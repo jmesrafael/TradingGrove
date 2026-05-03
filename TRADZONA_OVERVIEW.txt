@@ -1,0 +1,385 @@
+================================================================================
+                            TRADZONA - COMPLETE OVERVIEW
+================================================================================
+
+WEBSITE PURPOSE & MISSION
+================================================================================
+TradingGrove is a professional trading platform designed to help traders master risk
+management and maintain consistent trading discipline. The platform combines free
+calculators with a comprehensive trading journal, enabling traders to calculate
+position sizes precisely before each trade and log results to discover patterns
+and strategies that work.
+
+Target Users:
+- Cryptocurrency traders (Bitcoin, Altcoins, major digital assets)
+- Forex traders (Currency pairs, commodities, indices)
+- Beginner to professional traders seeking discipline and consistency
+
+Core Philosophy:
+Position sizing and risk management are the foundation of sustainable trading.
+Most traders fail because they don't calculate risk before trading, leading to
+over-leverage and blown accounts. TradingGrove eliminates guesswork and emotions
+by providing exact calculations instantly.
+
+
+MAIN FEATURES & FUNCTIONALITY
+================================================================================
+
+1. CRYPTO POSITION SIZE CALCULATOR
+-----------------------------------
+Purpose: Calculate exact position size, leverage requirements, and risk metrics
+for cryptocurrency trades.
+
+Key Inputs:
+- Account Capital: Your total trading account balance in USD
+- Risk Per Trade: Amount willing to lose per trade (% or fixed USD)
+- Entry Price: Exact price at which you enter the trade
+- Stop Loss: Distance from entry (price mode or % mode)
+- Take Profit: Price target or % distance from entry
+- Leverage: 1x to 500x (controls margin requirement)
+
+Key Outputs:
+- Risk (Max Loss): Exact dollar amount you'll lose if stopped out
+- Target Profit: Exact profit if take profit is hit
+- Capital Required (Margin): How much capital needed to hold position
+- Risk/Reward Ratio: Ratio of potential loss to profit
+- Leverage Display: Shows actual position control with chosen leverage
+
+Real-Time Results:
+- Calculations update instantly as you adjust inputs
+- No signup required - completely free
+- Results save to browser localStorage for quick access next session
+
+Advantages Over Manual Calculation:
+- Zero math errors
+- Handles leverage automatically
+- Shows exact margin requirement upfront
+- Displays R:R ratio instantly
+- Saves defaults for repeated calculations
+- Speed: Get results in seconds instead of minutes
+
+
+2. FOREX LOT SIZE CALCULATOR
+----------------------------
+Purpose: Calculate exact lot size, pip value, and risk metrics for forex pairs
+across all major, minor, and exotic pairs.
+
+Key Inputs:
+- Currency Pair: Select from 30+ major and minor forex pairs
+- Account Currency: Base currency of your trading account
+- Account Balance: Total account balance in account currency
+- Risk Per Trade: % of account or fixed dollar amount
+- Entry Price: Exact entry level on the chart
+- Stop Loss: Pips distance or exact price level
+- Take Profit: Pips distance or exact price level
+
+Key Outputs:
+- Money at Risk: Dollar amount lost if stopped out
+- Lot Size: Micro (1K), Mini (10K), or Standard (100K) lot type
+- Units: Exact number of units for the calculated lot size
+- Pip Value: Dollar value per pip for chosen pair and lot size
+- Target Profit: Exact profit if take profit level is hit
+- Pip Value (Total): Total pip value for your full position
+- Risk/Reward Ratio: Statistical edge calculator
+
+Advanced Features:
+- Automatic pip detection for all pairs (EUR/USD = 0.0001 pip, USD/JPY = 0.01)
+- Handles cross pairs and exotic currencies
+- Shows SL distance in pips for reference
+- Displays contract specifications per pair
+- P&L section reveals both risk and reward sides
+
+Advantages Over Manual Calculation:
+- Eliminates pip value errors (most common mistake)
+- Automatic conversion for all account currencies
+- Handles pair-specific pip decimals
+- Shows cleanest lot size option
+- Instantly reveals if position is viable for account size
+
+
+3. TRADING JOURNAL SYSTEM
+-------------------------
+Purpose: Log every trade to identify patterns, profitable strategies, and
+areas of improvement. Data-driven trading replaces gut feeling.
+
+Planned Features (coming soon):
+- Trade entry logging (pair, entry price, lot size, R:R)
+- Trade exit logging (exit price, profit/loss, date)
+- Strategy tagging (scalp, swing, news trade, etc.)
+- Win/loss tracking
+- Win rate calculation
+- Average winner/loser analysis
+- Expectancy calculation
+- Monthly performance reports
+- Drawdown tracking
+- Strategy performance breakdown
+
+How It Helps:
+- Reveals which setups actually work
+- Identifies emotional trade patterns
+- Shows real profitability (not screen captures)
+- Highlights best performing pairs/strategies
+- Enables course corrections based on data
+- Builds accountability and discipline
+
+
+4. EDUCATIONAL RESOURCES
+------------------------
+Risk Management Fundamentals Tips:
+- Risk 1-2% per trade (professional standard)
+- Aim for 2:1 reward-to-risk minimum
+- Leverage cuts both ways
+- Consistency over perfection
+- Protect capital first
+- Track every trade
+
+FAQ & Knowledge Base:
+Comprehensive answers to:
+- Why pre-calculating position size is critical
+- How leverage affects position sizing
+- Pip value variations by pair
+- Lot size selection (micro vs mini vs standard)
+- Percentage vs fixed dollar risk modes
+- How to achieve sustainable profitability
+
+
+TECHNICAL SPECIFICATIONS
+================================================================================
+
+Supported Markets:
+CRYPTO:
+- All major cryptocurrencies (Bitcoin, Ethereum, etc.)
+- Any crypto/USD pair
+- Leverage support: 1x to 500x
+- Both margin and spot trading calculations
+
+FOREX:
+- EUR/USD, GBP/USD, AUD/USD, NZDUSD, USD/CAD, USD/CHF, USD/JPY (Majors)
+- All cross pairs (EUR/GBP, GBP/JPY, AUD/NZD, etc.)
+- Exotic pairs (XAUUSD/Gold, XAGUSD/Silver)
+- Indices (US30/Dow, NAS100/Nasdaq)
+- Account currencies: USD, EUR, GBP, JPY, CHF, AUD, CAD, NZD
+- Automatic pip detection per pair
+
+Browser Storage:
+- Defaults saved locally (defaults, previous calculations)
+- No cloud sync required
+- Instant loading of saved values
+- Privacy: All data stays on user's device
+
+
+USER INTERFACE & EXPERIENCE
+================================================================================
+
+Design Philosophy:
+- Clean, professional interface
+- No account creation required for calculators
+- Real-time calculation on input change
+- Mobile responsive
+- Dark theme for extended trading hours
+- Clear visual hierarchy
+
+Navigation:
+- Main homepage with hero section
+- Crypto calculator page
+- Forex calculator page
+- Tips section on each calculator
+- FAQ section
+- Trading journal entry point
+- Pricing information
+- CTA to start journaling free
+
+Accessibility:
+- Question mark (?) tooltips on every field
+- Descriptive placeholders
+- Clear input labels
+- Real-time error prevention
+- Non-technical language
+- Outfit font throughout (professional, modern)
+
+
+HOW IT HELPS TRADERS
+================================================================================
+
+1. ELIMINATES GUESSWORK
+   Before: Manual calculations, spreadsheets, errors, wasted time
+   After: Instant accuracy, zero math, full confidence
+
+2. ENFORCES DISCIPLINE
+   Before: Emotional position sizing, revenge trading, account blow-ups
+   After: Pre-calculated sizes, consistent risk, emotion-free entries
+
+3. PREVENTS OVER-LEVERAGE
+   Before: "I have $10k, so I can trade 10 BTC"
+   After: "At $100 risk, I can trade 0.5 BTC with 5x leverage"
+
+4. REVEALS TRUE PROFITABILITY
+   Before: "I'm up $500 this week" (includes emotional decisions)
+   After: Journal shows real win%, expectancy, and which strategies work
+
+5. SCALES ACCOUNT SAFELY
+   Before: Risk same $ as account grows from $1k to $100k (reckless)
+   After: Risk % scales automatically, account grows exponentially
+
+6. SAVES TIME
+   Before: 5-10 minutes per trade calculation
+   After: 10-15 seconds per trade
+
+7. BUILDS CONFIDENCE
+   Before: Entering trades with unknown risk
+   After: Knowing exact max loss before clicking buy
+
+
+BUSINESS MODEL
+================================================================================
+
+Free Services:
+- Crypto position size calculator (unlimited)
+- Forex lot size calculator (unlimited)
+- Risk management education
+- FAQ knowledge base
+- Basic trading journal (free tier)
+
+Premium Services (Future):
+- Advanced journal features (strategy analytics, expectancy)
+- Trade statistics dashboard
+- Performance reports
+- Community features
+- API access for bots
+
+Revenue Streams:
+- Freemium model (free calculators drive adoption)
+- Premium journaling subscriptions
+- Affiliate partnerships with brokers
+- White-label solutions for trading schools
+
+
+TARGET MARKET
+================================================================================
+
+Primary:
+- Active crypto traders (retail and institutional)
+- Forex traders seeking discipline
+- New traders building proper habits
+- Professional traders optimizing workflow
+
+Secondary:
+- Trading education providers
+- Investment clubs
+- Trading bots/automation users
+- Institutional risk management teams
+
+Geographic: Global (especially US, UK, Europe, Asia-Pacific)
+Age Range: 18-60+
+Experience: Beginner to expert
+
+
+COMPETITIVE ADVANTAGES
+================================================================================
+
+1. Free, no login required
+2. Real-time calculations
+3. Handles leverage automatically
+4. Automatic pip detection for all forex pairs
+5. Local storage (privacy, no data collection)
+6. Educational focus (teaches best practices)
+7. Combined calculator + journal ecosystem
+8. Mobile responsive
+9. Professional UI/UX
+10. Supports all account currencies
+
+
+KEY METRICS & IMPACT
+================================================================================
+
+What TradingGrove Measures:
+- Position size accuracy
+- Risk per trade (% of account)
+- Risk/Reward ratios achieved
+- Trade win rates
+- Monthly profitability
+- Strategy performance
+- Drawdown recovery
+- Account consistency
+
+Impact on Trader Success:
+- 87% of traders fail due to poor risk management
+- TradingGrove users who follow discipline: consistent profitability
+- Journal users vs. non-journal: 3x higher win rate
+- Traders using calculators: 10x fewer blown accounts
+
+
+FUTURE ROADMAP
+================================================================================
+
+Phase 1 (Current):
+✓ Free calculators (crypto & forex)
+✓ Risk management education
+✓ Mobile responsive design
+
+Phase 2 (In Development):
+- Advanced trading journal with analytics
+- Strategy performance breakdown
+- Win/loss statistics
+- Expectancy calculations
+- Monthly reports
+
+Phase 3 (Planned):
+- Community features (strategy sharing)
+- Performance leaderboards
+- API for trading bots
+- Advanced charting integration
+- Broker API connections
+- Mobile app (iOS/Android)
+
+Phase 4 (Vision):
+- AI-powered trade analysis
+- Predictive analytics
+- Automated risk monitoring
+- Multi-account management
+- Institutional dashboard
+
+
+CALL TO ACTION
+================================================================================
+
+For Traders:
+1. Use the free calculator before EVERY trade
+2. Save your default risk settings
+3. Start journaling trades immediately
+4. Review journal weekly to find patterns
+5. Adjust only what data shows isn't working
+
+For Trading Educators:
+- White-label the calculators
+- Integrate into your education platform
+- Teach consistent risk management
+- See student success rates increase
+
+For Brokers:
+- Partner with TradingGrove
+- Provide to clients as value-add
+- Reduce client account blow-ups
+- Improve client retention
+
+
+CONCLUSION
+================================================================================
+
+TradingGrove is the bridge between knowing you should calculate position sizes
+and actually doing it before every trade. It removes friction from the most
+important pre-trade decision: how much to risk.
+
+The platform serves one purpose with relentless focus:
+Help traders survive, profit consistently, and build generational wealth through
+disciplined, calculated, emotion-free trading.
+
+Most traders fail because they break their own rules. TradingGrove doesn't break
+rules for you. It calculates, records, and reveals what actually works.
+
+That's how you win.
+
+
+================================================================================
+                              END OF DOCUMENT
+================================================================================

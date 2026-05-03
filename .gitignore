@@ -1,0 +1,48 @@
+# ── Claude & Editor ──────────────────────────────────────
+.claude/
+
+# ── Vercel ───────────────────────────────────────────────
+.vercel/
+
+# ── Supabase ─────────────────────────────────────────────
+supabase/.temp/
+supabase/supabase/.temp/
+supabase/.env
+
+# ── Environment & Secrets ─────────────────────────────────
+.env
+.env.local
+.env.development
+.env.production
+.env.*.local
+
+# ── Node / Package managers ───────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+.pnpm-debug.log*
+
+# ── OS files ─────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Windows ──────────────────────────────────────────────
+*.lnk
+
+# ── Build outputs ─────────────────────────────────────────
+dist/
+build/
+.output/
+.cache/
+
+# ── IDE & Editor ─────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.user
+*.swp
+*.swo

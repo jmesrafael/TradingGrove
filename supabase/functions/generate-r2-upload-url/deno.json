@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "@aws-sdk/client-s3": "https://esm.sh/@aws-sdk/client-s3@3.654.0",
+    "@aws-sdk/s3-request-presigner": "https://esm.sh/@aws-sdk/s3-request-presigner@3.654.0"
+  }
+}

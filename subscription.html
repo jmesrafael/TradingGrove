@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<title>TradingGrove | Pro</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="theme.js"></script>
+<script src="supabase.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn{from{transform:scale(.88) translateY(10px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+@keyframes shimmer{0%{background-position:-300% 0}100%{background-position:300% 0}}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes glowPulse{0%,100%{box-shadow:0 0 40px rgba(var(--accent-rgb,0,255,136),.15),0 4px 24px rgba(var(--accent-rgb,0,255,136),.2)}50%{box-shadow:0 0 70px rgba(var(--accent-rgb,0,255,136),.3),0 4px 36px rgba(var(--accent-rgb,0,255,136),.35)}}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body,'Inter',sans-serif);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── Ambient orbs ── */
+.bg-orb{position:fixed;border-radius:50%;pointer-events:none;z-index:0;filter:blur(130px)}
+.bg-orb1{width:700px;height:700px;background:rgba(var(--accent-rgb,0,255,136),.04);top:-200px;right:-150px}
+.bg-orb2{width:500px;height:500px;background:rgba(var(--accent-rgb,0,255,136),.03);bottom:-150px;left:-100px}
+.bg-orb3{width:400px;height:400px;background:rgba(var(--accent-rgb,0,255,136),.025);top:50%;left:50%;transform:translate(-50%,-50%)}
+
+/* ── Page loader ── */
+.page-loader{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .45s}
+.page-loader.gone{opacity:0;pointer-events:none}
+.pl-inner{text-align:center}
+.pl-logo{font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:28px;font-weight:800;margin-bottom:20px}
+.pl-logo span{color:var(--accent)}
+.pl-spin{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto}
+
+/* ── Header ── */
+header{
+  position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 32px;
+  background:rgba(var(--bg-raw,7,12,9),.9);
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(20px);
+}
+.logo{font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:18px;font-weight:700;cursor:pointer;user-select:none;text-decoration:none;color:var(--text)}
+.logo span{color:var(--accent)}
+.btn-ghost{
+  background:none;border:1px solid var(--border);color:var(--muted);
+  border-radius:var(--radius-md,10px);padding:8px 14px;
+  font-family:var(--font-body,'Inter',sans-serif);font-size:13px;cursor:pointer;
+  transition:all .2s;display:inline-flex;align-items:center;gap:6px;
+}
+.btn-ghost:hover{border-color:var(--accent2);color:var(--text)}
+
+/* ── Main ── */
+main{position:relative;z-index:1;max-width:1020px;margin:0 auto;padding:60px 24px 100px}
+
+/* ── Hero ── */
+.hero{text-align:center;margin-bottom:52px;animation:fadeUp .55s ease both}
+.hero-pill{
+  display:inline-flex;align-items:center;gap:7px;
+  background:rgba(var(--accent-rgb,0,255,136),.08);
+  border:1px solid rgba(var(--accent-rgb,0,255,136),.2);
+  border-radius:999px;padding:6px 16px;
+  font-size:11px;font-weight:700;color:var(--accent2);
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:22px;
+}
+.hero h1{
+  font-family:var(--font-heading,'Space Grotesk',sans-serif);
+  font-size:50px;font-weight:800;
+  line-height:1.1;letter-spacing:-.5px;margin-bottom:16px;
+}
+.hero h1 .hl{
+  color:var(--accent);
+  text-shadow:0 0 60px rgba(var(--accent-rgb,0,255,136),.4);
+}
+.hero p{font-size:16px;color:var(--muted);line-height:1.7;max-width:480px;margin:0 auto 20px}
+
+/* Social proof strip */
+.social-proof{
+  display:inline-flex;align-items:center;gap:16px;
+  background:rgba(var(--accent-rgb,0,255,136),.04);
+  border:1px solid rgba(var(--accent-rgb,0,255,136),.1);
+  border-radius:999px;padding:8px 20px;font-size:12px;color:var(--muted);
+  flex-wrap:wrap;justify-content:center;
+}
+.sp-item{display:flex;align-items:center;gap:6px}
+.sp-item i{color:var(--accent2);font-size:11px}
+.sp-sep{opacity:.2}
+
+@media(max-width:640px){.hero h1{font-size:34px}}
+
+/* ── Current plan strip ── */
+.plan-strip{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--radius-xl,20px);padding:16px 22px;
+  margin-bottom:36px;flex-wrap:wrap;
+  animation:fadeUp .55s .1s ease both;
+}
+.ps-left{display:flex;align-items:center;gap:12px}
+.ps-icon{width:40px;height:40px;border-radius:var(--radius-lg,14px);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ps-icon.free{background:rgba(143,163,154,.1);color:var(--muted)}
+.ps-icon.pro{background:rgba(var(--accent-rgb,0,255,136),.12);color:var(--accent2)}
+.ps-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px}
+.ps-val{font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:16px;font-weight:700}
+.ps-val.pro{color:var(--accent2)}
+.ps-meta{font-size:13px;color:var(--muted)}
+.ps-meta.warn{color:var(--amber,#f59e0b)}
+.ps-meta.danger{color:var(--red,#ff5f6d)}
+.manage-btn{
+  background:none;border:1px solid rgba(var(--accent-rgb,0,255,136),.3);color:var(--accent2);
+  border-radius:var(--radius-md,10px);padding:8px 14px;
+  font-family:var(--font-body,'Inter',sans-serif);font-size:12px;
+  font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px;
+}
+.manage-btn:hover{background:rgba(var(--accent-rgb,0,255,136),.08)}
+
+/* ── Days bar ── */
+.days-bar-wrap{
+  margin-bottom:28px;padding:14px 18px;
+  background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-xl,20px);
+  animation:fadeUp .55s .12s ease both;
+}
+.days-bar-labels{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px}
+.days-bar-track{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.days-bar-fill{height:100%;border-radius:3px;transition:width .6s ease,background .3s}
+
+/* ── Billing toggle ── */
+.billing-toggle{
+  display:flex;align-items:center;justify-content:center;
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:999px;padding:4px;
+  margin:0 auto 40px;width:fit-content;
+  animation:fadeUp .55s .15s ease both;
+}
+.btog-btn{
+  padding:10px 26px;border:none;border-radius:999px;
+  font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .25s;color:var(--muted);background:none;
+  display:flex;align-items:center;gap:8px;white-space:nowrap;
+}
+.btog-btn.active{background:var(--accent);color:var(--bg);box-shadow:0 2px 20px rgba(var(--accent-rgb,0,255,136),.35)}
+
+/* Annual badge */
+.annual-badge{
+  background:rgba(245,158,11,.15);
+  border:1px solid rgba(245,158,11,.35);
+  color:#fbbf24;
+  border-radius:999px;padding:3px 10px;font-size:10px;font-weight:800;
+  text-transform:uppercase;letter-spacing:.6px;
+}
+
+/* ── Plans grid ── */
+.plans{
+  display:grid;grid-template-columns:1fr 1fr;gap:24px;
+  margin-bottom:60px;animation:fadeUp .55s .2s ease both;
+}
+@media(max-width:660px){.plans{grid-template-columns:1fr}}
+
+.plan-card{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--radius-xl,20px);padding:32px;position:relative;
+  transition:transform .25s,box-shadow .25s;
+}
+.plan-card:hover{transform:translateY(-3px)}
+
+/* Pro card */
+.plan-card.pro{
+  border-color:transparent;
+  background:linear-gradient(var(--panel),var(--panel)) padding-box,
+             linear-gradient(135deg,rgba(var(--accent-rgb,0,255,136),.4),rgba(var(--accent-rgb,0,255,136),.1) 50%,rgba(var(--accent-rgb,0,255,136),.3)) border-box;
+  box-shadow:0 0 60px rgba(var(--accent-rgb,0,255,136),.08),0 20px 60px rgba(0,0,0,.4);
+  animation:glowPulse 3s ease-in-out infinite;
+}
+.plan-card.pro:hover{transform:translateY(-5px);box-shadow:0 0 80px rgba(var(--accent-rgb,0,255,136),.15),0 24px 70px rgba(0,0,0,.45)}
+
+.popular-tag{
+  position:absolute;top:-15px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  color:var(--bg);font-family:var(--font-heading,'Space Grotesk',sans-serif);
+  font-size:10px;font-weight:800;
+  padding:5px 20px;border-radius:999px;
+  text-transform:uppercase;letter-spacing:1px;white-space:nowrap;
+  box-shadow:0 4px 20px rgba(var(--accent-rgb,0,255,136),.4);
+}
+
+.plan-tier{
+  font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:18px;
+}
+.plan-tier.pro{color:var(--accent2)}
+
+/* Pricing */
+.price-wrap{margin-bottom:12px}
+.price-annual-stack{display:flex;align-items:baseline;gap:10px;margin-bottom:4px;flex-wrap:wrap}
+.price-old{font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:28px;font-weight:700;color:var(--muted);text-decoration:line-through;opacity:.5}
+.price-row{display:flex;align-items:baseline;gap:3px}
+.price-currency{font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:22px;font-weight:700;color:var(--muted)}
+.price-currency.pro{color:var(--accent2)}
+.price-amt{font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:58px;font-weight:800;line-height:1;letter-spacing:-2px}
+.price-amt.pro{
+  background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.price-period{font-size:14px;color:var(--muted);margin-left:4px}
+.price-billed-note{font-size:12px;color:var(--muted);margin-top:6px;min-height:18px}
+.price-billed-note .save-amt{
+  color:#fbbf24;font-weight:700;
+  background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);
+  border-radius:4px;padding:1px 6px;font-size:11px;
+}
+
+.plan-desc{font-size:13px;color:var(--muted);line-height:1.7;margin:16px 0 20px}
+hr.pdiv{border:none;border-top:1px solid var(--border);margin:18px 0}
+
+.feat-list{list-style:none;display:flex;flex-direction:column;gap:11px;margin-bottom:28px}
+.feat-list li{display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:1.5}
+.feat-list li .ico{font-size:11px;margin-top:2px;flex-shrink:0}
+.feat-list li .ico.y{color:var(--accent2)}
+.feat-list li .ico.n{color:var(--muted);opacity:.3}
+.feat-list li.dim{color:var(--muted)}
+.feat-note{display:block;font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4}
+
+/* Plan buttons */
+.plan-btn{
+  display:block;width:100%;padding:15px;text-align:center;
+  border-radius:var(--radius-lg,14px);font-family:var(--font-heading,'Space Grotesk',sans-serif);
+  font-size:14px;font-weight:700;cursor:pointer;
+  transition:all .22s;border:none;letter-spacing:.2px;
+}
+.plan-btn.ghost{background:none;border:1px solid var(--border);color:var(--muted);cursor:default}
+.plan-btn.cta{
+  background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);
+  background-size:200% auto;
+  color:var(--bg);
+  box-shadow:0 6px 28px rgba(var(--accent-rgb,0,255,136),.35);
+  animation:shimmer 3s linear infinite;
+  position:relative;overflow:hidden;
+}
+.plan-btn.cta::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);
+  transform:translateX(-100%);transition:transform .4s;
+}
+.plan-btn.cta:hover:not(:disabled)::after{transform:translateX(100%)}
+.plan-btn.cta:hover:not(:disabled){
+  box-shadow:0 8px 40px rgba(var(--accent-rgb,0,255,136),.55);transform:translateY(-2px);
+}
+.plan-btn:disabled{opacity:.5;cursor:default;transform:none!important;animation:none}
+.plan-btn.current{
+  background:rgba(var(--accent-rgb,0,255,136),.08);
+  border:1px solid rgba(var(--accent-rgb,0,255,136),.2);
+  color:var(--accent2);cursor:default;
+}
+
+/* Urgency nudge */
+.cta-nudge{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:11px;color:var(--muted);margin-top:10px;
+}
+.cta-nudge i{color:var(--accent2);font-size:10px}
+
+/* ── Comparison table ── */
+.cmp-sec{margin-bottom:60px;animation:fadeUp .55s .25s ease both}
+.sec-title{font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:22px;font-weight:700;text-align:center;margin-bottom:24px}
+.cmp-wrap{border:1px solid var(--border);border-radius:var(--radius-xl,20px);overflow:hidden}
+.cmp-table{width:100%;border-collapse:collapse}
+.cmp-table th{
+  padding:14px 20px;font-size:10px;font-weight:700;text-align:left;
+  color:var(--muted);background:var(--panel);
+  border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.9px;
+}
+.cmp-table th.pro{color:var(--accent2);background:rgba(var(--accent-rgb,0,255,136),.04)}
+.cmp-table td{padding:13px 20px;font-size:13px;border-bottom:1px solid var(--border);background:var(--bg)}
+.cmp-table tr:last-child td{border-bottom:none}
+.cmp-table td.pro{background:rgba(var(--accent-rgb,0,255,136),.025);color:var(--accent2);font-weight:600}
+.cmp-table td.no{color:var(--muted)}
+.cmp-table .cat td{
+  background:var(--panel);font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.9px;color:var(--muted);
+  padding:8px 20px;border-bottom:1px solid var(--border);
+}
+.cmp-table .cat td.pro{background:rgba(var(--accent-rgb,0,255,136),.04)}
+.cmp-table i.y{color:var(--accent2)}.cmp-table i.n{color:var(--muted);opacity:.3}
+
+/* ── FAQ ── */
+.faq-sec{margin-bottom:52px;animation:fadeUp .55s .3s ease both}
+.faq-item{border:1px solid var(--border);border-radius:var(--radius-lg,14px);margin-bottom:8px;overflow:hidden;transition:border-color .2s}
+.faq-item.open{border-color:rgba(var(--accent-rgb,0,255,136),.25)}
+.faq-q{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;cursor:pointer;font-size:14px;font-weight:500;user-select:none;gap:12px;background:var(--panel)}
+.faq-q i{color:var(--muted);font-size:11px;transition:transform .25s,color .2s;flex-shrink:0}
+.faq-item.open .faq-q i{transform:rotate(180deg);color:var(--accent2)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s;font-size:13px;color:var(--muted);line-height:1.8;padding:0 20px;background:var(--bg)}
+.faq-item.open .faq-a{max-height:220px;padding:14px 20px 18px}
+
+/* ── Footer ── */
+.footer-note{
+  text-align:center;font-size:12px;color:var(--muted);
+  display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;
+  animation:fadeUp .55s .35s ease both;
+}
+.footer-note a{color:var(--muted);text-decoration:underline;text-underline-offset:2px}
+.footer-note a:hover{color:var(--text)}
+.footer-sep{opacity:.3}
+
+/* ══════════════════════════════════════════
+   PRO SUBSCRIPTION CELEBRATION MODAL
+   (Ported exactly from profile.html reward modal)
+═══════════════════════════════════════════ */
+@keyframes rewardOverlayIn{from{opacity:0}to{opacity:1}}
+@keyframes rewardCardIn{0%{opacity:0;transform:scale(.82) translateY(24px)}65%{transform:scale(1.03) translateY(-4px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes rewardBadgePop{0%{transform:scale(0) rotate(-18deg)}60%{transform:scale(1.18) rotate(4deg)}80%{transform:scale(.94) rotate(-2deg)}100%{transform:scale(1) rotate(0deg)}}
+@keyframes rewardPulseGlow{0%,100%{box-shadow:0 0 0 0 rgba(var(--accent-rgb,0,255,136),.35),0 24px 64px rgba(0,0,0,.7)}50%{box-shadow:0 0 0 18px rgba(var(--accent-rgb,0,255,136),0),0 24px 64px rgba(0,0,0,.7)}}
+@keyframes rewardStarSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes rewardFloatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-90px) scale(.4)}}
+@keyframes rewardShimmerBar{0%{background-position:-400px 0}100%{background-position:400px 0}}
+@keyframes goldShimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+@keyframes goldGlare{0%{left:-80%;opacity:0}10%{opacity:1}50%{left:110%;opacity:1}51%{opacity:0}100%{left:110%;opacity:0}}
+
+#rewardOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:10000;align-items:center;justify-content:center;padding:20px;animation:rewardOverlayIn .3s ease;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#rewardOverlay.open{display:flex}
+
+#rewardCard{background:var(--panel);border:1px solid rgba(var(--accent-rgb,0,255,136),.28);border-radius:24px;width:100%;max-width:420px;padding:0;overflow:hidden;animation:rewardCardIn .55s cubic-bezier(.34,1.56,.64,1) both,rewardPulseGlow 2.4s ease 1s infinite;position:relative}
+
+#rewardConfettiCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;border-radius:24px;z-index:0}
+
+.reward-hdr{background:linear-gradient(135deg,rgba(var(--accent-rgb,0,255,136),.15) 0%,rgba(var(--accent-rgb,0,255,136),.04) 100%);border-bottom:1px solid rgba(var(--accent-rgb,0,255,136),.18);padding:32px 28px 24px;text-align:center;position:relative;z-index:1}
+
+.reward-icon-wrap{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,rgba(var(--accent-rgb,0,255,136),.22),rgba(var(--accent-rgb,0,255,136),.06));border:2px solid rgba(var(--accent-rgb,0,255,136),.4);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:34px;animation:rewardBadgePop .6s cubic-bezier(.34,1.56,.64,1) .25s both;position:relative}
+.reward-icon-wrap::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:1.5px dashed rgba(var(--accent-rgb,0,255,136),.3);animation:rewardStarSpin 8s linear infinite}
+
+.reward-days-badge{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(105deg,#7a5a00 0%,#c9973a 18%,#f5c842 35%,#ffe17a 50%,#f5c842 65%,#c9973a 82%,#7a5a00 100%);background-size:200% auto;color:#3a2800;border:1px solid #c9973a;text-shadow:0 1px 0 rgba(255,230,100,.5);box-shadow:0 2px 8px rgba(0,0,0,.4),0 0 0 1px rgba(255,220,80,.2) inset;animation:rewardShimmerBar 3s linear infinite;border-radius:999px;padding:6px 16px;font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:13px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-bottom:14px}
+
+.reward-title{font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px;line-height:1.2}
+.reward-subtitle{font-size:13px;color:var(--muted);line-height:1.6}
+.reward-subtitle strong{color:var(--accent2)}
+
+.reward-body{padding:22px 28px 26px;position:relative;z-index:1}
+
+.reward-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.reward-info-cell{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:13px 14px;text-align:center}
+.reward-info-cell .ric-val{font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:20px;font-weight:800;color:var(--accent2);margin-bottom:2px;line-height:1}
+.reward-info-cell .ric-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+
+.reward-particles{position:absolute;top:0;left:0;right:0;pointer-events:none;overflow:hidden;height:100%;border-radius:24px;z-index:0}
+.reward-particle{position:absolute;font-size:18px;animation:rewardFloatUp 2s ease forwards;opacity:0}
+
+.reward-cta{width:100%;background:var(--accent);color:#0b0f0c;border:none;border-radius:12px;padding:13px 20px;font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:14px;font-weight:800;cursor:pointer;transition:opacity .2s,transform .15s;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.2px}
+.reward-cta:hover{opacity:.88;transform:translateY(-1px)}
+.reward-cta:active{transform:translateY(0)}
+
+.reward-dismiss{display:block;text-align:center;margin-top:14px;font-size:12px;color:var(--muted);cursor:pointer;transition:color .15s}
+.reward-dismiss:hover{color:var(--text)}
+
+/* ── Confetti canvas (page-level, for the old showCel path) ── */
+#confettiCanvas{position:fixed;inset:0;pointer-events:none;z-index:99998}
+
+/* ── Toast ── */
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-lg,14px);padding:11px 18px;font-size:13px;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:99999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;white-space:nowrap;display:flex;align-items:center;gap:8px;max-width:92vw}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.g{border-color:rgba(var(--accent-rgb,0,255,136),.4);background:rgba(var(--accent-rgb,0,255,136),.08)}
+#toast.r{border-color:rgba(255,95,109,.4);background:rgba(255,95,109,.08)}
+
+/* ── Test toggle button ── */
+.test-toggle-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35);color:#fbbf24;border-radius:8px;padding:6px 12px;font-family:var(--font-body,'Inter',sans-serif);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;position:fixed;bottom:20px;right:20px;z-index:9990}
+.test-toggle-btn:hover{background:rgba(245,158,11,.18)}
+
+@media(max-width:600px){
+  header{padding:12px 16px}
+  main{padding:36px 16px 80px}
+  .plan-card{padding:24px}
+  .price-amt{font-size:44px}
+}
+</style>
+</head>
+<body>
+
+<canvas id="confettiCanvas" style="display:none"></canvas>
+<div class="bg-orb bg-orb1"></div>
+<div class="bg-orb bg-orb2"></div>
+<div class="bg-orb bg-orb3"></div>
+
+<div class="page-loader" id="pageLoader">
+  <div class="pl-inner">
+    <div class="pl-logo">Trading<span>Grove</span></div>
+    <div class="pl-spin"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PRO SUBSCRIPTION CELEBRATION MODAL
+     (Ported exactly from profile.html reward modal)
+═══════════════════════════════════════════ -->
+<div id="rewardOverlay">
+  <div id="rewardParticles" class="reward-particles"></div>
+  <div id="rewardCard">
+    <canvas id="rewardConfettiCanvas"></canvas>
+    <div class="reward-hdr">
+      <div class="reward-icon-wrap">🚀</div>
+      <div class="reward-days-badge">
+        <i class="fa-solid fa-star"></i>
+        Pro — Successfully Activated!
+      </div>
+      <div class="reward-title">You're now <span style="color:var(--accent)">Pro!</span> 🎉</div>
+      <div class="reward-subtitle">
+        Your subscription is live and all Pro features are<br>
+        <strong>active on your account right now.</strong>
+      </div>
+    </div>
+    <div class="reward-body">
+      <button class="reward-cta" onclick="closeRewardModal()">
+        <i class="fa-solid fa-book-open"></i>
+        Start Journalling
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ▼ REMOVE THIS BUTTON WHEN DONE TESTING ▼ -->
+<button class="test-toggle-btn" onclick="_testRewardModal()">
+  <i class="fa-solid fa-flask"></i> Test Pro Modal
+</button>
+<!-- ▲ REMOVE THIS BUTTON WHEN DONE TESTING ▲ -->
+
+<header>
+  <a href="/dashboard" class="logo">Trading<span>Grove</span></a>
+  <div style="display:flex;align-items:center;gap:8px">
+    <button class="btn-ghost" onclick="location.href='/dashboard'"><i class="fa-solid fa-chevron-left"></i> Dashboard</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-pill"><i class="fa-solid fa-bolt"></i> Unlock Your Full Edge</div>
+    <h1>Trade smarter.<br><span class="hl">Win more.</span></h1>
+    <p>Serious traders don't guess. They journal, analyze, and improve. Pro gives you every tool to do exactly that.</p>
+    <div class="social-proof">
+      <div class="sp-item"><i class="fa-solid fa-lock"></i> Secure checkout</div>
+      <span class="sp-sep">·</span>
+      <div class="sp-item"><i class="fa-solid fa-database"></i> Your data, always</div>
+      <span class="sp-sep">·</span>
+      <div class="sp-item"><i class="fa-solid fa-ban"></i> No ads ever</div>
+    </div>
+  </div>
+
+  <!-- Current plan strip -->
+  <div class="plan-strip" id="planStrip">
+    <div class="ps-left">
+      <div class="ps-icon free" id="psIcon"><i class="fa-solid fa-circle-user"></i></div>
+      <div>
+        <div class="ps-label">Your current plan</div>
+        <div class="ps-val" id="psVal">Free Plan</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <span class="ps-meta" id="psMeta">Upgrade to unlock all features</span>
+      <button class="manage-btn" id="manageBtn" style="display:none" onclick="openBillingPortal()">
+        <i class="fa-solid fa-gear"></i> Manage Billing
+      </button>
+    </div>
+  </div>
+
+  <!-- Days remaining bar (Pro users only) -->
+  <div class="days-bar-wrap" id="daysBarWrap" style="display:none">
+    <div class="days-bar-labels" style="margin-bottom:6px">
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:600">Subscription Period</span>
+    </div>
+    <div class="days-bar-track" style="margin-bottom:8px">
+      <div class="days-bar-fill" id="daysBarFill"></div>
+    </div>
+    <div class="days-bar-labels">
+      <span id="daysBarLeft" style="font-weight:600"></span>
+      <span id="daysBarRight" style="font-size:11px"></span>
+    </div>
+  </div>
+
+  <!-- Billing toggle -->
+  <div class="billing-toggle" id="billingToggle">
+    <button class="btog-btn active" id="btnMonthly" onclick="setPlan('monthly')">Monthly</button>
+    <button class="btog-btn" id="btnAnnual" onclick="setPlan('annual')">
+      Annual &nbsp;<span class="annual-badge">Save $60</span>
+    </button>
+  </div>
+
+  <!-- Plans -->
+  <div class="plans" id="plansGrid">
+
+    <!-- Free -->
+    <div class="plan-card">
+      <div class="plan-tier">Free</div>
+      <div class="price-wrap">
+        <div class="price-row">
+          <span class="price-currency">$</span>
+          <span class="price-amt">0</span>
+          <span class="price-period">/ forever</span>
+        </div>
+        <div class="price-billed-note">&nbsp;</div>
+      </div>
+      <p class="plan-desc">A solid start. Get one journal and basic analytics — no card needed, no expiry.</p>
+      <hr class="pdiv">
+      <ul class="feat-list">
+        <li><i class="fa-solid fa-check ico y"></i><span>1 Trading journal</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Unlimited trade logs</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>1 image per trade</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Basic analytics</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Limited calendar lookback</span></li>
+        <li class="dim"><i class="fa-solid fa-xmark ico n"></i><span>Multiple journals</span></li>
+        <li class="dim"><i class="fa-solid fa-xmark ico n"></i><span>Advanced analytics</span></li>
+        <li class="dim"><i class="fa-solid fa-xmark ico n"></i><span>Themes &amp; fonts</span></li>
+        <li class="dim"><i class="fa-solid fa-xmark ico n"></i><span>Export / import</span></li>
+        <li class="dim"><i class="fa-solid fa-xmark ico n"></i><span>Ads shown</span></li>
+      </ul>
+      <button class="plan-btn ghost" id="freePlanBtn" disabled>Current Plan</button>
+    </div>
+
+    <!-- Pro -->
+    <div class="plan-card pro">
+      <div class="popular-tag">⚡ Most Popular</div>
+      <div class="plan-tier pro">Pro</div>
+
+      <!-- Monthly pricing (default) -->
+      <div id="priceMonthly" class="price-wrap">
+        <div class="price-row">
+          <span class="price-currency pro">$</span>
+          <span class="price-amt pro">15</span>
+          <span class="price-period">/ month</span>
+        </div>
+        <div class="price-billed-note">Billed monthly · cancel anytime</div>
+      </div>
+
+      <!-- Annual pricing (hidden by default) -->
+      <div id="priceAnnual" class="price-wrap" style="display:none">
+        <div class="price-annual-stack">
+          <span class="price-old">$15</span>
+          <div class="price-row">
+            <span class="price-currency pro">$</span>
+            <span class="price-amt pro">10</span>
+            <span class="price-period">/ month</span>
+          </div>
+        </div>
+        <div class="price-billed-note">
+          Billed as <strong style="color:var(--text)">$120/yr</strong> &nbsp;
+          <span class="save-amt">You save $60</span>
+        </div>
+      </div>
+
+      <p class="plan-desc">For traders who are serious. Every insight, every edge, zero limitations — starting today.</p>
+      <hr class="pdiv">
+      <ul class="feat-list">
+        <li><i class="fa-solid fa-check ico y"></i><span>Unlimited journals<span class="feat-note">Forex, Crypto, Futures — all separate</span></span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Unlimited trade logs</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Multiple images per trade</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Full analytics suite<span class="feat-note">Heatmap, Mood, Confidence, Timeframe</span></span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Unlimited calendar lookback</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Notes collection</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Export &amp; import backup</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Color &amp; font themes</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>PIN-protected journals</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>No ads — ever</span></li>
+      </ul>
+
+      <button class="plan-btn cta" id="proPlanBtn" onclick="upgradeToPro()">
+        <i class="fa-solid fa-rocket"></i>
+        <span id="proBtnText">Upgrade to Pro — $15/mo</span>
+      </button>
+      <div class="cta-nudge">
+        <i class="fa-solid fa-shield-halved"></i> Secure payment via Stripe
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Comparison table -->
+  <div class="cmp-sec">
+    <div class="sec-title">Everything compared</div>
+    <div class="cmp-wrap">
+      <table class="cmp-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Free</th>
+            <th class="pro"><i class="fa-solid fa-bolt" style="margin-right:5px;font-size:9px"></i>Pro</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="cat"><td colspan="2">Journals &amp; Logs</td><td class="pro"></td></tr>
+          <tr><td>Journals</td><td>1</td><td class="pro">Unlimited</td></tr>
+          <tr><td>Trade logs</td><td>Unlimited</td><td class="pro">Unlimited</td></tr>
+          <tr><td>Images per trade</td><td>1</td><td class="pro">Multiple</td></tr>
+          <tr><td>PIN-protected journals</td><td class="no"><i class="fa-solid fa-xmark n"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr class="cat"><td colspan="2">Analytics</td><td class="pro"></td></tr>
+          <tr><td>Total PNL, Win Rate, Streaks</td><td><i class="fa-solid fa-check y"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Equity Curve</td><td><i class="fa-solid fa-check y"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Hour-of-day heatmap</td><td class="no"><i class="fa-solid fa-xmark n"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Mood &amp; Confidence analytics</td><td class="no"><i class="fa-solid fa-xmark n"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Timeframe &amp; Day breakdown</td><td class="no"><i class="fa-solid fa-xmark n"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr class="cat"><td colspan="2">Tools &amp; Customization</td><td class="pro"></td></tr>
+          <tr><td>Notes collection</td><td class="no"><i class="fa-solid fa-xmark n"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Export / Import (.json, .csv)</td><td class="no"><i class="fa-solid fa-xmark n"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Color theme customization</td><td class="no"><i class="fa-solid fa-xmark n"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Font customization</td><td class="no"><i class="fa-solid fa-xmark n"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Calendar lookback</td><td>Limited</td><td class="pro">Unlimited</td></tr>
+          <tr><td>Ads</td><td>Shown</td><td class="pro">None — ever</td></tr>
+          <tr class="cat"><td colspan="2">Referrals</td><td class="pro"></td></tr>
+          <tr><td>Referral program</td><td><i class="fa-solid fa-check y"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Earn free Pro days</td><td><i class="fa-solid fa-check y"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq-sec">
+    <div class="sec-title">Common questions</div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Is the free plan really free forever? <i class="fa-solid fa-chevron-down"></i></div>
+      <div class="faq-a">Yes. The free plan never expires and requires no credit card. You get 1 journal, unlimited trade logs, basic analytics, and limited calendar lookback — no strings attached.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">What's the difference between Monthly and Annual? <i class="fa-solid fa-chevron-down"></i></div>
+      <div class="faq-a">Monthly is $15/month billed each month. Annual is $120/year — that's just $10/month, saving you $60 compared to paying monthly. Both plans include exactly the same Pro features.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Can I cancel anytime? <i class="fa-solid fa-chevron-down"></i></div>
+      <div class="faq-a">Absolutely. Cancel anytime via Manage Billing. You keep full Pro access until the end of your billing period, then revert to Free. Your trades and journals are never deleted.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">What happens to extra journals if I cancel? <i class="fa-solid fa-chevron-down"></i></div>
+      <div class="faq-a">Extra journals become read-only after downgrade — all your data stays safe. Your primary journal continues to work normally on the Free plan.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">How does the referral program work? <i class="fa-solid fa-chevron-down"></i></div>
+      <div class="faq-a">Share your referral link from your Profile page. When someone signs up through your link and subscribes to Pro for the first time, you automatically receive 30 free days of Pro added to your account.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Where is my data stored? <i class="fa-solid fa-chevron-down"></i></div>
+      <div class="faq-a">Securely in Supabase with row-level security — only you can access your own data. Pro users can export everything as a .json backup or .csv for spreadsheet analysis.</div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    <span>Your data is always yours</span>
+    <span class="footer-sep">·</span>
+    <span>No hidden fees</span>
+    <span class="footer-sep">·</span>
+    <a href="/terms">Terms</a>
+    <span class="footer-sep">·</span>
+    <a href="/privacy">Privacy</a>
+  </div>
+
+</main>
+
+<div id="toast"><i id="toastIcon"></i><span id="toastMsg"></span></div>
+
+<script>
+let selectedPlan = 'monthly';
+let currentProfile = null;
+
+// ── Billing toggle ────────────────────────────────────────
+function setPlan(plan) {
+  selectedPlan = plan;
+  document.getElementById('btnMonthly').classList.toggle('active', plan === 'monthly');
+  document.getElementById('btnAnnual').classList.toggle('active',  plan === 'annual');
+  document.getElementById('priceMonthly').style.display = plan === 'monthly' ? 'block' : 'none';
+  document.getElementById('priceAnnual').style.display  = plan === 'annual'  ? 'block' : 'none';
+
+  const btn = document.getElementById('proPlanBtn');
+  if (btn && !btn.disabled) {
+    document.getElementById('proBtnText').textContent =
+      plan === 'annual' ? 'Upgrade to Pro — $10/mo billed $120/yr' : 'Upgrade to Pro — $15/mo';
+  }
+}
+
+// ── FAQ ───────────────────────────────────────────────────
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const open = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+  if (!open) item.classList.add('open');
+}
+
+// ── Upgrade ───────────────────────────────────────────────
+async function upgradeToPro() {
+  const btn = document.getElementById('proPlanBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Redirecting to checkout…</span>';
+
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    if (!session) { location.href = '/auth'; return; }
+
+    const lookupKey = selectedPlan === 'annual' ? 'tradinggrove_pro_annual' : 'tradinggrove_pro_monthly';
+
+    const res = await fetch(SUPABASE_URL + '/functions/v1/create-checkout', {
+      method:  'POST',
+      headers: { 'Authorization': 'Bearer ' + session.access_token, 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ lookup_key: lookupKey }),
+    });
+    const data = await res.json();
+
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error(data.error || 'Could not create checkout session.');
+    }
+  } catch (err) {
+    showToast('Checkout error: ' + err.message, 'fa-solid fa-circle-exclamation', 'r');
+    const btn2 = document.getElementById('proPlanBtn');
+    btn2.disabled = false;
+    btn2.innerHTML = '<i class="fa-solid fa-rocket"></i><span id="proBtnText">' +
+      (selectedPlan === 'annual' ? 'Upgrade to Pro — $10/mo billed $120/yr' : 'Upgrade to Pro — $15/mo') + '</span>';
+  }
+}
+
+// ── Manage billing portal ─────────────────────────────────
+async function openBillingPortal() {
+  const btn = document.getElementById('manageBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading…';
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    if (!session) throw new Error('Not authenticated');
+
+    const res = await fetch(SUPABASE_URL + '/functions/v1/billing-portal', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + session.access_token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        return_url: window.location.origin + '/subscription',
+        customer_id: session.user?.id
+      }),
+    });
+
+    if (!res.ok) {
+      const errData = await res.json();
+      const errMsg = errData.error || `HTTP ${res.status}`;
+      throw new Error(errMsg);
+    }
+
+    const data = await res.json();
+
+    if (data.message) {
+      showToast(data.message, 'fa-solid fa-gift', 'green');
+      if (data.url && data.url.includes('#')) {
+        setTimeout(() => { window.location.href = data.url; }, 1500);
+      }
+      return;
+    }
+
+    if (!data.url) {
+      throw new Error(data.error || 'No billing portal URL returned');
+    }
+
+    window.location.href = data.url;
+  } catch (err) {
+    console.error('Billing portal error:', err);
+    showToast('Error: ' + err.message, 'fa-solid fa-circle-exclamation', 'r');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-gear"></i> Manage Billing';
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PRO SUBSCRIPTION CELEBRATION MODAL
+//  Ported exactly from profile.html reward modal.
+//  Fires automatically when ?upgraded=1 is in the URL.
+// ══════════════════════════════════════════════════════════════
+
+// ── REMOVE THIS ENTIRE FUNCTION WHEN DONE TESTING ──────────
+function _testRewardModal() {
+  // Bypasses the normal trigger so the modal always fires on click.
+  _openRewardModal();
+}
+// ── END REMOVE ──────────────────────────────────────────────
+
+function _openRewardModal() {
+  document.getElementById('rewardOverlay').classList.add('open');
+  _launchRewardConfetti();
+  _spawnRewardParticles();
+}
+
+function closeRewardModal() {
+  const overlay = document.getElementById('rewardOverlay');
+  overlay.style.opacity = '0';
+  overlay.style.transition = 'opacity .25s';
+  setTimeout(() => {
+    overlay.classList.remove('open');
+    overlay.style.opacity = '';
+    overlay.style.transition = '';
+    // Clean the URL so refreshing doesn't retrigger
+    window.history.replaceState({}, '', window.location.pathname);
+  }, 260);
+}
+
+// Close on backdrop click
+document.getElementById('rewardOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeRewardModal();
+});
+
+// ── Floating ✨ particles (exact copy from profile.html) ──
+function _spawnRewardParticles() {
+  const container = document.getElementById('rewardParticles');
+  container.innerHTML = '';
+  for (let i = 0; i < 14; i++) {
+    const el = document.createElement('span');
+    el.className = 'reward-particle';
+    el.textContent = '✨';
+    el.style.left              = (4 + Math.random() * 92) + '%';
+    el.style.bottom            = (4 + Math.random() * 45) + '%';
+    el.style.animationDelay    = (i * 0.15) + 's';
+    el.style.fontSize          = (13 + Math.random() * 16) + 'px';
+    el.style.animationDuration = (1.5 + Math.random() * .9) + 's';
+    container.appendChild(el);
+  }
+}
+
+// ── Canvas confetti burst (exact copy from profile.html) ──
+function _launchRewardConfetti() {
+  const canvas = document.getElementById('rewardConfettiCanvas');
+  const ctx = canvas.getContext('2d');
+  const card = document.getElementById('rewardCard');
+  const W = card.offsetWidth || 420;
+  const H = card.offsetHeight || 520;
+  canvas.width = W;
+  canvas.height = H;
+
+  const FALLBACK_COLORS = ['#00ff88', '#f5c842', '#ff5f6d', '#a5b4fc', '#fbbf24', '#34d399', '#60a5fa', '#fb923c'];
+
+  const particles = Array.from({ length: 90 }, (_, i) => ({
+    x: Math.random() * W,
+    y: -12 - Math.random() * 50,
+    size: 5 + Math.random() * 7,
+    color: FALLBACK_COLORS[i % FALLBACK_COLORS.length],
+    vx: (Math.random() - .5) * 3.5,
+    vy: 1.8 + Math.random() * 3.5,
+    rot: Math.random() * 360,
+    vrot: (Math.random() - .5) * 9,
+    shape: Math.random() > .45 ? 'rect' : 'circle',
+    alpha: 1,
+  }));
+
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    let alive = 0;
+    particles.forEach(p => {
+      if (p.y > H + 20 || p.alpha <= 0) return;
+      alive++;
+      p.x += p.vx;
+      p.y += p.vy + frame * .01;
+      p.rot += p.vrot;
+      if (p.y > H * .55) p.alpha = Math.max(0, p.alpha - .02);
+      ctx.save();
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle = p.color;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      if (p.shape === 'circle') {
+        ctx.beginPath();
+        ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+      }
+      ctx.restore();
+    });
+    frame++;
+    if (alive > 0 && frame < 240) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, W, H);
+  }
+  draw();
+}
+
+// ── Toast ─────────────────────────────────────────────────
+let _tt;
+function showToast(msg, icon, type) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastIcon').className = icon;
+  document.getElementById('toastMsg').textContent = msg;
+  t.className = 'show' + (type ? ' ' + type : '');
+  clearTimeout(_tt);
+  _tt = setTimeout(() => t.className = '', 3500);
+}
+
+// ── Init ──────────────────────────────────────────────────
+(async () => {
+  const user = await requireAuth();
+  if (!user) return;
+
+  currentProfile = await getProfile(user.id);
+
+  // Apply the user's saved theme before anything else renders
+  applyProfileTheme(currentProfile);
+
+  const isPro     = currentProfile?.plan === 'pro';
+  const subStatus = getSubscriptionStatus(currentProfile);
+  const planType  = currentProfile?.plan_type || 'none';
+
+  const psIcon = document.getElementById('psIcon');
+  const psVal  = document.getElementById('psVal');
+  const psMeta = document.getElementById('psMeta');
+
+  if (isPro) {
+    psIcon.className = 'ps-icon pro';
+    psIcon.innerHTML = '<i class="fa-solid fa-star"></i>';
+    psVal.textContent = 'Pro Plan';
+    psVal.className   = 'ps-val pro';
+
+    if (subStatus.expired) {
+      psMeta.textContent = 'Your subscription has expired';
+      psMeta.className   = 'ps-meta danger';
+    } else if (subStatus.expiring) {
+      psMeta.textContent = subStatus.label;
+      psMeta.className   = 'ps-meta warn';
+    } else {
+      psMeta.textContent = subStatus.label;
+    }
+
+    document.getElementById('manageBtn').style.display = 'inline-flex';
+
+    const expiresAt = currentProfile?.subscription_expires_at || currentProfile?.pro_expires_at;
+    if (expiresAt && planType !== 'lifetime') {
+      const totalDays = planType === 'yearly' ? 365 : planType === 'monthly' ? 30 : ((subStatus.daysLeft ?? 0) > 60 ? 365 : 30);
+      const daysLeft  = subStatus.daysLeft ?? 0;
+      const pct       = Math.max(0, Math.min(100, (daysLeft / totalDays) * 100));
+      const fillColor = subStatus.expired ? 'var(--red,#ff5f6d)' : subStatus.expiring ? 'var(--amber,#f59e0b)' : 'var(--accent2)';
+      document.getElementById('daysBarFill').style.width      = pct + '%';
+      document.getElementById('daysBarFill').style.background = fillColor;
+      document.getElementById('daysBarLeft').textContent      = subStatus.expired ? 'Expired' : daysLeft + ' days remaining';
+      document.getElementById('daysBarLeft').style.color      = subStatus.expired ? 'var(--red,#ff5f6d)' : subStatus.expiring ? 'var(--amber,#f59e0b)' : '';
+      document.getElementById('daysBarRight').textContent     = subStatus.label;
+      document.getElementById('daysBarWrap').style.display    = 'block';
+    }
+
+    const proBtn = document.getElementById('proPlanBtn');
+    proBtn.disabled  = true;
+    proBtn.className = 'plan-btn current';
+    proBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Your Current Plan';
+    document.querySelector('.cta-nudge').style.display = 'none';
+    document.getElementById('billingToggle').style.display = 'none';
+
+    const freeBtn = document.getElementById('freePlanBtn');
+    freeBtn.disabled    = true;
+    freeBtn.textContent = 'Free Plan';
+
+  } else {
+    setPlan('monthly');
+    document.getElementById('freePlanBtn').disabled    = true;
+    document.getElementById('freePlanBtn').textContent = 'Current Plan';
+  }
+
+  const loader = document.getElementById('pageLoader');
+  loader.classList.add('gone');
+  setTimeout(() => { if (loader) loader.style.display = 'none'; }, 450);
+
+  // ── Fire the Pro celebration modal on successful upgrade ──
+  const sp = new URLSearchParams(window.location.search);
+  if (sp.get('upgraded') === '1') {
+    setTimeout(() => _openRewardModal(), 700);
+  }
+  if (sp.get('cancelled') === '1') {
+    setTimeout(() => showToast('Checkout cancelled — still on Free plan.', 'fa-solid fa-circle-info', ''), 600);
+  }
+})();
+</script>
+</body>
+</html>

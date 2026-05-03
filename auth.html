@@ -1,0 +1,679 @@
+<!-- auth.html — with email confirmation support -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<title>TradingGrove | Sign In</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#070a08;--panel:#0d1410;--panel2:#111e17;--accent:#00ff88;--accent2:#19c37d;--border:rgba(0,255,136,.12);--border2:rgba(255,255,255,.07);--text:#e8f5ee;--text2:#b0c8bc;--muted:#6a8a7a;--red:#ff5f6d}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:.022;pointer-events:none;z-index:0}
+.orb{position:fixed;border-radius:50%;filter:blur(110px);pointer-events:none;z-index:0}
+.orb1{width:520px;height:520px;background:rgba(0,255,136,.07);top:-100px;left:-100px}
+.orb2{width:420px;height:420px;background:rgba(25,195,125,.05);bottom:-80px;right:-80px}
+/* nav */
+.top-nav{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:18px 32px;border-bottom:1px solid var(--border2)}
+.logo{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--text);text-decoration:none}
+.logo span{color:var(--accent)}
+.back-link{font-size:13px;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .18s}
+.back-link:hover{color:var(--accent2)}
+/* layout */
+.auth-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 24px;position:relative;z-index:1}
+.auth-box{width:100%;max-width:420px}
+/* tabs */
+.auth-tabs{display:flex;background:var(--panel2);border:1px solid var(--border2);border-radius:12px;padding:4px;margin-bottom:24px}
+.auth-tab{flex:1;text-align:center;padding:10px;border-radius:9px;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;color:var(--muted);border:none;background:none}
+.auth-tab.active{background:var(--accent);color:#070a08;box-shadow:0 2px 12px rgba(0,255,136,.25)}
+/* card */
+.auth-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:32px}
+.auth-title{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:6px}
+.auth-subtitle{font-size:13px;color:var(--muted);margin-bottom:28px;line-height:1.5}
+/* fields */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:500;margin-bottom:7px}
+.field-inner{position:relative}
+.field-inner .fi{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--muted);pointer-events:none}
+.field input{width:100%;background:rgba(0,0,0,.25);border:1px solid var(--border2);border-radius:9px;padding:12px 40px 12px 38px;color:var(--text);font-family:'Inter',sans-serif;font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s}
+.field input:focus{border-color:rgba(0,255,136,.4);box-shadow:0 0 0 3px rgba(0,255,136,.09)}
+.field input::placeholder{color:var(--muted);opacity:.55}
+.toggle-pw{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px;transition:color .15s}
+.toggle-pw:hover{color:var(--text2)}
+/* referral field special styles */
+.ref-field-wrap{position:relative}
+.ref-field-wrap input{text-transform:uppercase;letter-spacing:2px;font-family:'Space Grotesk','Inter',sans-serif;font-weight:600;padding-right:90px}
+.ref-validate-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:1px solid var(--border2);border-radius:6px;color:var(--muted);cursor:pointer;font-size:11px;font-family:'Space Grotesk',sans-serif;font-weight:600;padding:4px 8px;transition:all .2s;white-space:nowrap}
+.ref-validate-btn:hover{border-color:var(--accent2);color:var(--accent2)}
+.ref-status{font-size:11px;margin-top:5px;min-height:16px;display:flex;align-items:center;gap:5px;transition:all .2s}
+.ref-status.valid{color:var(--accent2)}
+.ref-status.invalid{color:var(--red)}
+.ref-status.checking{color:var(--muted)}
+/* divider */
+.field-divider{display:flex;align-items:center;gap:10px;margin:6px 0 16px}
+.field-divider span{font-size:11px;color:var(--muted);white-space:nowrap}
+.field-divider::before,.field-divider::after{content:'';flex:1;height:1px;background:var(--border2)}
+/* strength */
+.pw-strength{margin-top:6px;height:3px;border-radius:2px;background:var(--border2);overflow:hidden}
+.pw-strength-bar{height:100%;width:0;border-radius:2px;transition:width .3s,background .3s}
+.pw-hint{font-size:11px;color:var(--muted);margin-top:4px}
+/* submit */
+.btn-submit{width:100%;padding:13px;border:none;border-radius:10px;background:var(--accent);color:#070a08;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .22s;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px}
+.btn-submit:hover:not(:disabled){background:#00e67a;box-shadow:0 0 24px rgba(0,255,136,.35)}
+.btn-submit:disabled{opacity:.5;cursor:not-allowed}
+/* resend button */
+.btn-resend{width:100%;padding:11px;border:1px solid var(--border);border-radius:10px;background:none;color:var(--accent2);font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .22s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px}
+.btn-resend:hover:not(:disabled){background:rgba(0,255,136,.06);border-color:rgba(0,255,136,.3)}
+.btn-resend:disabled{opacity:.45;cursor:not-allowed}
+/* google button */
+.btn-google{width:100%;padding:12px;border:1px solid var(--border2);border-radius:10px;background:rgba(255,255,255,.04);color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .22s;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:4px}
+.btn-google:hover:not(:disabled){background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.18)}
+.btn-google:disabled{opacity:.5;cursor:not-allowed}
+.btn-google svg{width:18px;height:18px;flex-shrink:0}
+.or-divider{display:flex;align-items:center;gap:10px;margin:18px 0}
+.or-divider span{font-size:11px;color:var(--muted);white-space:nowrap;text-transform:uppercase;letter-spacing:.8px}
+.or-divider::before,.or-divider::after{content:'';flex:1;height:1px;background:var(--border2)}
+/* spinner */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin-ring{width:17px;height:17px;border:2px solid rgba(7,10,8,.3);border-top-color:#070a08;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+.spin-ring-green{width:17px;height:17px;border:2px solid rgba(0,255,136,.2);border-top-color:var(--accent2);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+/* alerts */
+.auth-alert{border-radius:8px;padding:11px 13px;font-size:13px;margin-bottom:14px;display:none;align-items:flex-start;gap:9px;line-height:1.4}
+.auth-alert.show{display:flex}
+.auth-alert.error{background:rgba(255,95,109,.1);border:1px solid rgba(255,95,109,.3);color:#ff5f6d}
+.auth-alert.success{background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.22);color:var(--accent2)}
+.auth-alert.warning{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);color:#fbbf24}
+/* email confirm panel */
+.confirm-panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:32px;text-align:center;display:none}
+.confirm-panel.show{display:block}
+.confirm-icon{width:64px;height:64px;border-radius:50%;background:rgba(0,255,136,.1);border:2px solid rgba(0,255,136,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:26px}
+.confirm-title{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;margin-bottom:8px}
+.confirm-subtitle{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:24px}
+.confirm-email-badge{display:inline-block;background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.2);border-radius:8px;padding:6px 14px;font-size:13px;color:var(--accent2);font-weight:600;margin-bottom:20px;word-break:break-all}
+.confirm-steps{text-align:left;background:rgba(0,0,0,.2);border-radius:10px;padding:16px;margin-bottom:20px}
+.confirm-step{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.5}
+.confirm-step:last-child{margin-bottom:0}
+.confirm-step-num{width:20px;height:20px;border-radius:50%;background:rgba(0,255,136,.12);color:var(--accent2);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+/* misc */
+.forgot-link{display:block;text-align:right;font-size:12px;color:var(--muted);text-decoration:none;margin-top:-8px;margin-bottom:18px;transition:color .15s}
+.forgot-link:hover{color:var(--accent2)}
+.auth-footer-note{text-align:center;margin-top:18px;font-size:12px;color:var(--muted);line-height:1.5}
+.auth-footer-note a{color:var(--accent2);text-decoration:none}
+.auth-footer-note a:hover{text-decoration:underline}
+.terms-note{font-size:11px;color:var(--muted);text-align:center;margin-top:14px;line-height:1.5}
+.terms-note a{color:var(--muted);text-decoration:underline;cursor:pointer}
+/* page loader */
+.page-loader{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s}
+.page-loader.gone{opacity:0;pointer-events:none}
+.pl-logo{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;color:var(--text);margin-bottom:20px;text-align:center}
+.pl-logo span{color:var(--accent)}
+.pl-spin{width:32px;height:32px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto}
+</style>
+</head>
+<body>
+<div class="page-loader" id="pageLoader">
+  <div>
+    <div class="pl-logo">Trading<span>Grove</span></div>
+    <div class="pl-spin"></div>
+  </div>
+</div>
+
+<div class="orb orb1"></div><div class="orb orb2"></div>
+
+<nav class="top-nav">
+  <a href="/dashboard" class="logo">Trading<span>Grove</span></a>
+  <a href="/" class="back-link"><i class="fa-solid fa-chevron-left"></i> Back to Home</a>
+</nav>
+
+<div class="auth-wrap">
+  <div class="auth-box">
+
+    <!-- Tabs (hidden when confirm panel is showing) -->
+    <div class="auth-tabs" id="authTabs">
+      <button class="auth-tab active" id="tabLogin"  onclick="switchTab('login')">Sign In</button>
+      <button class="auth-tab"        id="tabSignup" onclick="switchTab('signup')">Create Account</button>
+    </div>
+
+    <div class="auth-alert error"   id="authError">  <i class="fa-solid fa-circle-exclamation" style="flex-shrink:0;margin-top:1px"></i><span id="authErrorMsg"></span></div>
+    <div class="auth-alert success" id="authSuccess"><i class="fa-solid fa-circle-check" style="flex-shrink:0;margin-top:1px"></i><span id="authSuccessMsg"></span></div>
+    <div class="auth-alert warning" id="authWarning"><i class="fa-solid fa-triangle-exclamation" style="flex-shrink:0;margin-top:1px"></i><span id="authWarningMsg"></span></div>
+
+    <!-- ── EMAIL CONFIRM PANEL (shown after signup) ── -->
+    <div class="confirm-panel" id="confirmPanel">
+      <div class="confirm-icon">📧</div>
+      <div class="confirm-title">Check Your Email</div>
+      <p class="confirm-subtitle">We sent a confirmation link to:</p>
+      <div class="confirm-email-badge" id="confirmEmailBadge"></div>
+      <div class="confirm-steps">
+        <div class="confirm-step">
+          <div class="confirm-step-num">1</div>
+          <span>Open the email from <strong style="color:var(--text)">TradingGrove</strong></span>
+        </div>
+        <div class="confirm-step">
+          <div class="confirm-step-num">2</div>
+          <span>Click the <strong style="color:var(--text)">Confirm your email</strong> link</span>
+        </div>
+        <div class="confirm-step">
+          <div class="confirm-step-num">3</div>
+          <span>You'll be signed in automatically and redirected to your dashboard</span>
+        </div>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Didn't receive it? Check your spam folder or resend below.</p>
+      <button class="btn-resend" id="resendBtn" onclick="resendConfirmation()">
+        <i class="fa-solid fa-paper-plane" id="resendBtnIcon"></i>
+        <span id="resendBtnText">Resend Confirmation Email</span>
+      </button>
+      <p class="auth-footer-note" style="margin-top:20px">
+        Wrong email? <a href="#" onclick="backToSignup();return false">Go back</a>
+      </p>
+    </div>
+
+    <!-- ── LOGIN ── -->
+    <div id="loginPanel" class="auth-card">
+      <div class="auth-title">Welcome back</div>
+      <p class="auth-subtitle">Sign in to continue tracking your trades.</p>
+
+      <!-- Google Sign In -->
+      <button class="btn-google" id="googleLoginBtn" onclick="doGoogleAuth()">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Continue with Google
+      </button>
+
+      <div class="or-divider"><span>or sign in with email</span></div>
+      <div class="field">
+        <label>Email Address</label>
+        <div class="field-inner">
+          <i class="fa-solid fa-envelope fi"></i>
+          <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email" oninput="clearAlerts()">
+        </div>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="field-inner">
+          <i class="fa-solid fa-lock fi"></i>
+          <input type="password" id="loginPassword" placeholder="Your password" autocomplete="current-password" oninput="clearAlerts()">
+          <button class="toggle-pw" type="button" onclick="togglePw('loginPassword',this)" tabindex="-1"><i class="fa-solid fa-eye"></i></button>
+        </div>
+      </div>
+      <a href="#" class="forgot-link" onclick="showForgot(event)">Forgot password?</a>
+      <button class="btn-submit" id="loginBtn" onclick="doLogin()">
+        <i class="fa-solid fa-arrow-right-to-bracket" id="loginBtnIcon"></i>
+        <span id="loginBtnText">Sign In</span>
+      </button>
+      <p class="auth-footer-note">No account yet? <a href="#" onclick="switchTab('signup');return false">Create one free <i class="fa-solid fa-chevron-right" style="font-size:10px"></i></a></p>
+    </div>
+
+    <!-- ── SIGN UP ── -->
+    <div id="signupPanel" class="auth-card" style="display:none">
+      <div class="auth-title">Create your account</div>
+      <p class="auth-subtitle">Start journaling your trades. Free to get started — no card needed.</p>
+
+      <!-- Google Sign Up -->
+      <button class="btn-google" id="googleSignupBtn" onclick="doGoogleAuth()">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Continue with Google
+      </button>
+
+      <div class="or-divider"><span>or sign up with email</span></div>
+
+      <div class="field">
+        <label>Full Name</label>
+        <div class="field-inner">
+          <i class="fa-solid fa-user fi"></i>
+          <input type="text" id="signupName" placeholder="Your full name" autocomplete="name" oninput="clearAlerts()">
+        </div>
+      </div>
+      <div class="field">
+        <label>Email Address</label>
+        <div class="field-inner">
+          <i class="fa-solid fa-envelope fi"></i>
+          <input type="email" id="signupEmail" placeholder="you@example.com" autocomplete="email" oninput="clearAlerts()">
+        </div>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="field-inner">
+          <i class="fa-solid fa-lock fi"></i>
+          <input type="password" id="signupPassword" placeholder="Minimum 8 characters" autocomplete="new-password" oninput="checkStrength(this.value);clearAlerts()">
+          <button class="toggle-pw" type="button" onclick="togglePw('signupPassword',this)" tabindex="-1"><i class="fa-solid fa-eye"></i></button>
+        </div>
+        <div class="pw-strength"><div class="pw-strength-bar" id="pwBar"></div></div>
+        <div class="pw-hint" id="pwHint"></div>
+      </div>
+
+      <!-- ── REFERRAL CODE FIELD ── -->
+      <div class="field-divider"><span>Have a referral code? (optional)</span></div>
+      <div class="field" id="refFieldWrap">
+        <label>
+          <i class="fa-solid fa-gift" style="color:var(--accent2);margin-right:4px"></i>
+          Referral Code
+        </label>
+        <div class="field-inner ref-field-wrap">
+          <i class="fa-solid fa-ticket fi"></i>
+          <input
+            type="text"
+            id="signupRefCode"
+            placeholder="e.g. ABCD1234"
+            maxlength="8"
+            autocomplete="off"
+            autocapitalize="characters"
+            oninput="onRefCodeInput(this.value)"
+            style="text-transform:uppercase;letter-spacing:2px;font-family:'Space Grotesk','Inter',sans-serif;font-weight:600;padding-right:80px"
+          >
+          <button class="ref-validate-btn" id="refValidateBtn" onclick="validateRefCode()" type="button">Verify</button>
+        </div>
+        <div class="ref-status" id="refStatus"></div>
+      </div>
+
+      <button class="btn-submit" id="signupBtn" onclick="doSignup()">
+        <i class="fa-solid fa-user-plus" id="signupBtnIcon"></i>
+        <span id="signupBtnText">Create Account — Free</span>
+      </button>
+      <p class="terms-note">By creating an account you agree to our <a href="#">Terms of Service</a> &amp; <a href="#">Privacy Policy</a>.</p>
+      <p class="auth-footer-note" style="margin-top:12px">Already have an account? <a href="#" onclick="switchTab('login');return false">Sign in <i class="fa-solid fa-chevron-right" style="font-size:10px"></i></a></p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── Boot: redirect if already signed in ──────────────────
+(async () => {
+  const user = await getUser();
+  if (user) { window.location.href = '/dashboard'; return; }
+  document.getElementById('pageLoader').classList.add('gone');
+})();
+
+// ── Referral code from URL ────────────────────────────────
+const _p      = new URLSearchParams(window.location.search);
+const refCode = _p.get('ref');
+
+if (refCode) {
+  localStorage.setItem('ref_code', refCode);
+  switchTab('signup');
+  document.addEventListener('DOMContentLoaded', () => {
+    const el = document.getElementById('signupRefCode');
+    if (el) { el.value = refCode.toUpperCase(); validateRefCode(); }
+  });
+}
+
+const storedRef = localStorage.getItem('ref_code');
+if (storedRef && !refCode) {
+  document.addEventListener('DOMContentLoaded', () => {
+    const el = document.getElementById('signupRefCode');
+    if (el && !el.value) el.value = storedRef.toUpperCase();
+  });
+}
+
+if (_p.get('signup') === '1') switchTab('signup');
+
+// ── Pending email (after signup, before confirm) ──────────
+let _pendingEmail = sessionStorage.getItem('tz_pending_email') || '';
+
+// ── Tab switching ─────────────────────────────────────────
+function switchTab(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('loginPanel').style.display  = isLogin ? 'block' : 'none';
+  document.getElementById('signupPanel').style.display = isLogin ? 'none'  : 'block';
+  document.getElementById('confirmPanel').classList.remove('show');
+  document.getElementById('authTabs').style.display    = 'flex';
+  document.getElementById('tabLogin').classList.toggle('active',  isLogin);
+  document.getElementById('tabSignup').classList.toggle('active', !isLogin);
+  clearAlerts();
+}
+
+function showConfirmPanel(email) {
+  _pendingEmail = email;
+  sessionStorage.setItem('tz_pending_email', email);
+  document.getElementById('confirmEmailBadge').textContent = email;
+  document.getElementById('loginPanel').style.display  = 'none';
+  document.getElementById('signupPanel').style.display = 'none';
+  document.getElementById('authTabs').style.display    = 'none';
+  document.getElementById('confirmPanel').classList.add('show');
+  clearAlerts();
+}
+
+function backToSignup() {
+  _pendingEmail = '';
+  sessionStorage.removeItem('tz_pending_email');
+  switchTab('signup');
+}
+
+// ── Password toggle ───────────────────────────────────────
+function togglePw(id, btn) {
+  const inp  = document.getElementById(id);
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.querySelector('i').className = show ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+}
+
+// ── Password strength ─────────────────────────────────────
+function checkStrength(val) {
+  const bar  = document.getElementById('pwBar');
+  const hint = document.getElementById('pwHint');
+  if (!val) { bar.style.width = '0'; hint.textContent = ''; return; }
+  let s = 0;
+  if (val.length >= 8)           s++;
+  if (val.length >= 12)          s++;
+  if (/[A-Z]/.test(val))         s++;
+  if (/[0-9]/.test(val))         s++;
+  if (/[^A-Za-z0-9]/.test(val))  s++;
+  const lvl = [
+    {w:'20%',bg:'#ff5f6d',t:'Too short'},
+    {w:'40%',bg:'#f59e0b',t:'Weak'},
+    {w:'60%',bg:'#f59e0b',t:'Fair'},
+    {w:'80%',bg:'var(--accent2)',t:'Good'},
+    {w:'100%',bg:'var(--accent)',t:'Strong'},
+  ][Math.min(s, 4)];
+  bar.style.width      = lvl.w;
+  bar.style.background = lvl.bg;
+  hint.textContent     = lvl.t;
+  hint.style.color     = lvl.bg;
+}
+
+// ── Alert helpers ─────────────────────────────────────────
+function showError(msg)   {
+  document.getElementById('authErrorMsg').textContent = msg;
+  document.getElementById('authError').classList.add('show');
+  document.getElementById('authSuccess').classList.remove('show');
+  document.getElementById('authWarning').classList.remove('show');
+}
+function showSuccess(msg) {
+  document.getElementById('authSuccessMsg').textContent = msg;
+  document.getElementById('authSuccess').classList.add('show');
+  document.getElementById('authError').classList.remove('show');
+  document.getElementById('authWarning').classList.remove('show');
+}
+function showWarning(msg) {
+  document.getElementById('authWarningMsg').innerHTML = msg;
+  document.getElementById('authWarning').classList.add('show');
+  document.getElementById('authError').classList.remove('show');
+  document.getElementById('authSuccess').classList.remove('show');
+}
+function clearAlerts() {
+  document.getElementById('authError').classList.remove('show');
+  document.getElementById('authSuccess').classList.remove('show');
+  document.getElementById('authWarning').classList.remove('show');
+}
+function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+
+// ── Referral code validation ──────────────────────────────
+let _refValidated  = false;
+let _refValidCode  = '';
+let _refValidTimer = null;
+
+function onRefCodeInput(val) {
+  _refValidated = false;
+  _refValidCode = '';
+  clearRefStatus();
+  if (val.length === 8) {
+    clearTimeout(_refValidTimer);
+    _refValidTimer = setTimeout(validateRefCode, 600);
+  }
+}
+
+function clearRefStatus() {
+  const el = document.getElementById('refStatus');
+  el.className = 'ref-status';
+  el.innerHTML = '';
+}
+
+async function validateRefCode() {
+  const raw  = document.getElementById('signupRefCode').value.trim().toUpperCase();
+  const stat = document.getElementById('refStatus');
+  if (!raw) { clearRefStatus(); return; }
+  if (raw.length < 4) {
+    stat.className = 'ref-status invalid';
+    stat.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Code too short';
+    return;
+  }
+  stat.className = 'ref-status checking';
+  stat.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking…';
+  try {
+    const { data, error } = await db.rpc('validate_referral_code', { code: raw });
+    if (error) throw error;
+    if (data?.valid) {
+      _refValidated = true;
+      _refValidCode = raw;
+      localStorage.setItem('ref_code', raw);
+      stat.className = 'ref-status valid';
+      stat.innerHTML = `<i class="fa-solid fa-circle-check"></i> Valid! Referred by <strong>${data.referrer_name}</strong>`;
+    } else {
+      _refValidated = false;
+      _refValidCode = '';
+      stat.className = 'ref-status invalid';
+      stat.innerHTML = data?.reason === 'not_found'
+        ? '<i class="fa-solid fa-circle-xmark"></i> Code not found. Check spelling and try again.'
+        : '<i class="fa-solid fa-circle-xmark"></i> Invalid code.';
+    }
+  } catch (e) {
+    stat.className = 'ref-status invalid';
+    stat.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> Could not verify. Try again.';
+  }
+}
+
+// ── Button loading helper ─────────────────────────────────
+function setBtnLoading(btnId, iconId, textId, loading, defaultIcon, defaultText, loadingText) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  if (loading) {
+    document.getElementById(iconId).outerHTML = `<div class="spin-ring" id="${iconId}"></div>`;
+    document.getElementById(textId).textContent = loadingText;
+  } else {
+    const el = document.getElementById(iconId);
+    if (el) el.outerHTML = `<i class="${defaultIcon}" id="${iconId}"></i>`;
+    document.getElementById(textId).textContent = defaultText;
+  }
+}
+
+// ── Google OAuth ──────────────────────────────────────────
+async function doGoogleAuth() {
+  clearAlerts();
+  // Disable both google buttons while redirecting
+  const btns = ['googleLoginBtn','googleSignupBtn'];
+  btns.forEach(id => { const b = document.getElementById(id); if(b) b.disabled = true; });
+
+  try {
+    const { error } = await db.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/dashboard',
+        queryParams: { access_type: 'offline', prompt: 'consent' },
+      },
+    });
+    if (error) throw error;
+    // Supabase will redirect to Google — no further action needed here
+  } catch (err) {
+    showError(err.message || 'Google sign-in failed. Try again.');
+    btns.forEach(id => { const b = document.getElementById(id); if(b) b.disabled = false; });
+  }
+}
+
+// ── Login ─────────────────────────────────────────────────
+async function doLogin() {
+  clearAlerts();
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPassword').value;
+  if (!email || !isValidEmail(email)) { showError('Please enter a valid email address.'); return; }
+  if (!pass) { showError('Please enter your password.'); return; }
+
+  setBtnLoading('loginBtn','loginBtnIcon','loginBtnText',true,'fa-solid fa-arrow-right-to-bracket','Sign In','Signing in…');
+  try {
+    const { data, error } = await db.auth.signInWithPassword({ email, password: pass });
+    if (error) throw error;
+
+    // Extra guard: if email not confirmed, block and show confirm panel
+    if (!data.user?.email_confirmed_at) {
+      await db.auth.signOut();
+      showConfirmPanel(email);
+      showWarning('Please confirm your email before signing in. Check your inbox or resend below.');
+      setBtnLoading('loginBtn','loginBtnIcon','loginBtnText',false,'fa-solid fa-arrow-right-to-bracket','Sign In','');
+      return;
+    }
+
+    showSuccess('Signed in! Redirecting…');
+    setTimeout(() => window.location.href = '/dashboard', 700);
+  } catch (err) {
+    let msg = err.message || 'Login failed.';
+    if (msg === 'Invalid login credentials') {
+      msg = 'Incorrect email or password.';
+    } else if (msg.toLowerCase().includes('email not confirmed')) {
+      // Supabase returns this when confirm email is enabled
+      showConfirmPanel(email);
+      showWarning('Please confirm your email first. Check your inbox or resend below.');
+      setBtnLoading('loginBtn','loginBtnIcon','loginBtnText',false,'fa-solid fa-arrow-right-to-bracket','Sign In','');
+      return;
+    }
+    showError(msg);
+    setBtnLoading('loginBtn','loginBtnIcon','loginBtnText',false,'fa-solid fa-arrow-right-to-bracket','Sign In','');
+  }
+}
+
+// ── Signup ────────────────────────────────────────────────
+async function doSignup() {
+  clearAlerts();
+  const name   = document.getElementById('signupName').value.trim();
+  const email  = document.getElementById('signupEmail').value.trim();
+  const pass   = document.getElementById('signupPassword').value;
+  const rawRef = document.getElementById('signupRefCode').value.trim().toUpperCase();
+
+  if (!name)                          { showError('Please enter your full name.'); return; }
+  if (!email || !isValidEmail(email)) { showError('Please enter a valid email address.'); return; }
+  if (pass.length < 8)                { showError('Password must be at least 8 characters.'); return; }
+
+  if (rawRef && !_refValidated) {
+    await validateRefCode();
+    if (!_refValidated) {
+      const proceed = confirm(`The referral code "${rawRef}" could not be verified. Continue without it?`);
+      if (!proceed) return;
+    }
+  }
+
+  setBtnLoading('signupBtn','signupBtnIcon','signupBtnText',true,'fa-solid fa-user-plus','Create Account — Free','Creating account…');
+
+  try {
+    const { data, error } = await db.auth.signUp({
+      email,
+      password: pass,
+      options: { data: { name, plan: 'free' } },
+    });
+    if (error) throw error;
+
+    // Store ref code for supabase.js SIGNED_IN handler
+    const refToStore = _refValidated ? _refValidCode : (rawRef || '');
+    if (refToStore) {
+      localStorage.setItem('ref_code', refToStore);
+      sessionStorage.setItem('ref_code', refToStore);
+    }
+
+    if (data.session) {
+      // Email confirmation is disabled — user is auto signed in
+      showSuccess('Account created! Redirecting…');
+      setTimeout(() => window.location.href = '/dashboard', 900);
+    } else {
+      // Email confirmation required — show the confirm panel
+      showConfirmPanel(email);
+    }
+  } catch (err) {
+    let msg = err.message || 'Could not create account. Please try again.';
+    // Handle "User already registered" gracefully
+    if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already been registered')) {
+      msg = 'An account with this email already exists. <a href="#" onclick="switchTab(\'login\');return false" style="color:inherit;font-weight:600;text-decoration:underline">Sign in instead?</a>';
+      showWarning(msg);
+      setBtnLoading('signupBtn','signupBtnIcon','signupBtnText',false,'fa-solid fa-user-plus','Create Account — Free','');
+      return;
+    }
+    showError(msg);
+    setBtnLoading('signupBtn','signupBtnIcon','signupBtnText',false,'fa-solid fa-user-plus','Create Account — Free','');
+  }
+}
+
+// ── Resend confirmation email ─────────────────────────────
+let _resendCooldown = false;
+async function resendConfirmation() {
+  if (_resendCooldown) return;
+  const email = _pendingEmail || document.getElementById('loginEmail').value.trim();
+  if (!email) {
+    showError('Could not determine email address. Please go back and try again.');
+    return;
+  }
+
+  const btn      = document.getElementById('resendBtn');
+  const iconEl   = document.getElementById('resendBtnIcon');
+  const textEl   = document.getElementById('resendBtnText');
+  btn.disabled   = true;
+  iconEl.outerHTML = `<div class="spin-ring-green" id="resendBtnIcon"></div>`;
+  textEl.textContent = 'Sending…';
+
+  try {
+    const { error } = await db.auth.resend({ type: 'signup', email });
+    if (error) throw error;
+
+    document.getElementById('resendBtnIcon').outerHTML = `<i class="fa-solid fa-circle-check" id="resendBtnIcon"></i>`;
+    textEl.textContent = 'Email sent! Check your inbox.';
+
+    // Cooldown 60 seconds
+    _resendCooldown = true;
+    let secs = 60;
+    const interval = setInterval(() => {
+      secs--;
+      textEl.textContent = `Resend again in ${secs}s`;
+      if (secs <= 0) {
+        clearInterval(interval);
+        _resendCooldown = false;
+        btn.disabled = false;
+        document.getElementById('resendBtnIcon').outerHTML = `<i class="fa-solid fa-paper-plane" id="resendBtnIcon"></i>`;
+        textEl.textContent = 'Resend Confirmation Email';
+      }
+    }, 1000);
+  } catch (err) {
+    document.getElementById('resendBtnIcon').outerHTML = `<i class="fa-solid fa-paper-plane" id="resendBtnIcon"></i>`;
+    textEl.textContent = 'Resend Confirmation Email';
+    btn.disabled = false;
+    showError(err.message || 'Failed to resend. Try again.');
+  }
+}
+
+// ── Forgot password ───────────────────────────────────────
+async function showForgot(e) {
+  e.preventDefault(); clearAlerts();
+  const email = document.getElementById('loginEmail').value.trim();
+  if (!email || !isValidEmail(email)) { showError('Enter your email address above first.'); return; }
+  const { error } = await db.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/reset-password',
+  });
+  if (error) showError(error.message);
+  else showSuccess(`Password reset link sent to ${email}. Check your inbox.`);
+}
+
+// ── Enter key support ─────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  if (document.getElementById('confirmPanel').classList.contains('show')) return;
+  const loginVisible = document.getElementById('loginPanel').style.display !== 'none';
+  if (loginVisible) doLogin(); else doSignup();
+});
+
+// ── Pre-fill ref code field after DOM ready ───────────────
+window.addEventListener('load', () => {
+  const stored = localStorage.getItem('ref_code');
+  const el     = document.getElementById('signupRefCode');
+  if (el && stored && !el.value) {
+    el.value = stored.toUpperCase();
+    validateRefCode();
+  }
+});
+</script>
+</body>
+</html>

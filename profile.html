@@ -1,0 +1,1045 @@
+<!-- profile.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradingGrove | Profile</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="theme.js"></script>
+<script src="supabase.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body,'Inter',sans-serif);min-height:100vh}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-14px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+
+/* ── Header ── */
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--border);background:var(--panel);flex-wrap:wrap;gap:10px}
+.logo{font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:18px;font-weight:600;cursor:pointer;user-select:none;text-decoration:none;color:var(--text)}
+.logo span{color:var(--accent)}
+.hright{display:flex;align-items:center;gap:8px}
+.btn-ghost{background:none;border:1px solid var(--border);color:var(--muted);border-radius:var(--radius-md,8px);padding:8px 14px;font-family:var(--font-body,'Inter',sans-serif);font-size:13px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+.btn-ghost:hover{border-color:var(--accent2);color:var(--text)}
+
+/* ── Layout ── */
+main{padding:32px;max-width:880px;margin:0 auto}
+@media(max-width:600px){main{padding:20px 16px}}
+
+.page-hdr{margin-bottom:32px;animation:fadeUp .4s ease}
+.page-hdr h1{font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:24px;font-weight:700;margin-bottom:4px}
+.page-hdr p{font-size:13px;color:var(--muted)}
+
+/* ── Profile Hero ── */
+.profile-hero{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;animation:fadeUp .4s ease .05s both}
+.avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,rgba(var(--accent-rgb,0,255,136),.2),rgba(var(--accent-rgb,0,255,136),.05));border:2px solid rgba(var(--accent-rgb,0,255,136),.3);display:flex;align-items:center;justify-content:center;font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:26px;font-weight:700;color:var(--accent2);flex-shrink:0;text-transform:uppercase}
+.profile-hero-info{flex:1;min-width:0}
+.hero-name{font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:20px;font-weight:700;margin-bottom:3px}
+.hero-email{font-size:13px;color:var(--muted);margin-bottom:8px}
+.hero-badges{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.plan-badge{font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px}
+.badge-pro{background:linear-gradient(105deg,#7a5a00 0%,#c9973a 18%,#f5c842 35%,#ffe17a 50%,#f5c842 65%,#c9973a 82%,#7a5a00 100%);background-size:200% auto;color:#3a2800;border:1px solid #c9973a;text-shadow:0 1px 0 rgba(255,230,100,.5);box-shadow:0 1px 4px rgba(0,0,0,.35),0 0 0 1px rgba(255,220,80,.15) inset,0 1px 0 rgba(255,255,180,.3) inset;animation:goldShimmer 3.5s linear infinite;position:relative;overflow:hidden}
+.badge-pro::after{content:'';position:absolute;top:0;left:-80%;width:45%;height:100%;background:linear-gradient(105deg,transparent 20%,rgba(255,255,255,.55) 50%,transparent 80%);transform:skewX(-15deg);animation:goldGlare 3.5s ease-in-out infinite;pointer-events:none}
+.badge-free{background:rgba(128,128,128,.12);color:var(--muted);border:1px solid var(--border)}
+.badge-referral{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px;background:rgba(99,102,241,.12);color:#a5b4fc;border:1px solid rgba(99,102,241,.25);display:flex;align-items:center;gap:5px}
+
+/* ── Section Cards ── */
+.section-grid{display:grid;grid-template-columns:1fr;gap:16px}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:16px;overflow:hidden;animation:fadeUp .4s ease both}
+.card:nth-child(1){animation-delay:.1s}.card:nth-child(2){animation-delay:.15s}.card:nth-child(3){animation-delay:.2s}.card:nth-child(4){animation-delay:.25s}
+.card-hdr{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border)}
+.card-hdr-left{display:flex;align-items:center;gap:10px}
+.card-hdr-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.icon-teal{background:rgba(var(--accent-rgb,0,255,136),.1);color:var(--accent2)}
+.icon-indigo{background:rgba(99,102,241,.12);color:#a5b4fc}
+.icon-amber{background:rgba(245,158,11,.1);color:#fbbf24}
+.icon-red{background:rgba(255,95,109,.1);color:var(--red,#ff5f6d)}
+.card-title{font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:14px;font-weight:600}
+.card-body{padding:22px}
+
+/* ── Form fields ── */
+.field{margin-bottom:18px}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:500;margin-bottom:7px}
+.field-row{display:flex;gap:10px;align-items:flex-end}
+.input-wrap{position:relative;flex:1}
+.input-wrap i.ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--muted);pointer-events:none}
+input.plain{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:11px 13px 11px 38px;color:var(--text);font-family:var(--font-body,'Inter',sans-serif);font-size:14px;outline:none;transition:border-color .2s}
+input.plain:focus{border-color:rgba(var(--accent-rgb,0,255,136),.45)}
+input.plain:disabled{opacity:.5;cursor:not-allowed}
+input.plain.no-icon{padding-left:13px}
+.eye-btn{position:absolute;right:11px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:2px;transition:color .15s;line-height:1}
+.eye-btn:hover{color:var(--text)}
+
+.btn-save{background:var(--accent);color:#0b0f0c;border:none;border-radius:9px;padding:11px 20px;font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:13px;font-weight:700;cursor:pointer;transition:opacity .2s;display:inline-flex;align-items:center;gap:7px}
+.btn-save:hover{opacity:.85}
+.btn-save:disabled{opacity:.45;cursor:not-allowed}
+.btn-sm{padding:8px 14px;font-size:12px}
+.save-row{display:flex;align-items:center;gap:12px;margin-top:6px;flex-wrap:wrap}
+.save-msg{font-size:12px;opacity:0;transition:opacity .3s}
+.save-msg.show{opacity:1}
+.save-msg.ok{color:var(--accent2)}
+.save-msg.err{color:var(--red,#ff5f6d)}
+
+/* ── Subscription info ── */
+.sub-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border)}
+.sub-row:last-child{border-bottom:none}
+.sub-lbl{font-size:13px;color:var(--muted)}
+.sub-val{font-size:13px;font-weight:600;font-family:var(--font-heading,'Space Grotesk',sans-serif)}
+.sub-val.pro{color:var(--accent2)}
+.sub-val.free{color:var(--muted)}
+.sub-val.expiring{color:#fbbf24}
+.sub-val.expired{color:var(--red,#ff5f6d)}
+
+/* Expiry progress bar */
+.expiry-bar-wrap{margin-top:12px;padding:12px 14px;background:var(--bg);border:1px solid var(--border);border-radius:10px}
+.expiry-bar-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px}
+.expiry-bar-track{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.expiry-bar-fill{height:100%;border-radius:3px;transition:width .5s ease}
+
+/* ── Golden Pro Badge (from dashboard) ── */
+@keyframes goldShimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+@keyframes goldGlare{0%{left:-80%;opacity:0}10%{opacity:1}50%{left:110%;opacity:1}51%{opacity:0}100%{left:110%;opacity:0}}
+.badge-pro-golden{background:linear-gradient(105deg,#7a5a00 0%,#c9973a 18%,#f5c842 35%,#ffe17a 50%,#f5c842 65%,#c9973a 82%,#7a5a00 100%);background-size:200% auto;color:#3a2800;border:1px solid #c9973a !important;text-shadow:0 1px 0 rgba(255,230,100,.5);box-shadow:0 1px 4px rgba(0,0,0,.35),0 0 0 1px rgba(255,220,80,.15) inset,0 1px 0 rgba(255,255,180,.3) inset;animation:goldShimmer 3.5s linear infinite;position:relative;overflow:hidden}
+.badge-pro-golden::after{content:'';position:absolute;top:0;left:-80%;width:45%;height:100%;background:linear-gradient(105deg,transparent 20%,rgba(255,255,255,.55) 50%,transparent 80%);transform:skewX(-15deg);animation:goldGlare 3.5s ease-in-out infinite;pointer-events:none}
+
+/* ── Password section toggle ── */
+.password-section{display:none}
+.password-section.show{display:block}
+.btn-change-pass{background:rgba(var(--accent-rgb,0,255,136),.1);border:1px solid rgba(var(--accent-rgb,0,255,136),.25);color:var(--accent2);border-radius:9px;padding:11px 20px;font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:13px;font-weight:700;cursor:pointer;transition:opacity .2s;display:inline-flex;align-items:center;gap:7px}
+.btn-change-pass:hover{opacity:.85}
+.btn-cancel-pass{background:none;border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:11px 20px;font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-cancel-pass:hover{border-color:var(--accent2);color:var(--text)}
+
+/* ── Save button hidden state ── */
+.btn-save.hidden{display:none}
+
+.upgrade-btn{background:var(--accent);color:#0b0f0c;border:none;border-radius:8px;padding:8px 16px;font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:12px;font-weight:700;cursor:pointer;transition:opacity .2s;display:inline-flex;align-items:center;gap:6px}
+.upgrade-btn:hover{opacity:.85}
+
+/* ── Referral section ── */
+.ref-code-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ref-code-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px}
+.ref-code-value{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;letter-spacing:4px;color:var(--text)}
+.copy-btn{background:rgba(var(--accent-rgb,0,255,136),.1);border:1px solid rgba(var(--accent-rgb,0,255,136),.25);color:var(--accent2);border-radius:8px;padding:9px 14px;font-family:var(--font-body,'Inter',sans-serif);font-size:13px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.copy-btn:hover{background:rgba(var(--accent-rgb,0,255,136),.18)}
+.copy-btn.copied{color:#0b0f0c;background:var(--accent);border-color:var(--accent)}
+
+.share-url-box{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:10px 13px;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.share-url{flex:1;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;font-family:monospace}
+.copy-url-btn{background:none;border:1px solid var(--border);color:var(--muted);border-radius:7px;padding:6px 10px;font-size:12px;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.copy-url-btn:hover{border-color:var(--accent2);color:var(--accent2)}
+
+.ref-how{background:rgba(var(--accent-rgb,0,255,136),.04);border:1px solid rgba(var(--accent-rgb,0,255,136),.12);border-radius:10px;padding:14px 16px;margin-bottom:20px}
+.ref-how-title{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--accent2);font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.ref-step{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.5}
+.ref-step:last-child{margin-bottom:0}
+.ref-step-num{width:20px;height:20px;border-radius:50%;background:rgba(var(--accent-rgb,0,255,136),.12);color:var(--accent2);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.ref-step strong{color:var(--text)}
+
+.ref-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+@media(max-width:480px){.ref-stats{grid-template-columns:1fr 1fr}}
+.ref-stat{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+.ref-stat-val{font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:24px;font-weight:700;color:var(--text);margin-bottom:3px}
+.ref-stat-val.accent{color:var(--accent2)}
+.ref-stat-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+
+.ref-table{width:100%;border-collapse:collapse}
+.ref-table th{font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);padding:0 0 8px;text-align:left;font-weight:600;border-bottom:1px solid var(--border)}
+.ref-table td{padding:10px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+.ref-table tr:last-child td{border-bottom:none}
+.status-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:.4px}
+.status-pending{background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2)}
+.status-rewarded{background:rgba(var(--accent-rgb,0,255,136),.1);color:var(--accent2);border:1px solid rgba(var(--accent-rgb,0,255,136),.2)}
+.status-converted{background:rgba(99,102,241,.1);color:#a5b4fc;border:1px solid rgba(99,102,241,.2)}
+.empty-ref{text-align:center;padding:32px 0;color:var(--muted);font-size:13px}
+.empty-ref i{display:block;font-size:28px;margin-bottom:10px;opacity:.3}
+
+.skel{background:linear-gradient(90deg,var(--panel) 25%,rgba(255,255,255,.04) 50%,var(--panel) 75%);background-size:400px 100%;animation:shimmer 1.4s infinite;border-radius:8px}
+
+/* Toast */
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:11px 18px;font-size:13px;color:var(--text);box-shadow:0 8px 28px rgba(0,0,0,.45);z-index:9999;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;white-space:nowrap;display:flex;align-items:center;gap:8px;max-width:90vw}
+#toast.show{opacity:1;pointer-events:all;transform:translateX(-50%) translateY(0);animation:slideDown .25s ease}
+#toast.toast-green{border-color:rgba(var(--accent-rgb,0,255,136),.45);background:rgba(var(--accent-rgb,0,255,136),.08)}
+#toast.toast-red{border-color:rgba(255,95,109,.45);background:rgba(255,95,109,.08)}
+
+/* ══════════════════════════════════════════
+   REFERRAL REWARD CELEBRATION MODAL
+═══════════════════════════════════════════ */
+@keyframes rewardOverlayIn{from{opacity:0}to{opacity:1}}
+@keyframes rewardCardIn{0%{opacity:0;transform:scale(.82) translateY(24px)}65%{transform:scale(1.03) translateY(-4px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes rewardBadgePop{0%{transform:scale(0) rotate(-18deg)}60%{transform:scale(1.18) rotate(4deg)}80%{transform:scale(.94) rotate(-2deg)}100%{transform:scale(1) rotate(0deg)}}
+@keyframes rewardPulseGlow{0%,100%{box-shadow:0 0 0 0 rgba(var(--accent-rgb,0,255,136),.35),0 24px 64px rgba(0,0,0,.7)}50%{box-shadow:0 0 0 18px rgba(var(--accent-rgb,0,255,136),0),0 24px 64px rgba(0,0,0,.7)}}
+@keyframes rewardStarSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes rewardFloatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-90px) scale(.4)}}
+@keyframes rewardShimmerBar{0%{background-position:-400px 0}100%{background-position:400px 0}}
+@keyframes confettiDrop{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(220px) rotate(720deg);opacity:0}}
+
+#rewardOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:10000;align-items:center;justify-content:center;padding:20px;animation:rewardOverlayIn .3s ease;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#rewardOverlay.open{display:flex}
+
+#rewardCard{background:var(--panel);border:1px solid rgba(var(--accent-rgb,0,255,136),.28);border-radius:24px;width:100%;max-width:420px;padding:0;overflow:hidden;animation:rewardCardIn .55s cubic-bezier(.34,1.56,.64,1) both,rewardPulseGlow 2.4s ease 1s infinite;position:relative}
+
+#rewardConfettiCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;border-radius:24px;z-index:0}
+
+.reward-hdr{background:linear-gradient(135deg,rgba(var(--accent-rgb,0,255,136),.15) 0%,rgba(var(--accent-rgb,0,255,136),.04) 100%);border-bottom:1px solid rgba(var(--accent-rgb,0,255,136),.18);padding:32px 28px 24px;text-align:center;position:relative;z-index:1}
+
+.reward-icon-wrap{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,rgba(var(--accent-rgb,0,255,136),.22),rgba(var(--accent-rgb,0,255,136),.06));border:2px solid rgba(var(--accent-rgb,0,255,136),.4);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:34px;animation:rewardBadgePop .6s cubic-bezier(.34,1.56,.64,1) .25s both;position:relative}
+.reward-icon-wrap::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:1.5px dashed rgba(var(--accent-rgb,0,255,136),.3);animation:rewardStarSpin 8s linear infinite}
+
+.reward-days-badge{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(105deg,#7a5a00 0%,#c9973a 18%,#f5c842 35%,#ffe17a 50%,#f5c842 65%,#c9973a 82%,#7a5a00 100%);background-size:200% auto;color:#3a2800;border:1px solid #c9973a;text-shadow:0 1px 0 rgba(255,230,100,.5);box-shadow:0 2px 8px rgba(0,0,0,.4),0 0 0 1px rgba(255,220,80,.2) inset;animation:rewardShimmerBar 3s linear infinite;border-radius:999px;padding:6px 16px;font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:13px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-bottom:14px}
+
+.reward-title{font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px;line-height:1.2}
+.reward-subtitle{font-size:13px;color:var(--muted);line-height:1.6}
+.reward-subtitle strong{color:var(--accent2)}
+
+.reward-body{padding:22px 28px 26px;position:relative;z-index:1}
+
+.reward-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.reward-info-cell{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:13px 14px;text-align:center}
+.reward-info-cell .ric-val{font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:20px;font-weight:800;color:var(--accent2);margin-bottom:2px;line-height:1}
+.reward-info-cell .ric-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+
+.reward-particles{position:absolute;top:0;left:0;right:0;pointer-events:none;overflow:hidden;height:100%;border-radius:24px;z-index:0}
+.reward-particle{position:absolute;font-size:18px;animation:rewardFloatUp 2s ease forwards;opacity:0}
+
+.reward-cta{width:100%;background:var(--accent);color:#0b0f0c;border:none;border-radius:12px;padding:13px 20px;font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:14px;font-weight:800;cursor:pointer;transition:opacity .2s,transform .15s;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.2px}
+.reward-cta:hover{opacity:.88;transform:translateY(-1px)}
+.reward-cta:active{transform:translateY(0)}
+
+.reward-dismiss{display:block;text-align:center;margin-top:14px;font-size:12px;color:var(--muted);cursor:pointer;transition:color .15s}
+.reward-dismiss:hover{color:var(--text)}
+
+/* Referral count badge (shown next to referral count for newly rewarded) */
+.reward-new-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(var(--accent-rgb,0,255,136),.12);color:var(--accent2);border:1px solid rgba(var(--accent-rgb,0,255,136),.25);border-radius:6px;font-size:10px;font-weight:700;padding:2px 7px;margin-left:6px;vertical-align:middle;text-transform:uppercase;letter-spacing:.4px}
+</style>
+</head>
+<body>
+<div id="pageLoader"></div>
+
+<header>
+  <a href="/dashboard" class="logo">Trading<span>Grove</span></a>
+  <div class="hright">
+    <button class="btn-ghost" onclick="location.href='/dashboard'"><i class="fa-solid fa-arrow-left"></i> Dashboard</button>
+    <button class="btn-ghost" onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+  </div>
+</header>
+
+<main>
+  <div class="page-hdr">
+    <h1><i class="fa-solid fa-user-circle" style="color:var(--accent2);margin-right:10px"></i>My Profile</h1>
+    <p>Manage your account, referrals, and subscription details.</p>
+  </div>
+
+  <!-- Profile Hero -->
+  <div class="profile-hero" id="profileHero">
+    <div class="avatar" id="avatarEl">—</div>
+    <div class="profile-hero-info">
+      <div class="hero-name" id="heroName"><div class="skel" style="width:160px;height:22px"></div></div>
+      <div class="hero-email" id="heroEmail"><div class="skel" style="width:220px;height:14px;margin-top:4px"></div></div>
+      <div class="hero-badges" id="heroBadges"></div>
+    </div>
+  </div>
+
+  <div class="section-grid">
+
+    <!-- Account Info -->
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-hdr-left">
+          <div class="card-hdr-icon icon-teal"><i class="fa-solid fa-user"></i></div>
+          <span class="card-title">Account Information</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label>Display Name</label>
+          <div class="field-row">
+            <div class="input-wrap">
+              <i class="fa-solid fa-user ico"></i>
+              <input type="text" class="plain" id="fieldName" placeholder="Your name" maxlength="60" autocomplete="name">
+            </div>
+          </div>
+        </div>
+        <div class="save-row">
+          <button class="btn-save btn-sm" id="saveNameBtn" onclick="saveName()"><i class="fa-solid fa-check"></i> Save Name</button>
+          <span class="save-msg" id="saveNameMsg"></span>
+        </div>
+
+        <div style="height:1px;background:var(--border);margin:20px 0"></div>
+
+        <div class="field">
+          <label>Email Address</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-envelope ico"></i>
+            <input type="email" class="plain" id="fieldEmail" placeholder="you@example.com" autocomplete="email" disabled>
+          </div>
+        </div>
+        <div class="save-row">
+          <button class="btn-save btn-sm hidden" id="saveEmailBtn" onclick="saveEmail()"><i class="fa-solid fa-check"></i> Save Email</button>
+          <span class="save-msg" id="saveEmailMsg"></span>
+        </div>
+
+        <div style="height:1px;background:var(--border);margin:20px 0"></div>
+
+        <div class="save-row" style="margin-top:0">
+          <button class="btn-change-pass" id="changePassBtn" onclick="togglePasswordSection()"><i class="fa-solid fa-lock"></i> Change Password</button>
+        </div>
+
+        <div class="password-section" id="passwordSection">
+          <div style="height:1px;background:var(--border);margin:20px 0"></div>
+          <div class="field">
+            <label>New Password</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-lock ico"></i>
+              <input type="password" class="plain" id="fieldPass" placeholder="Minimum 8 characters" autocomplete="new-password">
+              <button class="eye-btn" type="button" onclick="toggleEye('fieldPass',this)"><i class="fa-solid fa-eye"></i></button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Confirm Password</label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-lock ico"></i>
+              <input type="password" class="plain" id="fieldPassConfirm" placeholder="Repeat new password" autocomplete="new-password">
+              <button class="eye-btn" type="button" onclick="toggleEye('fieldPassConfirm',this)"><i class="fa-solid fa-eye"></i></button>
+            </div>
+          </div>
+          <div class="save-row">
+            <button class="btn-save btn-sm" id="savePassBtn" onclick="savePassword()"><i class="fa-solid fa-check"></i> Save Password</button>
+            <button class="btn-cancel-pass btn-sm" onclick="cancelPasswordChange()"><i class="fa-solid fa-xmark"></i> Cancel</button>
+            <span class="save-msg" id="savePassMsg"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subscription -->
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-hdr-left">
+          <div class="card-hdr-icon icon-amber"><i class="fa-solid fa-star"></i></div>
+          <span class="card-title">Subscription</span>
+        </div>
+        <button class="upgrade-btn" id="upgradeBtn" onclick="location.href='/subscription'" style="display:none">
+          <i class="fa-solid fa-arrow-up"></i> Upgrade to Pro
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="sub-row">
+          <span class="sub-lbl">Current Plan</span>
+          <span class="sub-val" id="subPlan">—</span>
+        </div>
+        <div class="sub-row">
+          <span class="sub-lbl">Billing Cycle</span>
+          <span class="sub-val" id="subCycle">—</span>
+        </div>
+        <div class="sub-row">
+          <span class="sub-lbl">Status</span>
+          <span class="sub-val" id="subStatus">—</span>
+        </div>
+        <div class="sub-row" id="subExpiryRow" style="display:none">
+          <span class="sub-lbl">Subscription Period</span>
+          <span class="sub-val" id="subExpiry">—</span>
+        </div>
+        <div class="sub-row">
+          <span class="sub-lbl">Includes</span>
+          <span class="sub-val" style="color:var(--muted);font-size:12px;font-weight:400;text-align:right;max-width:260px">
+            Unlimited journals · Calculator · Full analytics · All themes &amp; fonts
+          </span>
+        </div>
+        <!-- Expiry progress bar (only for Pro with expiry) -->
+        <div id="expiryBarWrap" style="display:none" class="expiry-bar-wrap">
+          <div class="expiry-bar-label">
+            <span id="expiryBarLeft">Days remaining</span>
+            <span id="expiryBarRight"></span>
+          </div>
+          <div class="expiry-bar-track">
+            <div class="expiry-bar-fill" id="expiryBarFill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Referral Program -->
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-hdr-left">
+          <div class="card-hdr-icon icon-indigo"><i class="fa-solid fa-gift"></i></div>
+          <span class="card-title">Referral Program</span>
+        </div>
+        <!-- ▼ REMOVE THIS BUTTON WHEN DONE TESTING ▼ -->
+        <button onclick="_testRewardModal()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35);color:#fbbf24;border-radius:8px;padding:6px 12px;font-family:var(--font-body,'Inter',sans-serif);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s" onmouseover="this.style.background='rgba(245,158,11,.18)'" onmouseout="this.style.background='rgba(245,158,11,.1)'">
+          <i class="fa-solid fa-flask"></i> Test Reward Modal
+        </button>
+        <!-- ▲ REMOVE THIS BUTTON WHEN DONE TESTING ▲ -->
+      </div>
+      <div class="card-body">
+        <div class="ref-code-box">
+          <div>
+            <div class="ref-code-label">Your Referral Code</div>
+            <div class="ref-code-value" id="refCodeDisplay">••••••••</div>
+          </div>
+          <button class="copy-btn" id="copyCodeBtn" onclick="copyCode()">
+            <i class="fa-solid fa-copy"></i> Copy Code
+          </button>
+        </div>
+
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:7px">Share Link</div>
+        <div class="share-url-box">
+          <span class="share-url" id="shareUrlDisplay">—</span>
+          <button class="copy-url-btn" onclick="copyShareUrl()"><i class="fa-solid fa-link"></i> Copy</button>
+        </div>
+
+        <div class="ref-how">
+          <div class="ref-how-title"><i class="fa-solid fa-circle-info"></i> How it works</div>
+          <div class="ref-step"><div class="ref-step-num">1</div><span>Share your link or code with fellow traders</span></div>
+          <div class="ref-step"><div class="ref-step-num">2</div><span>They sign up using your referral</span></div>
+          <div class="ref-step"><div class="ref-step-num">3</div><span>When they <strong>subscribe to Pro</strong>, you automatically get <strong>30 days of free Pro</strong> added to your account</span></div>
+        </div>
+
+        <div class="ref-stats" id="refStats">
+          <div class="ref-stat"><div class="ref-stat-val" id="statTotal">—</div><div class="ref-stat-lbl">Total Referrals</div></div>
+          <div class="ref-stat"><div class="ref-stat-val accent" id="statRewarded">—</div><div class="ref-stat-lbl">Rewards Earned</div></div>
+          <div class="ref-stat"><div class="ref-stat-val" id="statPending">—</div><div class="ref-stat-lbl">Pending</div></div>
+        </div>
+
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px">Referral History</div>
+        <div id="refHistoryWrap">
+          <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">
+            <div class="skel" style="height:14px;width:80%;margin:0 auto 8px"></div>
+            <div class="skel" style="height:14px;width:60%;margin:0 auto"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="card" id="dangerCard">
+      <div class="card-hdr">
+        <div class="card-hdr-left">
+          <div class="card-hdr-icon icon-red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <span class="card-title" style="color:var(--red,#ff5f6d)">Danger Zone</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:16px">
+          Once you delete your account, there is no going back. All journals, trades, and images will be permanently erased.
+        </p>
+        <button
+          style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,95,109,.06);border:1px solid rgba(255,95,109,.3);color:var(--red,#ff5f6d);border-radius:9px;padding:11px 18px;font-family:var(--font-body,'Inter',sans-serif);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;"
+          onmouseover="this.style.background='rgba(255,95,109,.12)'"
+          onmouseout="this.style.background='rgba(255,95,109,.06)'"
+          onclick="openDelAccount()">
+          <i class="fa-solid fa-user-xmark"></i> Delete My Account Permanently
+        </button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Delete Account Overlay -->
+<div id="delAccountOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--panel);border:1px solid rgba(255,95,109,.35);border-radius:16px;width:100%;max-width:440px;padding:28px">
+    <div style="width:54px;height:54px;background:rgba(255,95,109,.1);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:22px;color:var(--red,#ff5f6d)"><i class="fa-solid fa-user-xmark"></i></div>
+    <h3 style="font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:18px;font-weight:700;text-align:center;margin-bottom:8px;color:var(--red,#ff5f6d)">Delete Your Account?</h3>
+    <p style="font-size:13px;color:var(--muted);line-height:1.7;text-align:center;margin-bottom:16px">This will <strong style="color:var(--red,#ff5f6d)">permanently and irreversibly</strong> delete everything.</p>
+    <div style="background:rgba(255,95,109,.05);border:1px solid rgba(255,95,109,.18);border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)"><i class="fa-solid fa-xmark" style="color:var(--red,#ff5f6d);width:14px"></i>All journals and trade history</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)"><i class="fa-solid fa-xmark" style="color:var(--red,#ff5f6d);width:14px"></i>All images and screenshots</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)"><i class="fa-solid fa-xmark" style="color:var(--red,#ff5f6d);width:14px"></i>Your referral history and rewards</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)"><i class="fa-solid fa-xmark" style="color:var(--red,#ff5f6d);width:14px"></i>Your login credentials</div>
+    </div>
+    <div id="delAccFormProfile">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:7px">Type <strong style="color:var(--text)">DELETE</strong> to confirm:</div>
+      <input type="text" id="delAccInputProfile" placeholder="DELETE" oninput="checkDelAccProfile()"
+        style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:11px 13px;color:var(--text);font-family:var(--font-body,'Inter',sans-serif);font-size:14px;outline:none;margin-bottom:14px">
+      <div style="display:flex;gap:8px">
+        <button onclick="closeDelAccount()" style="flex:1;background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:10px;font-family:var(--font-body,'Inter',sans-serif);font-size:13px;cursor:pointer">Cancel</button>
+        <button id="delAccBtnProfile" onclick="executeDeleteAccount()" disabled
+          style="flex:1;background:var(--red,#ff5f6d);color:#fff;border:none;border-radius:8px;padding:10px;font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:13px;font-weight:600;cursor:not-allowed;opacity:.4;transition:all .2s">
+          <i class="fa-solid fa-user-xmark" style="margin-right:6px"></i>Delete Forever
+        </button>
+      </div>
+    </div>
+    <div id="delAccProgressProfile" style="display:none;text-align:center;padding:14px 0">
+      <div style="width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--red,#ff5f6d);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px"></div>
+      <p id="delAccMsgProfile" style="font-size:13px;color:var(--muted)">Deleting your account…</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     REFERRAL REWARD CELEBRATION MODAL
+═══════════════════════════════════════════ -->
+<div id="rewardOverlay">
+  <div id="rewardParticles" class="reward-particles"></div>
+  <div id="rewardCard">
+    <canvas id="rewardConfettiCanvas"></canvas>
+    <div class="reward-hdr">
+      <div class="reward-icon-wrap">🎁</div>
+      <div class="reward-days-badge">
+        <i class="fa-solid fa-star"></i>
+        +30 Days Pro — Unlocked!
+      </div>
+      <div class="reward-title">You Earned a Reward! 🎉</div>
+      <div class="reward-subtitle">
+        Someone you referred just subscribed to Pro.<br>
+        <strong>30 days of free Pro</strong> have been added to your account.
+      </div>
+    </div>
+    <div class="reward-body">
+      <div class="reward-info-grid">
+        <div class="reward-info-cell">
+          <div class="ric-val" id="rewardTotalReferrals">—</div>
+          <div class="ric-lbl">Total Referrals</div>
+        </div>
+        <div class="reward-info-cell">
+          <div class="ric-val" id="rewardDaysEarned">—</div>
+          <div class="ric-lbl">Days Earned Total</div>
+        </div>
+      </div>
+      <button class="reward-cta" onclick="closeRewardModal()">
+        <i class="fa-solid fa-circle-check"></i>
+        Awesome, Thanks!
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"><i id="toastIcon" class="fa-solid fa-circle-check"></i><span id="toastMsg"></span></div>
+
+<script>
+let currentUser = null;
+let currentProfile = null;
+
+// ── Toggle password section ──────────────────────────────
+let _passwordShown = false;
+let _originalNameValue = '';
+let _originalEmailValue = '';
+
+function togglePasswordSection() {
+  _passwordShown = !_passwordShown;
+  const section = document.getElementById('passwordSection');
+  const btn = document.getElementById('changePassBtn');
+  section.classList.toggle('show', _passwordShown);
+  if (_passwordShown) {
+    btn.textContent = '';
+    btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Hide Password';
+    setTimeout(() => document.getElementById('fieldPass').focus(), 100);
+  } else {
+    btn.textContent = '';
+    btn.innerHTML = '<i class="fa-solid fa-lock"></i> Change Password';
+  }
+}
+
+function cancelPasswordChange() {
+  _passwordShown = false;
+  document.getElementById('passwordSection').classList.remove('show');
+  document.getElementById('fieldPass').value = '';
+  document.getElementById('fieldPassConfirm').value = '';
+  document.getElementById('savePassMsg').classList.remove('show');
+  document.getElementById('changePassBtn').innerHTML = '<i class="fa-solid fa-lock"></i> Change Password';
+}
+
+// ── Save button visibility ───────────────────────────────
+function updateSaveButtons() {
+  const nameVal = document.getElementById('fieldName').value.trim();
+  const nameChanged = nameVal !== _originalNameValue;
+  document.getElementById('saveNameBtn').classList.toggle('hidden', !nameChanged);
+
+  const emailVal = document.getElementById('fieldEmail').value.trim();
+  const emailChanged = emailVal !== _originalEmailValue;
+  document.getElementById('saveEmailBtn').classList.toggle('hidden', !emailChanged);
+}
+
+// ── Boot ─────────────────────────────────────────────────
+(async () => {
+  currentUser = await requireAuth();
+  if (!currentUser) return;
+
+  currentProfile = await getProfile(currentUser.id);
+
+  // ── Apply saved theme/font (persisted per user)
+  applyProfileTheme(currentProfile);
+
+  const isPro = currentProfile?.plan === 'pro';
+
+  // ── Profile hero
+  const initials = (currentProfile?.name || currentUser.email || '?')
+    .split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  document.getElementById('avatarEl').textContent = initials;
+  document.getElementById('heroName').textContent = currentProfile?.name || '(No name set)';
+  document.getElementById('heroEmail').textContent = currentUser.email;
+
+  // ── Get actual referral count from database
+  let actualReferralCount = 0;
+  try {
+    const refs = await getReferrals(currentUser.id);
+    actualReferralCount = refs.length;
+  } catch (e) {
+    console.warn('[profile] Failed to load referral count:', e);
+  }
+
+  const heroBadges = document.getElementById('heroBadges');
+  heroBadges.innerHTML = `
+    <span class="plan-badge ${isPro ? 'badge-pro' : 'badge-free'}">${isPro ? 'Pro' : 'Free'}</span>
+    ${actualReferralCount > 0
+      ? `<span class="badge-referral"><i class="fa-solid fa-gift"></i> ${actualReferralCount} referral${actualReferralCount > 1 ? 's' : ''}</span>`
+      : ''}
+  `;
+
+  // ── Form fields
+  const nameValue = currentProfile?.name || '';
+  const emailValue = currentUser.email || '';
+  document.getElementById('fieldName').value  = nameValue;
+  document.getElementById('fieldEmail').value = emailValue;
+
+  // Store original values for change detection
+  _originalNameValue = nameValue;
+  _originalEmailValue = emailValue;
+
+  // Add change listeners
+  document.getElementById('fieldName').addEventListener('input', updateSaveButtons);
+
+  // Initial button states
+  updateSaveButtons();
+
+  // ── Subscription card
+  populateSubscription(currentProfile, isPro);
+
+  // ── Referral card
+  populateReferral(currentProfile);
+  await loadReferrals();
+
+  if (window.TZ) TZ.hideLoader();
+})();
+
+// ── Subscription ─────────────────────────────────────────
+function populateSubscription(profile, isPro) {
+  const planEl     = document.getElementById('subPlan');
+  const cycleEl    = document.getElementById('subCycle');
+  const statusEl   = document.getElementById('subStatus');
+  const expiryEl   = document.getElementById('subExpiry');
+  const expiryRow  = document.getElementById('subExpiryRow');
+  const upgradeBtn = document.getElementById('upgradeBtn');
+  const barWrap    = document.getElementById('expiryBarWrap');
+
+  const subStatus = getSubscriptionStatus(profile);
+  const planType  = profile?.plan_type || 'none';
+
+  if (isPro) {
+    planEl.textContent   = 'Pro';
+    planEl.className     = 'sub-val pro';
+
+    // Billing cycle
+    const cycleMap = { monthly: 'Monthly', yearly: 'Yearly', lifetime: 'Lifetime', none: '—' };
+    cycleEl.textContent = cycleMap[planType] || '—';
+    cycleEl.className   = 'sub-val pro';
+
+    if (subStatus.expired) {
+      statusEl.textContent = 'Expired';
+      statusEl.className   = 'sub-val expired';
+      upgradeBtn.style.display = 'inline-flex';
+    } else {
+      statusEl.textContent = 'Active ✓';
+      statusEl.className   = 'sub-val pro';
+    }
+
+    if (profile?.subscription_expires_at || profile?.pro_expires_at) {
+      expiryEl.textContent = subStatus.label;
+      expiryEl.className   = 'sub-val ' + (subStatus.expired ? 'expired' : subStatus.expiring ? 'expiring' : 'pro');
+      expiryRow.style.display = 'flex';
+
+      // Progress bar: show for non-lifetime plans
+      if (planType !== 'lifetime') {
+        const totalDays = planType === 'yearly' ? 365 : planType === 'monthly' ? 30 : (subStatus.daysLeft > 60 ? 365 : 30);
+        const daysLeft  = subStatus.daysLeft ?? 0;
+        const pct       = Math.max(0, Math.min(100, (daysLeft / totalDays) * 100));
+        const fillColor = subStatus.expired ? 'var(--red)' : subStatus.expiring ? '#fbbf24' : 'var(--accent2)';
+
+        document.getElementById('expiryBarFill').style.width      = pct + '%';
+        document.getElementById('expiryBarFill').style.background = fillColor;
+        document.getElementById('expiryBarLeft').textContent  = daysLeft + ' days remaining';
+        document.getElementById('expiryBarRight').textContent = totalDays + ' day cycle';
+        barWrap.style.display = 'block';
+      }
+    } else {
+      expiryEl.textContent    = 'Active subscription';
+      expiryEl.className      = 'sub-val pro';
+      expiryRow.style.display = 'flex';
+    }
+  } else {
+    planEl.textContent      = 'Free';
+    planEl.className        = 'sub-val free';
+    cycleEl.textContent     = '—';
+    cycleEl.className       = 'sub-val free';
+    statusEl.textContent    = 'Free tier';
+    statusEl.className      = 'sub-val free';
+    expiryRow.style.display = 'none';
+    upgradeBtn.style.display = 'inline-flex';
+  }
+}
+
+// ── Referral ─────────────────────────────────────────────
+function populateReferral(profile) {
+  const code = profile?.referral_code || '—';
+  document.getElementById('refCodeDisplay').textContent = code;
+  const url = buildReferralUrl(code);
+  document.getElementById('shareUrlDisplay').textContent = url;
+}
+
+async function loadReferrals() {
+  const referrals = await getReferrals(currentUser.id);
+  const total     = referrals.length;
+  const rewarded  = referrals.filter(r => r.reward_granted).length;
+  const pending   = referrals.filter(r => !r.reward_granted).length;
+
+  document.getElementById('statTotal').textContent    = total;
+  document.getElementById('statRewarded').textContent = rewarded;
+  document.getElementById('statPending').textContent  = pending;
+
+  const wrap = document.getElementById('refHistoryWrap');
+
+  if (!referrals.length) {
+    wrap.innerHTML = `<div class="empty-ref">
+      <i class="fa-solid fa-user-group"></i>
+      No referrals yet. Share your link to start earning free Pro!
+    </div>`;
+    // No referrals = no rewards, bail early
+    return;
+  }
+
+  wrap.innerHTML = `
+    <table class="ref-table">
+      <thead><tr><th>User</th><th>Date Joined</th><th>Status</th><th>Reward</th></tr></thead>
+      <tbody>
+        ${referrals.map(r => {
+          const date = new Date(r.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+          const name = r.referred_profile?.name || 'Anonymous';
+          let statusClass = 'status-pending', statusLabel = 'Pending';
+          if (r.status === 'rewarded')   { statusClass = 'status-rewarded';  statusLabel = 'Rewarded'; }
+          if (r.status === 'converted')  { statusClass = 'status-converted'; statusLabel = 'Subscribed'; }
+          return `<tr>
+            <td style="font-weight:500">${name}</td>
+            <td>${date}</td>
+            <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+            <td style="color:${r.reward_granted ? 'var(--accent2)' : 'var(--muted)'}">
+              ${r.reward_granted
+                ? '<i class="fa-solid fa-circle-check" style="margin-right:5px"></i>+30 days Pro'
+                : '<i class="fa-solid fa-clock" style="margin-right:5px;opacity:.5"></i>Waiting'}
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+
+  // ── Check for newly rewarded referrals and fire celebration modal
+  checkAndShowRewardModal(referrals);
+}
+
+// ── Copy helpers ─────────────────────────────────────────
+function copyCode() {
+  const code = document.getElementById('refCodeDisplay').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.getElementById('copyCodeBtn');
+    btn.classList.add('copied');
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+    setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = '<i class="fa-solid fa-copy"></i> Copy Code'; }, 2000);
+  });
+}
+function copyShareUrl() {
+  const url = document.getElementById('shareUrlDisplay').textContent;
+  navigator.clipboard.writeText(url).then(() => showToast('Share link copied!', 'fa-solid fa-link', 'green'));
+}
+
+// ── Save name ─────────────────────────────────────────────
+async function saveName() {
+  const name = document.getElementById('fieldName').value.trim();
+  if (!name) { showSaveMsg('saveNameMsg', 'Enter a name.', 'err'); return; }
+  const btn = document.getElementById('saveNameBtn');
+  btn.disabled = true;
+  try {
+    await updateProfile(currentUser.id, { name });
+    await db.auth.updateUser({ data: { name } });
+    document.getElementById('heroName').textContent = name;
+    document.getElementById('avatarEl').textContent = name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+    _originalNameValue = name;
+    updateSaveButtons();
+    showSaveMsg('saveNameMsg', 'Saved!', 'ok');
+    showToast('Name updated!', 'fa-solid fa-circle-check', 'green');
+  } catch (e) {
+    showSaveMsg('saveNameMsg', e.message || 'Error saving.', 'err');
+  } finally { btn.disabled = false; }
+}
+
+// ── Save email ────────────────────────────────────────────
+async function saveEmail() {
+  const email = document.getElementById('fieldEmail').value.trim();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showSaveMsg('saveEmailMsg', 'Enter a valid email.', 'err'); return; }
+  const btn = document.getElementById('saveEmailBtn');
+  btn.disabled = true;
+  try {
+    const { error } = await db.auth.updateUser({ email });
+    if (error) throw error;
+    showSaveMsg('saveEmailMsg', 'Check inbox to confirm.', 'ok');
+    showToast('Confirmation email sent!', 'fa-solid fa-envelope', 'green');
+  } catch (e) {
+    showSaveMsg('saveEmailMsg', e.message || 'Error.', 'err');
+  } finally { btn.disabled = false; }
+}
+
+// ── Save password ─────────────────────────────────────────
+async function savePassword() {
+  const pass  = document.getElementById('fieldPass').value;
+  const passC = document.getElementById('fieldPassConfirm').value;
+  if (!pass)         { showSaveMsg('savePassMsg', 'Enter a password.', 'err'); return; }
+  if (pass.length<8) { showSaveMsg('savePassMsg', 'Min 8 characters.', 'err'); return; }
+  if (pass !== passC){ showSaveMsg('savePassMsg', 'Passwords do not match.', 'err'); return; }
+  const btn = document.getElementById('savePassBtn');
+  btn.disabled = true;
+  try {
+    const { error } = await db.auth.updateUser({ password: pass });
+    if (error) throw error;
+    document.getElementById('fieldPass').value = '';
+    document.getElementById('fieldPassConfirm').value = '';
+    showSaveMsg('savePassMsg', 'Password updated!', 'ok');
+    showToast('Password updated!', 'fa-solid fa-circle-check', 'green');
+    setTimeout(() => { cancelPasswordChange(); }, 1500);
+  } catch (e) {
+    showSaveMsg('savePassMsg', e.message || 'Error.', 'err');
+  } finally { btn.disabled = false; }
+}
+
+function showSaveMsg(id, msg, type) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = 'save-msg show ' + type;
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function toggleEye(id, btn) {
+  const inp  = document.getElementById(id);
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.querySelector('i').className = show ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+}
+
+// ── Delete Account ────────────────────────────────────────
+function openDelAccount() {
+  document.getElementById('delAccInputProfile').value = '';
+  document.getElementById('delAccFormProfile').style.display = 'block';
+  document.getElementById('delAccProgressProfile').style.display = 'none';
+  checkDelAccProfile();
+  document.getElementById('delAccountOverlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('delAccInputProfile').focus(), 150);
+}
+function closeDelAccount() { document.getElementById('delAccountOverlay').style.display = 'none'; }
+function checkDelAccProfile() {
+  const ok  = document.getElementById('delAccInputProfile').value.trim() === 'DELETE';
+  const btn = document.getElementById('delAccBtnProfile');
+  btn.disabled = !ok;
+  btn.style.opacity = ok ? '1' : '.4';
+  btn.style.cursor  = ok ? 'pointer' : 'not-allowed';
+}
+async function executeDeleteAccount() {
+  document.getElementById('delAccFormProfile').style.display = 'none';
+  document.getElementById('delAccProgressProfile').style.display = 'block';
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    if (!session) throw new Error('Not authenticated');
+    const res  = await fetch(`${SUPABASE_URL}/functions/v1/delete-account`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + session.access_token, 'Content-Type': 'application/json' },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Deletion failed');
+    document.getElementById('delAccMsgProfile').textContent = 'Account deleted. Redirecting…';
+    await db.auth.signOut();
+    sessionStorage.clear(); localStorage.clear();
+    setTimeout(() => location.href = '/', 1500);
+  } catch (e) {
+    showToast('Failed: ' + e.message, 'fa-solid fa-circle-exclamation', 'red');
+    document.getElementById('delAccFormProfile').style.display = 'block';
+    document.getElementById('delAccProgressProfile').style.display = 'none';
+  }
+}
+
+async function logout() { await db.auth.signOut(); sessionStorage.clear(); location.href = '/auth'; }
+
+// ── Toast ─────────────────────────────────────────────────
+let _tt;
+function showToast(msg, icon = 'fa-solid fa-circle-check', type = '') {
+  const t = document.getElementById('toast');
+  document.getElementById('toastIcon').className = icon;
+  document.getElementById('toastMsg').textContent = msg;
+  t.className = 'show' + (type === 'green' ? ' toast-green' : type === 'red' ? ' toast-red' : '');
+  clearTimeout(_tt);
+  _tt = setTimeout(() => { t.classList.remove('show', 'toast-green', 'toast-red'); }, 3400);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  REFERRAL REWARD CELEBRATION MODAL
+//  - Fires once per newly rewarded referral (tracked in localStorage)
+//  - Called automatically at the end of loadReferrals()
+// ══════════════════════════════════════════════════════════════
+
+const REWARD_SEEN_KEY = 'tz_reward_seen_ids';
+
+function _getSeenRewardIds() {
+  try { return new Set(JSON.parse(localStorage.getItem(REWARD_SEEN_KEY) || '[]')); }
+  catch { return new Set(); }
+}
+
+function _markRewardIdsSeen(ids) {
+  const seen = _getSeenRewardIds();
+  ids.forEach(id => seen.add(id));
+  localStorage.setItem(REWARD_SEEN_KEY, JSON.stringify([...seen]));
+}
+
+// ── REMOVE THIS ENTIRE FUNCTION WHEN DONE TESTING ──────────
+function _testRewardModal() {
+  // Bypasses the seen-IDs check so the modal always fires on click.
+  // Fills stats from whatever is already rendered on the page.
+  const total    = document.getElementById('statTotal').textContent;
+  const rewarded = parseInt(document.getElementById('statRewarded').textContent) || 1;
+  document.getElementById('rewardTotalReferrals').textContent = total === '—' ? '3' : total;
+  document.getElementById('rewardDaysEarned').textContent     = (rewarded * 30) + 'd';
+  _openRewardModal();
+}
+// ── END REMOVE ──────────────────────────────────────────────
+
+function checkAndShowRewardModal(referrals) {
+  if (!referrals || !referrals.length) return;
+
+  const seen = _getSeenRewardIds();
+
+  // Find referrals that are rewarded (reward_granted=true) and not yet seen
+  const newlyRewarded = referrals.filter(r =>
+    r.reward_granted === true && r.id && !seen.has(String(r.id))
+  );
+
+  if (!newlyRewarded.length) return;
+
+  // Mark all newly rewarded as seen immediately — prevents duplicate shows
+  _markRewardIdsSeen(newlyRewarded.map(r => String(r.id)));
+
+  // Populate the stat cells
+  const totalRewarded = referrals.filter(r => r.reward_granted).length;
+  document.getElementById('rewardTotalReferrals').textContent = referrals.length;
+  document.getElementById('rewardDaysEarned').textContent = (totalRewarded * 30) + 'd';
+
+  // Short delay so the page finishes rendering before the modal pops
+  setTimeout(() => _openRewardModal(), 750);
+}
+
+function _openRewardModal() {
+  document.getElementById('rewardOverlay').classList.add('open');
+  _launchRewardConfetti();
+  _spawnRewardParticles();
+}
+
+// ── Floating ✨ particles ─────────────────────────────────
+function _spawnRewardParticles() {
+  const container = document.getElementById('rewardParticles');
+  container.innerHTML = '';
+  for (let i = 0; i < 14; i++) {
+    const el = document.createElement('span');
+    el.className = 'reward-particle';
+    el.textContent = '✨';
+    el.style.left              = (4 + Math.random() * 92) + '%';
+    el.style.bottom            = (4 + Math.random() * 45) + '%';
+    el.style.animationDelay    = (i * 0.15) + 's';
+    el.style.fontSize          = (13 + Math.random() * 16) + 'px';
+    el.style.animationDuration = (1.5 + Math.random() * .9) + 's';
+    container.appendChild(el);
+  }
+}
+
+function closeRewardModal() {
+  const overlay = document.getElementById('rewardOverlay');
+  overlay.style.opacity = '0';
+  overlay.style.transition = 'opacity .25s';
+  setTimeout(() => {
+    overlay.classList.remove('open');
+    overlay.style.opacity = '';
+    overlay.style.transition = '';
+  }, 260);
+}
+
+// Close on backdrop click
+document.getElementById('rewardOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeRewardModal();
+});
+
+// ── Canvas confetti burst ─────────────────────────────────
+function _launchRewardConfetti() {
+  const canvas = document.getElementById('rewardConfettiCanvas');
+  const ctx = canvas.getContext('2d');
+  const card = document.getElementById('rewardCard');
+  const W = card.offsetWidth || 420;
+  const H = card.offsetHeight || 520;
+  canvas.width = W;
+  canvas.height = H;
+
+  // Resolve a CSS color variable to a real rgba string for canvas use
+  const FALLBACK_COLORS = ['#00ff88', '#f5c842', '#ff5f6d', '#a5b4fc', '#fbbf24', '#34d399', '#60a5fa', '#fb923c'];
+
+  const particles = Array.from({ length: 90 }, (_, i) => ({
+    x: Math.random() * W,
+    y: -12 - Math.random() * 50,
+    size: 5 + Math.random() * 7,
+    color: FALLBACK_COLORS[i % FALLBACK_COLORS.length],
+    vx: (Math.random() - .5) * 3.5,
+    vy: 1.8 + Math.random() * 3.5,
+    rot: Math.random() * 360,
+    vrot: (Math.random() - .5) * 9,
+    shape: Math.random() > .45 ? 'rect' : 'circle',
+    alpha: 1,
+  }));
+
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    let alive = 0;
+    particles.forEach(p => {
+      if (p.y > H + 20 || p.alpha <= 0) return;
+      alive++;
+      p.x += p.vx;
+      p.y += p.vy + frame * .01;
+      p.rot += p.vrot;
+      if (p.y > H * .55) p.alpha = Math.max(0, p.alpha - .02);
+      ctx.save();
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle = p.color;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      if (p.shape === 'circle') {
+        ctx.beginPath();
+        ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+      }
+      ctx.restore();
+    });
+    frame++;
+    if (alive > 0 && frame < 240) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, W, H);
+  }
+  draw();
+}
+</script>
+</body>
+</html>

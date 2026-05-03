@@ -1,0 +1,199 @@
+<!-- confirm.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradingGrove | Confirm Your Email</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#070a08;--panel:#0d1410;--accent:#00ff88;--accent2:#19c37d;--border:rgba(0,255,136,.12);--border2:rgba(255,255,255,.07);--text:#e8f5ee;--muted:#6a8a7a;--red:#ff5f6d}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:.022;pointer-events:none;z-index:0}
+.orb{position:fixed;border-radius:50%;filter:blur(110px);pointer-events:none;z-index:0}
+.orb1{width:500px;height:500px;background:rgba(0,255,136,.07);top:-80px;left:-80px}
+.orb2{width:400px;height:400px;background:rgba(25,195,125,.05);bottom:-60px;right:-60px}
+.logo{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--text);text-decoration:none;margin-bottom:40px;position:relative;z-index:1}
+.logo span{color:var(--accent)}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:40px 36px;width:100%;max-width:440px;text-align:center;position:relative;z-index:1;animation:fadeUp .5s ease both}
+/* States */
+.state{display:none}
+.state.active{display:block}
+/* Checking state */
+.spinner{width:48px;height:48px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 20px}
+/* Success state */
+.success-icon{width:72px;height:72px;background:rgba(0,255,136,.1);border:2px solid rgba(0,255,136,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;color:var(--accent)}
+/* Error state */
+.error-icon{width:72px;height:72px;background:rgba(255,95,109,.1);border:2px solid rgba(255,95,109,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;color:var(--red)}
+/* Waiting state — when no token in URL */
+.email-icon{width:72px;height:72px;background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:28px;color:var(--accent2)}
+h2{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:10px}
+p{font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:0}
+p strong{color:var(--text)}
+.email-display{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:var(--accent2);margin:12px 0 20px;padding:10px 16px;background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.15);border-radius:8px;word-break:break-all}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border:none;border-radius:10px;background:var(--accent);color:#070a08;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .22s;text-decoration:none;margin-top:20px}
+.btn:hover{background:#00e67a;box-shadow:0 0 20px rgba(0,255,136,.35)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-ghost{background:none;border:1px solid var(--border2);color:var(--muted);margin-top:10px}
+.btn-ghost:hover{border-color:var(--accent2);color:var(--text);box-shadow:none;background:none}
+.resend-timer{font-size:12px;color:var(--muted);margin-top:12px}
+.resend-timer a{color:var(--accent2);cursor:pointer;text-decoration:none;font-weight:600}
+.resend-timer a:hover{text-decoration:underline}
+.divider{height:1px;background:var(--border2);margin:20px 0}
+.steps-list{text-align:left;margin-top:16px}
+.step-item{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.5}
+.step-item:last-child{margin-bottom:0}
+.step-num{width:20px;height:20px;border-radius:50%;background:rgba(0,255,136,.12);color:var(--accent2);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<a href="/" class="logo">Trading<span>Grove</span></a>
+
+<div class="card">
+  <!-- CHECKING: shown while processing token -->
+  <div class="state active" id="stateChecking">
+    <div class="spinner"></div>
+    <h2>Verifying your email…</h2>
+    <p>Please wait a moment.</p>
+  </div>
+
+  <!-- SUCCESS: email confirmed -->
+  <div class="state" id="stateSuccess">
+    <div class="success-icon"><i class="fa-solid fa-circle-check"></i></div>
+    <h2>Email Confirmed!</h2>
+    <p>Your account is verified and ready. You'll be redirected to your dashboard shortly.</p>
+    <a href="/dashboard" class="btn"><i class="fa-solid fa-chart-line"></i>Go to Dashboard</a>
+  </div>
+
+  <!-- WAITING: no token — user landed here directly -->
+  <div class="state" id="stateWaiting">
+    <div class="email-icon"><i class="fa-solid fa-envelope"></i></div>
+    <h2>Check your inbox</h2>
+    <p>We've sent a confirmation link to:</p>
+    <div class="email-display" id="emailDisplay">your email address</div>
+    <div class="steps-list">
+      <div class="step-item"><div class="step-num">1</div><span>Open the email from <strong>TradingGrove</strong></span></div>
+      <div class="step-item"><div class="step-num">2</div><span>Click the <strong>Confirm your email</strong> link</span></div>
+      <div class="step-item"><div class="step-num">3</div><span>You'll be signed in automatically</span></div>
+    </div>
+    <div class="divider"></div>
+    <p>Didn't receive it? Check your spam folder, or:</p>
+    <div class="resend-timer" id="resendArea">
+      <a onclick="resendEmail()">Resend confirmation email</a>
+    </div>
+    <a href="/auth" class="btn btn-ghost"><i class="fa-solid fa-chevron-left"></i>Back to Sign In</a>
+  </div>
+
+  <!-- ERROR -->
+  <div class="state" id="stateError">
+    <div class="error-icon"><i class="fa-solid fa-circle-xmark"></i></div>
+    <h2>Link expired or invalid</h2>
+    <p>This confirmation link has expired or already been used. Request a new one from the sign in page.</p>
+    <a href="/auth" class="btn"><i class="fa-solid fa-arrow-right-to-bracket"></i>Back to Sign In</a>
+  </div>
+</div>
+
+<script>
+function showState(id) {
+  document.querySelectorAll('.state').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+(async () => {
+  // Check if there's a token hash in the URL (Supabase email confirmation)
+  const hash = window.location.hash;
+  const params = new URLSearchParams(window.location.search);
+
+  // Supabase puts confirmation data in the hash fragment
+  if (hash && hash.includes('access_token')) {
+    // Let Supabase handle the token automatically
+    const { data, error } = await db.auth.getSession();
+    if (error || !data?.session) {
+      showState('stateError');
+    } else {
+      showState('stateSuccess');
+      setTimeout(() => window.location.href = '/dashboard', 2000);
+    }
+    return;
+  }
+
+  // Check URL params for type=signup (Supabase sends this)
+  if (params.get('type') === 'signup' || params.get('type') === 'email_change') {
+    const { data, error } = await db.auth.getSession();
+    if (error || !data?.session) {
+      showState('stateError');
+    } else {
+      showState('stateSuccess');
+      setTimeout(() => window.location.href = '/dashboard', 2000);
+    }
+    return;
+  }
+
+  // Also handle when Supabase processes the token and creates a session
+  const { data: { session } } = await db.auth.getSession();
+  if (session) {
+    showState('stateSuccess');
+    setTimeout(() => window.location.href = '/dashboard', 1500);
+    return;
+  }
+
+  // No token — show waiting state
+  const email = sessionStorage.getItem('tz_pending_email') || localStorage.getItem('tz_pending_email') || '';
+  if (email) document.getElementById('emailDisplay').textContent = email;
+  showState('stateWaiting');
+})();
+
+// Listen for auth state changes (fires when email is confirmed in another tab)
+db.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    showState('stateSuccess');
+    setTimeout(() => window.location.href = '/dashboard', 1500);
+  }
+});
+
+let resendCooldown = 0;
+async function resendEmail() {
+  if (resendCooldown > 0) return;
+  const email = sessionStorage.getItem('tz_pending_email') || localStorage.getItem('tz_pending_email');
+  if (!email) {
+    window.location.href = '/auth';
+    return;
+  }
+  const { error } = await db.auth.resend({ type: 'signup', email });
+  if (error) {
+    document.getElementById('resendArea').innerHTML = `<span style="color:var(--red)"><i class="fa-solid fa-circle-exclamation" style="margin-right:5px"></i>${error.message}</span>`;
+    return;
+  }
+  // Start 60s cooldown
+  resendCooldown = 60;
+  const timer = setInterval(() => {
+    resendCooldown--;
+    const area = document.getElementById('resendArea');
+    if (resendCooldown <= 0) {
+      clearInterval(timer);
+      area.innerHTML = '<a onclick="resendEmail()">Resend confirmation email</a>';
+    } else {
+      area.innerHTML = `<span>Email sent! Resend again in <strong>${resendCooldown}s</strong></span>`;
+    }
+  }, 1000);
+  document.getElementById('resendArea').innerHTML = `<span>Email sent! Resend again in <strong>60s</strong></span>`;
+}
+</script>
+</body>
+</html>
