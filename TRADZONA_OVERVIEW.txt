@@ -187,7 +187,7 @@ Navigation:
 - FAQ section
 - Trading journal entry point
 - Pricing information
-- CTA to start journaling free
+- CTA to Start Journaling
 
 Accessibility:
 - Question mark (?) tooltips on every field

@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title id="pageTitle">TradingGrove | Find Your Edge. Stop Losing to the Same Mistakes.</title>
-<meta id="pageDesc" name="description" content="TradingGrove is a cloud-powered trading journal with deep analytics, mood tracking, strategy breakdown, equity curves, pre-session planning, and more. Start free.">
-<meta property="og:title" content="TradingGrove | Your Edge Is Hiding in the Data">
-<meta property="og:description" content="Stop trading blind. TradingGrove turns your raw trade history into sharp, honest insights — win streaks, mood patterns, best hours, worst habits. Know exactly what's costing you.">
+<title id="pageTitle">TradingGrove | A trading journal that helps you understand your own trading.</title>
+<meta id="pageDesc" name="description" content="TradingGrove is a trading journal with analytics for mood tracking, strategy breakdown, equity curves, and session planning. Start free.">
+<meta property="og:title" content="TradingGrove | Understand your trading, one session at a time.">
+<meta property="og:description" content="Log your trades, track your patterns, and start seeing what's actually working. TradingGrove makes your trade history easy to read and honest to face.">
 <meta property="og:url" content="https://tradinggrove.vercel.app">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
@@ -33,9 +33,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 h1,h2,h3,h4{font-family:'Outfit',sans-serif}
 .glow-orb{position:absolute;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0}
 
-/* ══════════════════════════════════════
-   SHARED NAV
-══════════════════════════════════════ */
 nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:16px 40px;background:rgba(7,10,8,.88);backdrop-filter:blur(22px);border-bottom:1px solid rgba(255,255,255,.07)}
 .nav-logo{font-family:'Outfit',sans-serif;font-size:20px;font-weight:700;letter-spacing:-.5px;color:var(--text);text-decoration:none;flex-shrink:0}
 .nav-logo span{color:var(--accent)}
@@ -43,7 +40,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 .nav-links a{font-size:13px;color:var(--text2);text-decoration:none;padding:7px 12px;border-radius:8px;transition:color .18s,background .18s;font-family:'Inter',sans-serif;font-weight:500;white-space:nowrap}
 .nav-links a:hover{color:var(--text);background:rgba(255,255,255,.05)}
 .nav-links a.active{color:var(--accent2)}
-/* Tools dropdown */
 .nav-dropdown{position:relative;display:flex;align-items:center}
 .nav-dropdown-btn{font-size:13px;color:var(--text2);padding:7px 12px;border-radius:8px;cursor:pointer;background:none;border:none;font-family:'Inter',sans-serif;font-weight:500;display:flex;align-items:center;gap:6px;transition:color .18s,background .18s;white-space:nowrap}
 .nav-dropdown-btn:hover,.nav-dropdown.open .nav-dropdown-btn{color:var(--text);background:rgba(255,255,255,.05)}
@@ -57,26 +53,22 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 .nav-dd-item{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:9px;text-decoration:none;transition:background .15s}
 .nav-dd-item:hover{background:rgba(255,255,255,.05)}
 .nav-dd-icon{width:34px;height:34px;border-radius:9px;background:rgba(0,255,136,.07);border:1px solid rgba(0,255,136,.14);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--accent2);flex-shrink:0}
-.nav-dd-text{}
 .nav-dd-label{font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:var(--text);margin-bottom:1px}
 .nav-dd-sub{font-size:10px;color:var(--muted);font-family:'Inter',sans-serif;line-height:1.4}
 .nd-divider{height:1px;background:rgba(255,255,255,.06);margin:5px 0}
 .nd-coming{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:9px;opacity:.45;cursor:default}
 .nd-coming .nav-dd-icon{background:rgba(255,255,255,.03);border-color:rgba(255,255,255,.07);color:var(--muted)}
 .nd-badge{font-size:9px;font-weight:700;color:var(--muted);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:2px 6px;font-family:'Outfit',sans-serif;margin-left:auto}
-/* Nav right */
 .nav-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .nav-login{font-size:13px;color:var(--text2);text-decoration:none;padding:8px 14px;border-radius:8px;border:1px solid var(--border2);transition:all .18s;font-family:'Inter',sans-serif;font-weight:500}
 .nav-login:hover{color:var(--text);border-color:rgba(255,255,255,.2)}
 .nav-cta{background:var(--accent);color:#070a08;border:none;border-radius:8px;padding:9px 18px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s;white-space:nowrap}
 .nav-cta:hover{background:#00e67a;box-shadow:0 0 20px rgba(0,255,136,.35)}
-/* Hamburger */
 .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:7px;border:1px solid var(--border2);border-radius:8px;background:none}
 .nav-hamburger span{width:18px;height:2px;background:var(--text2);border-radius:2px;transition:all .22s;display:block}
 .nav-hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
 .nav-hamburger.open span:nth-child(2){opacity:0}
 .nav-hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
-/* Mobile overlay */
 .nav-mobile-overlay{display:none;position:fixed;inset:0;top:57px;background:rgba(7,10,8,.98);z-index:199;flex-direction:column;padding:16px;gap:2px;overflow-y:auto}
 .nav-mobile-overlay.open{display:flex}
 .nav-mob-link{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--text2);text-decoration:none;padding:13px 14px;border-radius:10px;font-family:'Inter',sans-serif;font-weight:500;transition:all .15s}
@@ -88,7 +80,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 .nav-mob-cta{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#070a08;border:none;border-radius:10px;padding:14px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;margin-top:10px}
 @media(max-width:820px){.nav-links{display:none}.nav-login{display:none}.nav-hamburger{display:flex}nav{padding:14px 20px}}
 
-/* HERO */
 .hero{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:140px 24px 80px;overflow:hidden}
 .hero .glow-orb:nth-child(1){width:700px;height:700px;background:rgba(0,255,136,.06);top:-160px;left:50%;transform:translateX(-50%)}
 .hero .glow-orb:nth-child(2){width:350px;height:350px;background:rgba(25,195,125,.07);top:55%;left:5%}
@@ -105,7 +96,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 .btn-hero-ghost{display:inline-flex;align-items:center;gap:9px;background:none;border:1px solid var(--border2);color:var(--text);border-radius:10px;padding:15px 30px;font-family:'Inter',sans-serif;font-size:15px;font-weight:500;cursor:pointer;text-decoration:none;transition:all .25s}
 .btn-hero-ghost:hover{border-color:rgba(0,255,136,.4);color:var(--accent)}
 
-/* ── HERO APP PREVIEW ── */
 .hero-screen{position:relative;width:100%;max-width:900px;margin:0 auto;animation:fadeUp .9s .4s ease both}
 .hero-screen::before{content:'';position:absolute;inset:-1px;border-radius:16px;background:linear-gradient(135deg,rgba(0,255,136,.28),rgba(0,255,136,.04) 55%,transparent);z-index:-1}
 .screen-chrome{background:var(--panel2);border-radius:14px 14px 0 0;border:1px solid rgba(255,255,255,.08);padding:11px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,.06)}
@@ -141,20 +131,17 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 .stars-mock{color:var(--gold);font-size:10px;letter-spacing:.5px}
 .note-icon-mock{color:var(--muted);font-size:11px}
 
-/* TICKER */
 .ticker-wrap{overflow:hidden;border-top:1px solid var(--border2);padding:13px 0;background:rgba(0,255,136,.02)}
 .ticker{display:flex;gap:56px;animation:ticker 30s linear infinite;white-space:nowrap}
 .ticker-item{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px;flex-shrink:0;font-family:'Outfit',sans-serif;font-weight:600}
 .ticker-item i{color:var(--accent2);font-size:10px}
 @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
-/* TRUST BAR */
 .trust-bar{border-top:1px solid var(--border2);border-bottom:1px solid var(--border2);padding:22px 40px;display:flex;align-items:center;justify-content:center;gap:48px;flex-wrap:wrap}
 .trust-item{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
 .trust-item i{color:var(--accent2);font-size:14px}
 .trust-item strong{color:var(--text2)}
 
-/* SECTIONS */
 section{position:relative;overflow:hidden}
 .sec-inner{max-width:1080px;margin:0 auto;padding:100px 40px}
 @media(max-width:640px){.sec-inner{padding:72px 24px}}
@@ -164,7 +151,6 @@ section{position:relative;overflow:hidden}
 .sec-title span{color:var(--accent)}
 .sec-sub{font-size:16px;color:var(--text2);line-height:1.7;max-width:540px}
 
-/* EDGE */
 #edge{background:linear-gradient(180deg,var(--bg) 0%,var(--panel) 100%)}
 .edge-intro{max-width:720px;margin-bottom:56px}
 .edge-line{display:flex;align-items:flex-start;gap:20px;padding:22px 24px;background:var(--panel2);border:1px solid var(--border2);border-radius:13px;margin-bottom:10px;transition:border-color .2s;position:relative;overflow:hidden}
@@ -175,7 +161,6 @@ section{position:relative;overflow:hidden}
 .edge-line p{font-size:13px;color:var(--text2);line-height:1.7}
 .edge-line .edge-insight{display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-size:11px;font-weight:700;color:var(--accent2);background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.15);border-radius:4px;padding:3px 9px;font-family:'Outfit',sans-serif}
 
-/* FEATURES */
 #features{background:var(--panel)}
 #features .glow-orb{width:500px;height:500px;background:rgba(0,255,136,.04);top:50%;left:-100px;transform:translateY(-50%)}
 .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:56px}
@@ -190,7 +175,6 @@ section{position:relative;overflow:hidden}
 .feat-tag{display:inline-block;font-size:10px;font-weight:700;color:var(--accent2);background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.15);border-radius:4px;padding:3px 8px;text-transform:uppercase;letter-spacing:.7px;font-family:'Outfit',sans-serif;align-self:flex-start}
 .feat-tag.pro{color:#fbbf24;background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.2)}
 
-/* DATA SPOTLIGHT */
 #spotlight{background:var(--bg)}
 .spotlight-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:52px}
 @media(max-width:700px){.spotlight-grid{grid-template-columns:1fr}}
@@ -206,7 +190,7 @@ section{position:relative;overflow:hidden}
 .heatmap-row{display:flex;gap:3px;margin-bottom:4px}
 .hm-cell{flex:1;height:14px;border-radius:2px}
 .donut-row{display:flex;align-items:center;gap:14px}
-.donut-mock{width:60px;height:60px;border-radius:50%;background:conic-gradient(#19c37d 0% 68%,#ff5f6d 68% 90%,rgba(255,255,255,.12) 90% 100%);flex-shrink:0}
+.donut-mock{width:60px;height:60px;border-radius:50%;background:conic-gradient(#19c37d 0% 58%,#ff5f6d 58% 88%,rgba(255,255,255,.12) 88% 100%);flex-shrink:0}
 .donut-legend{display:flex;flex-direction:column;gap:6px}
 .dl-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2)}
 .dl-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
@@ -231,7 +215,6 @@ section{position:relative;overflow:hidden}
 .eq-chart-label i{color:var(--accent2);font-size:8px}
 .eq-svg{width:100%;overflow:visible}
 
-/* CALC CTA */
 #calc-cta{background:var(--panel)}
 .calc-cta-inner{max-width:1080px;margin:0 auto;padding:80px 40px}
 .calc-cta-card{display:flex;align-items:center;justify-content:space-between;gap:32px;background:linear-gradient(135deg,rgba(0,255,136,.06),rgba(0,255,136,.02));border:1px solid rgba(0,255,136,.18);border-radius:18px;padding:36px 40px;flex-wrap:wrap}
@@ -258,7 +241,6 @@ section{position:relative;overflow:hidden}
 .ccp-rr-bar{height:100%;border-radius:3px;background:var(--accent)}
 @media(max-width:900px){.calc-cta-preview{display:none}}
 
-/* STATS */
 #stats{background:var(--bg);border-top:1px solid var(--border2);border-bottom:1px solid var(--border2)}
 .stats-inner{max-width:1080px;margin:0 auto;padding:64px 40px}
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:2px}
@@ -268,7 +250,6 @@ section{position:relative;overflow:hidden}
 .stat-num{font-family:'Outfit',sans-serif;font-size:clamp(34px,4.5vw,54px);font-weight:700;color:var(--accent);line-height:1;margin-bottom:6px;display:block}
 .stat-lbl{font-size:13px;color:var(--muted)}
 
-/* HOW */
 #how{background:linear-gradient(180deg,var(--bg),var(--panel))}
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:56px;position:relative}
 .steps::before{content:'';position:absolute;top:28px;left:calc(16.66% + 20px);right:calc(16.66% + 20px);height:1px;background:linear-gradient(90deg,var(--accent2),rgba(25,195,125,.2),var(--accent2))}
@@ -278,7 +259,6 @@ section{position:relative;overflow:hidden}
 .step h3{font-family:'Outfit',sans-serif;font-size:17px;font-weight:800;margin-bottom:8px}
 .step p{font-size:13px;color:var(--text2);line-height:1.7}
 
-/* TESTIMONIALS */
 #testimonials{background:var(--panel)}
 .testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:52px}
 @media(max-width:860px){.testi-grid{grid-template-columns:1fr 1fr}}
@@ -292,7 +272,6 @@ section{position:relative;overflow:hidden}
 .testi-name{font-size:13px;font-weight:700;font-family:'Outfit',sans-serif}
 .testi-role{font-size:11px;color:var(--muted)}
 
-/* COMPARE */
 #compare{background:var(--bg)}
 .cmp-wrap{margin-top:52px;overflow-x:auto;border:1px solid var(--border2);border-radius:14px;overflow:hidden}
 .cmp-table{width:100%;border-collapse:collapse;min-width:500px}
@@ -304,7 +283,6 @@ section{position:relative;overflow:hidden}
 .cmp-table td.no{color:var(--muted)}
 .cmp-table i.yes{color:var(--accent2)}.cmp-table i.no{color:var(--muted);opacity:.4}
 
-/* PRICING */
 #pricing{background:var(--panel)}
 .pricing-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:56px;max-width:800px;margin-left:auto;margin-right:auto}
 @media(max-width:640px){.pricing-grid{grid-template-columns:1fr}}
@@ -334,7 +312,6 @@ section{position:relative;overflow:hidden}
 .price-btn.pro-btn{background:var(--accent);color:#070a08;border:none;box-shadow:0 4px 20px rgba(0,255,136,.25)}
 .price-btn.pro-btn:hover{background:#00e67a;box-shadow:0 6px 28px rgba(0,255,136,.4);transform:translateY(-1px)}
 
-/* CTA */
 #cta{background:var(--bg);position:relative;overflow:hidden}
 #cta .glow-orb{width:800px;height:800px;background:rgba(0,255,136,.055);top:50%;left:50%;transform:translate(-50%,-50%)}
 .cta-inner{max-width:720px;margin:0 auto;padding:120px 40px;text-align:center;position:relative;z-index:1}
@@ -345,7 +322,6 @@ section{position:relative;overflow:hidden}
 .cta-note{font-size:12px;color:var(--muted)}
 .cta-note i{color:var(--accent2);margin-right:4px}
 
-/* FAQ */
 #faq{background:var(--panel);border-top:1px solid var(--border2)}
 .faq-list{max-width:680px;margin:52px auto 0;display:flex;flex-direction:column;gap:5px}
 .faq-item{border:1px solid var(--border2);border-radius:11px;overflow:hidden;transition:border-color .2s}
@@ -357,7 +333,6 @@ section{position:relative;overflow:hidden}
 .faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease;font-size:13px;color:var(--text2);line-height:1.7;padding:0 20px;background:var(--bg)}
 .faq-item.open .faq-a{max-height:300px;padding:14px 20px 20px}
 
-/* FOOTER */
 footer{background:var(--bg);border-top:1px solid var(--border2);padding:52px 40px 28px}
 .footer-inner{max-width:1080px;margin:0 auto;display:flex;gap:56px;flex-wrap:wrap;margin-bottom:40px}
 .footer-brand{flex:1;min-width:200px}
@@ -375,16 +350,12 @@ footer{background:var(--bg);border-top:1px solid var(--border2);padding:52px 40p
 .footer-bottom{max-width:1080px;margin:0 auto;padding-top:24px;border-top:1px solid var(--border2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--muted)}
 @media(max-width:640px){.footer-inner{flex-direction:column;gap:32px}.footer-bottom{flex-direction:column;align-items:center;text-align:center}}
 
-/* ANIMATIONS */
 @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 .reveal{opacity:0;transform:translateY(28px);transition:opacity .65s ease,transform .65s ease}
 .reveal.in{opacity:1;transform:translateY(0)}
 .reveal-d1{transition-delay:.08s}.reveal-d2{transition-delay:.16s}.reveal-d3{transition-delay:.24s}
 .reveal-d4{transition-delay:.32s}.reveal-d5{transition-delay:.40s}.reveal-d6{transition-delay:.48s}
 
-/* ═══════════════════════════════════
-   CALCULATOR PAGE STYLES
-══════════════════════════════════════ */
 .page-hero{text-align:center;margin-bottom:40px;display:flex;flex-direction:column;align-items:center}
 .hero-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.18);border-radius:999px;padding:5px 13px;font-size:11px;color:var(--accent2);font-weight:600;margin-bottom:18px;letter-spacing:.5px;font-family:var(--font-heading)}
 .page-hero h1{font-size:clamp(28px,5vw,52px);font-weight:700;letter-spacing:-1.2px;line-height:1.07;margin-bottom:12px}
@@ -493,19 +464,13 @@ footer{background:var(--bg);border-top:1px solid var(--border2);padding:52px 40p
 </head>
 <body>
 
-<!-- ══════════════════════════════════════
-     SHARED NAV
-══════════════════════════════════════ -->
 <nav>
   <a href="/" class="nav-logo">Trading<span>Grove</span></a>
-
   <div class="nav-links">
     <a href="#edge">About</a>
     <a href="#features">Features</a>
     <a href="#faq">FAQ</a>
     <a href="#pricing">Pricing</a>
-
-    <!-- Tools Dropdown -->
     <div class="nav-dropdown" id="toolsDropdown">
       <button class="nav-dropdown-btn" onclick="toggleToolsDropdown()">
         Tools <i class="fa-solid fa-chevron-down chevron"></i>
@@ -546,18 +511,15 @@ footer{background:var(--bg);border-top:1px solid var(--border2);padding:52px 40p
       </div>
     </div>
   </div>
-
   <div class="nav-right">
     <a href="/auth" class="nav-login">Log In</a>
     <a href="/auth" class="nav-cta">Start Free <i class="fa-solid fa-chevron-right" style="font-size:10px;margin-left:3px"></i></a>
-    <!-- Hamburger -->
     <div class="nav-hamburger" id="navHamburger" onclick="toggleMobileNav()">
       <span></span><span></span><span></span>
     </div>
   </div>
 </nav>
 
-<!-- Mobile overlay -->
 <div class="nav-mobile-overlay" id="mobileNav">
   <a href="#edge" class="nav-mob-link" onclick="closeMobileNav()"><i class="fa-solid fa-circle-info" style="color:var(--accent2);width:16px"></i> About</a>
   <a href="#features" class="nav-mob-link" onclick="closeMobileNav()"><i class="fa-solid fa-star" style="color:var(--accent2);width:16px"></i> Features</a>
@@ -572,19 +534,18 @@ footer{background:var(--bg);border-top:1px solid var(--border2);padding:52px 40p
     <div class="nav-mob-tool-icon"><i class="fa-solid fa-dollar-sign"></i></div>
     <div><div style="font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:var(--text)">Forex Risk Calculator</div><div style="font-size:11px;color:var(--muted)">Lot size, pip value, risk</div></div>
   </a>
-  <a href="/auth" class="nav-mob-cta" onclick="closeMobileNav()"><i class="fa-solid fa-rocket"></i> Start Journaling Free</a>
+  <a href="/auth" class="nav-mob-cta" onclick="closeMobileNav()"><i class="fa-solid fa-rocket"></i> Start Journaling</a>
 </div>
 
-<!-- Home page content (shown by default) -->
 <div id="homePage">
 
 <!-- HERO -->
 <section class="hero">
   <div class="glow-orb"></div><div class="glow-orb"></div><div class="glow-orb"></div>
-  <h1>Stop Trading Blind.<br><span class="line2">Find Your Edge.</span><span class="line3">The journal that shows you the truth.</span></h1>
-  <p class="hero-sub">TradingGrove converts your raw trade history into <strong>honest, actionable insights</strong>: your best hours, your worst habits, your strongest setups, and exactly what's costing you money.</p>
+  <h1>Keep a journal.<br><span class="line2">Know your trading.</span><span class="line3">The quiet way to improve over time.</span></h1>
+  <p class="hero-sub">TradingGrove gives you a clear, organised place to log your trades and gradually understand what is and isn't working — without overcomplicating things.</p>
   <div class="hero-actions">
-    <a href="/auth" class="btn-hero"><i class="fa-solid fa-chart-line"></i> Start Journaling Free</a>
+    <a href="/auth" class="btn-hero"><i class="fa-solid fa-chart-line"></i> Start Journaling</a>
     <a href="#features" class="btn-hero-ghost">See what's inside <i class="fa-solid fa-chevron-down" style="font-size:10px"></i></a>
   </div>
   <div class="hero-screen">
@@ -599,17 +560,17 @@ footer{background:var(--bg);border-top:1px solid var(--border2);padding:52px 40p
     </div>
     <div class="screen-body">
       <div class="abar-preview">
-        <div class="abar-stat"><div class="abar-lbl">Trades</div><div class="abar-val plain">148</div></div>
+        <div class="abar-stat"><div class="abar-lbl">Trades</div><div class="abar-val plain">112</div></div>
         <div class="abar-divider"></div>
-        <div class="abar-stat"><div class="abar-lbl">Win Rate</div><div class="abar-val gold">67.6%</div></div>
-        <div class="abar-stat"><div class="abar-lbl">Wins</div><div class="abar-val pos">100</div></div>
-        <div class="abar-stat"><div class="abar-lbl">Losses</div><div class="abar-val neg">48</div></div>
+        <div class="abar-stat"><div class="abar-lbl">Win Rate</div><div class="abar-val gold">54.5%</div></div>
+        <div class="abar-stat"><div class="abar-lbl">Wins</div><div class="abar-val pos">61</div></div>
+        <div class="abar-stat"><div class="abar-lbl">Losses</div><div class="abar-val neg">51</div></div>
         <div class="abar-divider"></div>
-        <div class="abar-stat"><div class="abar-lbl">Win Streak</div><div class="abar-val pos">9</div></div>
-        <div class="abar-stat"><div class="abar-lbl">Loss Streak</div><div class="abar-val neg">3</div></div>
+        <div class="abar-stat"><div class="abar-lbl">Win Streak</div><div class="abar-val pos">6</div></div>
+        <div class="abar-stat"><div class="abar-lbl">Loss Streak</div><div class="abar-val neg">5</div></div>
         <div class="abar-divider"></div>
-        <div class="abar-stat"><div class="abar-lbl">Avg R</div><div class="abar-val pos">+2.1R</div></div>
-        <div class="abar-stat"><div class="abar-lbl">Total PNL</div><div class="abar-val pos">+$6,340</div></div>
+        <div class="abar-stat"><div class="abar-lbl">Avg R</div><div class="abar-val pos">+1.4R</div></div>
+        <div class="abar-stat"><div class="abar-lbl">Total PNL</div><div class="abar-val pos">+$3,180</div></div>
       </div>
       <div class="logs-table-wrap">
         <div class="logs-ctrl">
@@ -620,9 +581,9 @@ footer{background:var(--bg);border-top:1px solid var(--border2);padding:52px 40p
         <table class="lt">
           <thead><tr><th>Date / Time</th><th>Pair</th><th>Pos</th><th>Strategy</th><th>TF</th><th>PNL</th><th>Ratio</th><th>Conf</th><th>Mood</th></tr></thead>
           <tbody>
-            <tr><td class="muted">Apr 10 · 09:14</td><td style="font-weight:700;color:var(--text)">EURUSD</td><td><span class="pill-long"><i class="fa-solid fa-arrow-up" style="font-size:7px"></i> Long</span></td><td><span class="pill-strat">Break &amp; Retest</span></td><td class="muted">H1</td><td class="pos">+$520</td><td class="pos">+2.6R</td><td><span class="stars-mock">★★★★★</span></td><td><span class="pill-mood sharp">Sharp</span></td></tr>
-            <tr><td class="muted">Apr 09 · 14:32</td><td style="font-weight:700;color:var(--text)">XAUUSD</td><td><span class="pill-short"><i class="fa-solid fa-arrow-down" style="font-size:7px"></i> Short</span></td><td><span class="pill-strat">SMC OB</span></td><td class="muted">H4</td><td class="neg">-$190</td><td class="neg">-1.0R</td><td><span class="stars-mock">★★★</span></td><td><span class="pill-mood" style="background:rgba(255,95,109,.09);color:#ff5f6d;border-color:rgba(255,95,109,.2)">Revenge</span></td></tr>
-            <tr><td class="muted">Apr 08 · 07:55</td><td style="font-weight:700;color:var(--text)">BTCUSDT</td><td><span class="pill-long"><i class="fa-solid fa-arrow-up" style="font-size:7px"></i> Long</span></td><td><span class="pill-strat">Trend Follow</span></td><td class="muted">D1</td><td class="pos">+$1,140</td><td class="pos">+3.8R</td><td><span class="stars-mock">★★★★★</span></td><td><span class="pill-mood calm">Calm</span></td></tr>
+            <tr><td class="muted">Apr 10 · 09:14</td><td style="font-weight:700;color:var(--text)">EURUSD</td><td><span class="pill-long"><i class="fa-solid fa-arrow-up" style="font-size:7px"></i> Long</span></td><td><span class="pill-strat">Break &amp; Retest</span></td><td class="muted">H1</td><td class="pos">+$380</td><td class="pos">+2.1R</td><td><span class="stars-mock">★★★★</span></td><td><span class="pill-mood sharp">Focused</span></td></tr>
+            <tr><td class="muted">Apr 09 · 14:32</td><td style="font-weight:700;color:var(--text)">XAUUSD</td><td><span class="pill-short"><i class="fa-solid fa-arrow-down" style="font-size:7px"></i> Short</span></td><td><span class="pill-strat">Supply Zone</span></td><td class="muted">H4</td><td class="neg">-$210</td><td class="neg">-1.0R</td><td><span class="stars-mock">★★★</span></td><td><span class="pill-mood" style="background:rgba(255,95,109,.09);color:#ff5f6d;border-color:rgba(255,95,109,.2)">Tired</span></td></tr>
+            <tr><td class="muted">Apr 08 · 08:22</td><td style="font-weight:700;color:var(--text)">BTCUSDT</td><td><span class="pill-long"><i class="fa-solid fa-arrow-up" style="font-size:7px"></i> Long</span></td><td><span class="pill-strat">Trend Follow</span></td><td class="muted">H4</td><td class="pos">+$640</td><td class="pos">+2.8R</td><td><span class="stars-mock">★★★★★</span></td><td><span class="pill-mood calm">Calm</span></td></tr>
           </tbody>
         </table>
       </div>
@@ -639,7 +600,7 @@ footer{background:var(--bg);border-top:1px solid var(--border2);padding:52px 40p
 <!-- TRUST BAR -->
 <div class="trust-bar">
   <div class="trust-item"><i class="fa-solid fa-cloud"></i><span><strong>Cloud sync</strong> across all devices</span></div>
-  <div class="trust-item"><i class="fa-solid fa-bolt"></i><span><strong>30-second setup,</strong> no card needed</span></div>
+  <div class="trust-item"><i class="fa-solid fa-bolt"></i><span><strong>Set up in under a minute,</strong> no card needed</span></div>
   <div class="trust-item"><i class="fa-solid fa-lock"></i><span><strong>Row-level security,</strong> your data stays yours</span></div>
   <div class="trust-item"><i class="fa-solid fa-circle-check"></i><span><strong>Free forever</strong> for 1 journal</span></div>
 </div>
@@ -649,13 +610,13 @@ footer{background:var(--bg);border-top:1px solid var(--border2);padding:52px 40p
   <div class="glow-orb" style="width:400px;height:400px;background:rgba(0,255,136,.04);top:50%;right:-100px;transform:translateY(-50%)"></div>
   <div class="sec-inner">
     <div class="edge-intro">
-      <h2 class="sec-title reveal">Most traders lose<br>for <span>avoidable reasons</span><br>they can't even see.</h2>
-      <p class="sec-sub reveal" style="margin-bottom:0">Emotions, timing, and bad habits are invisible without data. TradingGrove makes them undeniable.</p>
+      <h2 class="sec-title reveal">Most traders have more data<br>than they <span>realise they do.</span></h2>
+      <p class="sec-sub reveal" style="margin-bottom:0">Your trade history already holds patterns worth knowing — the times you trade well, the emotions that lead to mistakes, the setups that actually pay. TradingGrove helps you read that history clearly.</p>
     </div>
-    <div class="edge-line reveal"><div class="edge-icon"><i class="fa-solid fa-face-angry"></i></div><div><h3>Emotion is eating your account, and you don't know which one</h3><p>You know revenge trading is bad. But do you know your "Anxious" trades lose 2.4R on average while your "Calm" trades gain 1.8R? Mood tracking ties every emotion to exact PNL numbers so the data speaks for itself.</p><span class="edge-insight"><i class="fa-solid fa-chart-bar"></i> Mood vs Performance chart reveals this automatically</span></div></div>
-    <div class="edge-line reveal reveal-d1"><div class="edge-icon"><i class="fa-solid fa-clock"></i></div><div><h3>There's a time of day that's quietly bleeding your account</h3><p>Your 9AM to 11AM trades might carry a 71% win rate. Your 2PM to 4PM trades? 38%. Without an hour breakdown you're treating every session the same. The hour heatmap shows exactly when your edge is live and when to stay flat.</p><span class="edge-insight"><i class="fa-solid fa-fire-flame-curved"></i> Hour Heatmap + Best Hours chart pinpoints this</span></div></div>
-    <div class="edge-line reveal reveal-d2"><div class="edge-icon"><i class="fa-solid fa-chess-knight"></i></div><div><h3>Your best strategy is probably not the one you trade most</h3><p>The setup you take 3x a week might have a 40% win rate. The one you take once a week might be printing. The Strategy PNL breakdown puts every setup side by side: wins, losses, total dollars. You trade your actual edge, not your habits.</p><span class="edge-insight"><i class="fa-solid fa-chart-bar"></i> Strategy PNL bar chart shows it plainly</span></div></div>
-    <div class="edge-line reveal reveal-d3"><div class="edge-icon"><i class="fa-solid fa-shield-halved"></i></div><div><h3>Your R-multiples are lying to you about your risk management</h3><p>A few -4R outliers can wipe out 10 days of +1R consistency. The equity curve shows the problem instantly. Your average R stat tells you whether it's a system issue or a sizing issue. Fix the right one.</p><span class="edge-insight"><i class="fa-solid fa-chart-area"></i> Equity Curve + Avg R metric exposes this</span></div></div>
+    <div class="edge-line reveal"><div class="edge-icon"><i class="fa-solid fa-face-meh"></i></div><div><h3>Your mood has more impact on results than you might expect</h3><p>It's not that emotional awareness is a secret — most traders know it matters. What's harder is seeing the actual numbers. When you can compare your calm sessions against your frustrated ones in a simple chart, it becomes much easier to act on what you find.</p><span class="edge-insight"><i class="fa-solid fa-chart-bar"></i> Mood vs Performance chart reveals this over time</span></div></div>
+    <div class="edge-line reveal reveal-d1"><div class="edge-icon"><i class="fa-solid fa-clock"></i></div><div><h3>Some hours of the day may suit your trading better than others</h3><p>This varies for every trader. Some find they're sharper in the morning. Others notice they make more impulsive decisions late in the afternoon. Looking at an hour-by-hour breakdown of your own results is one of the more practical things you can do early on.</p><span class="edge-insight"><i class="fa-solid fa-fire-flame-curved"></i> Hour Heatmap shows your personal performance by time of day</span></div></div>
+    <div class="edge-line reveal reveal-d2"><div class="edge-icon"><i class="fa-solid fa-chess-knight"></i></div><div><h3>The setup you use most often isn't always the one that fits you best</h3><p>It's easy to keep returning to familiar setups without checking whether they're actually performing. Comparing your strategies side by side — wins, losses, and total result — gives you a clearer picture of where your time is best spent.</p><span class="edge-insight"><i class="fa-solid fa-chart-bar"></i> Strategy PNL breakdown puts everything side by side</span></div></div>
+    <div class="edge-line reveal reveal-d3"><div class="edge-icon"><i class="fa-solid fa-shield-halved"></i></div><div><h3>A few large losses can quietly undo a lot of steady progress</h3><p>It's one thing to know your win rate. It's another to see your equity curve and notice the shape of it. Are the drawdowns clustered? Are you recovering steadily or in bursts? These questions are easier to answer when you can actually see the picture.</p><span class="edge-insight"><i class="fa-solid fa-chart-area"></i> Equity Curve makes your progress and setbacks visible</span></div></div>
   </div>
 </section>
 
@@ -663,15 +624,15 @@ footer{background:var(--bg);border-top:1px solid var(--border2);padding:52px 40p
 <section id="features">
   <div class="glow-orb"></div>
   <div class="sec-inner">
-    <h2 class="sec-title reveal">Every tool you need<br><span>to find your edge.</span></h2>
-    <p class="sec-sub reveal">Start free. Upgrade when you're ready for the full picture.</p>
+    <h2 class="sec-title reveal">Everything in one place,<br><span>nothing you don't need.</span></h2>
+    <p class="sec-sub reveal">Log your trades, review your sessions, and let the patterns surface naturally over time.</p>
     <div class="feat-grid">
-      <div class="feat-card reveal reveal-d1"><span class="feat-num">01</span><div class="feat-icon-wrap"><i class="fa-solid fa-table-list"></i></div><h3>Smart Trade Log</h3><p>Log every trade with pair, position, strategy, timeframe, PNL, R-factor, confidence rating, and mood. Filter, search, sort, and bulk delete. Add chart screenshots and notes to any trade.</p><span class="feat-tag">Core</span></div>
-      <div class="feat-card reveal reveal-d2"><span class="feat-num">02</span><div class="feat-icon-wrap"><i class="fa-solid fa-clipboard-list"></i></div><h3>Pre-Session Planning</h3><p>Set your market bias, track high-impact news, run your rule checklist before entering any trade, and log a full post-session reflection. Build the discipline that separates professionals from gamblers.</p><span class="feat-tag">Discipline</span></div>
-      <div class="feat-card reveal reveal-d3"><span class="feat-num">03</span><div class="feat-icon-wrap"><i class="fa-solid fa-chart-area"></i></div><h3>Deep Analytics</h3><p>Equity curve, win/loss breakdown, strategy PNL, mood vs performance, day-of-week patterns, hourly heatmaps, Long vs Short, timeframe breakdown, and most traded pairs. Free gets the essentials. Pro unlocks everything.</p><span class="feat-tag">Insights</span></div>
-      <div class="feat-card reveal reveal-d4"><span class="feat-num">04</span><div class="feat-icon-wrap"><i class="fa-solid fa-calendar-days"></i></div><h3>Trade Calendar</h3><p>See every trading day at a glance: green for profit, red for loss. Click any day for a full breakdown of individual trades. Monthly summary shows win days, loss days, best day, worst day, and total PNL.</p><span class="feat-tag">Visual</span></div>
-      <div class="feat-card reveal reveal-d5"><span class="feat-num">05</span><div class="feat-icon-wrap"><i class="fa-solid fa-note-sticky"></i></div><h3>Notes &amp; Screenshot Gallery</h3><p>Attach chart images to any trade by uploading, drag-dropping, or pasting from clipboard. Write detailed analysis notes with autosave. View all trade notes in a filterable gallery, plus freeform custom notes.</p><span class="feat-tag pro">Pro · Unlimited Images</span></div>
-      <div class="feat-card reveal reveal-d6"><span class="feat-num">06</span><div class="feat-icon-wrap"><i class="fa-solid fa-calculator"></i></div><h3>Live Risk Calculator</h3><p>A draggable, always-accessible position sizing calculator built right into the journal. Supports Crypto and Forex (standard pairs, JPY, Gold, US30, NAS100). Live R:R ratio, lot size, and margin display.</p><span class="feat-tag">Risk</span></div>
+      <div class="feat-card reveal reveal-d1"><span class="feat-num">01</span><div class="feat-icon-wrap"><i class="fa-solid fa-table-list"></i></div><h3>Smart Trade Log</h3><p>Record each trade with the details that matter — pair, direction, strategy, timeframe, PNL, R-factor, confidence, and how you felt. Filter and search your history as it grows.</p><span class="feat-tag">Core</span></div>
+      <div class="feat-card reveal reveal-d2"><span class="feat-num">02</span><div class="feat-icon-wrap"><i class="fa-solid fa-clipboard-list"></i></div><h3>Pre-Session Planning</h3><p>A quiet space before you open a chart. Set your bias, check upcoming news, run through your rules, and reflect after the session closes. Simple habits that add up over months.</p><span class="feat-tag">Discipline</span></div>
+      <div class="feat-card reveal reveal-d3"><span class="feat-num">03</span><div class="feat-icon-wrap"><i class="fa-solid fa-chart-area"></i></div><h3>Deep Analytics</h3><p>Equity curve, win/loss breakdown, strategy PNL, mood vs performance, day-of-week patterns, hourly breakdown, Long vs Short, timeframe analysis, and your most-traded pairs. Free covers the essentials. Pro unlocks the full picture.</p><span class="feat-tag">Insights</span></div>
+      <div class="feat-card reveal reveal-d4"><span class="feat-num">04</span><div class="feat-icon-wrap"><i class="fa-solid fa-calendar-days"></i></div><h3>Trade Calendar</h3><p>A monthly view of every trading day — green for profit, red for a loss. Click any day to see the individual trades behind it. A helpful way to notice weekly and monthly patterns in your own behaviour.</p><span class="feat-tag">Visual</span></div>
+      <div class="feat-card reveal reveal-d5"><span class="feat-num">05</span><div class="feat-icon-wrap"><i class="fa-solid fa-note-sticky"></i></div><h3>Notes &amp; Screenshot Gallery</h3><p>Attach chart images to any trade by uploading, dragging, or pasting directly from your clipboard. Add notes with autosave. Browse your full trade gallery when you want to review past setups.</p><span class="feat-tag pro">Pro · Unlimited Images</span></div>
+      <div class="feat-card reveal reveal-d6"><span class="feat-num">06</span><div class="feat-icon-wrap"><i class="fa-solid fa-calculator"></i></div><h3>Live Risk Calculator</h3><p>A position sizing calculator you can pull up at any point during a session. Works for Crypto and Forex including JPY pairs, Gold, US30, and NAS100. Shows lot size, risk amount, and R:R in real time.</p><span class="feat-tag">Risk</span></div>
     </div>
   </div>
 </section>
@@ -679,47 +640,344 @@ footer{background:var(--bg);border-top:1px solid var(--border2);padding:52px 40p
 <!-- DATA SPOTLIGHT -->
 <section id="spotlight" style="background:var(--bg)">
   <div class="sec-inner">
-    <h2 class="sec-title reveal">The patterns are already<br><span>in your trades.</span></h2>
-    <p class="sec-sub reveal">You just need the right tools to surface them. Here's what TradingGrove reveals from a typical journal.</p>
+    <h2 class="sec-title reveal">What your trade history<br><span>can tell you.</span></h2>
+    <p class="sec-sub reveal">These are the kinds of things traders notice once they start logging consistently. None of it requires a perfect record — just an honest one.</p>
     <div class="spotlight-grid">
-      <div class="spot-card reveal reveal-d1"><div class="spot-label"><i class="fa-solid fa-chess-knight"></i> Strategy PNL Breakdown</div><div class="mini-bars"><div class="mini-bar pos" style="height:100%"></div><div class="mini-bar pos" style="height:72%"></div><div class="mini-bar neg" style="height:40%"></div><div class="mini-bar pos" style="height:55%"></div><div class="mini-bar neg" style="height:28%"></div><div class="mini-bar pos" style="height:90%"></div></div><div class="mini-labels"><span>B&amp;R</span><span>SMC</span><span>Reversal</span><span>FVG</span><span>Scalp</span><span>Trend</span></div><p style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6">See which setups actually make you money and which ones you're holding onto out of habit.</p></div>
-      <div class="spot-card reveal reveal-d2"><div class="spot-label"><i class="fa-solid fa-circle-half-stroke"></i> Win / Loss Split</div><div class="donut-row" style="margin-bottom:12px"><div class="donut-mock"></div><div class="donut-legend"><div class="dl-item"><div class="dl-dot" style="background:#19c37d"></div> Wins 68%</div><div class="dl-item"><div class="dl-dot" style="background:#ff5f6d"></div> Losses 29%</div><div class="dl-item"><div class="dl-dot" style="background:rgba(255,255,255,.15)"></div> Breakeven 3%</div></div></div><p style="font-size:12px;color:var(--muted);line-height:1.6">Your real win rate. Not the one you think you have, the one your trades actually prove.</p></div>
-      <div class="spot-card reveal reveal-d3"><div class="spot-label"><i class="fa-solid fa-fire-flame-curved"></i> Hour Performance — Avg PNL by Hour</div><div style="font-size:9px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">AM</div><div class="heatmap-row" style="margin-bottom:2px"><div class="hm-cell" style="background:rgba(255,255,255,.04)"></div><div class="hm-cell" style="background:rgba(255,255,255,.04)"></div><div class="hm-cell" style="background:rgba(255,255,255,.04)"></div><div class="hm-cell" style="background:rgba(255,255,255,.04)"></div><div class="hm-cell" style="background:rgba(255,255,255,.05)"></div><div class="hm-cell" style="background:rgba(25,195,125,.15)"></div><div class="hm-cell" style="background:rgba(25,195,125,.32)"></div><div class="hm-cell" style="background:rgba(25,195,125,.55)"></div><div class="hm-cell" style="background:rgba(25,195,125,.78)"></div><div class="hm-cell" style="background:rgba(25,195,125,.95)"></div><div class="hm-cell" style="background:rgba(25,195,125,.68)"></div><div class="hm-cell" style="background:rgba(25,195,125,.38)"></div></div><div style="display:flex;justify-content:space-between;font-size:8px;color:var(--muted);margin-bottom:10px"><span>12A</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11A</span></div><div style="font-size:9px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">PM</div><div class="heatmap-row" style="margin-bottom:2px"><div class="hm-cell" style="background:rgba(25,195,125,.28)"></div><div class="hm-cell" style="background:rgba(25,195,125,.48)"></div><div class="hm-cell" style="background:rgba(255,95,109,.42)"></div><div class="hm-cell" style="background:rgba(255,95,109,.65)"></div><div class="hm-cell" style="background:rgba(255,95,109,.35)"></div><div class="hm-cell" style="background:rgba(255,255,255,.1)"></div><div class="hm-cell" style="background:rgba(255,255,255,.06)"></div><div class="hm-cell" style="background:rgba(255,255,255,.04)"></div><div class="hm-cell" style="background:rgba(255,255,255,.04)"></div><div class="hm-cell" style="background:rgba(255,255,255,.04)"></div><div class="hm-cell" style="background:rgba(255,255,255,.04)"></div><div class="hm-cell" style="background:rgba(255,255,255,.04)"></div></div><div style="display:flex;justify-content:space-between;font-size:8px;color:var(--muted);margin-bottom:12px"><span>12P</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11P</span></div><div style="display:flex;gap:16px;flex-wrap:wrap"><div><div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#19c37d">9 AM</div><div style="font-size:10px;color:var(--muted)">Best hour / avg +$94</div></div><div><div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#ff5f6d">3 PM</div><div style="font-size:10px;color:var(--muted)">Worst hour / avg -$62</div></div></div></div>
-      <div class="spot-card reveal reveal-d4"><div class="spot-label"><i class="fa-solid fa-trophy"></i> Win &amp; Loss Streaks</div><div class="streak-row"><div class="streak-win"></div><div class="streak-win"></div><div class="streak-win"></div><div class="streak-loss"></div><div class="streak-win"></div><div class="streak-win"></div><div class="streak-win"></div><div class="streak-win"></div><div class="streak-win"></div><div class="streak-win"></div><div class="streak-win"></div><div class="streak-win"></div><div class="streak-win"></div><div class="streak-loss"></div><div class="streak-loss"></div><div class="streak-win"></div><div class="streak-win"></div><div class="streak-win"></div><div class="streak-win"></div><div class="streak-loss"></div><div class="streak-win"></div><div class="streak-win"></div><div class="streak-be"></div><div class="streak-win"></div><div class="streak-win"></div><div class="streak-win"></div><div class="streak-win"></div><div class="streak-win"></div><div class="streak-loss"></div><div class="streak-loss"></div><div class="streak-loss"></div></div><div style="display:flex;gap:20px;margin-top:12px"><div><div style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:700;color:#19c37d">9</div><div style="font-size:11px;color:var(--muted)">Best Win Streak</div></div><div><div style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:700;color:#ff5f6d">3</div><div style="font-size:11px;color:var(--muted)">Best Loss Streak</div></div></div><p style="font-size:12px;color:var(--muted);margin-top:10px;line-height:1.6">Know when you're on a run and when to step back.</p></div>
-      <div class="spot-card reveal reveal-d5"><div class="spot-label"><i class="fa-solid fa-face-smile"></i> Mood vs Performance</div><div style="display:flex;flex-direction:column;gap:9px"><div style="display:flex;align-items:center;gap:10px"><span style="font-size:13px;flex-shrink:0;width:20px">😌</span><div style="flex:1"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:3px"><span>Calm</span><span style="color:#19c37d">+$2,840 · 78% WR</span></div><div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px"><div style="height:100%;width:78%;background:#19c37d;border-radius:3px"></div></div></div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:13px;flex-shrink:0;width:20px">🎯</span><div style="flex:1"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:3px"><span>Focused</span><span style="color:#19c37d">+$1,960 · 71% WR</span></div><div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px"><div style="height:100%;width:71%;background:#19c37d;border-radius:3px"></div></div></div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:13px;flex-shrink:0;width:20px">😐</span><div style="flex:1"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:3px"><span>Neutral</span><span style="color:var(--text2)">+$340 · 54% WR</span></div><div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px"><div style="height:100%;width:54%;background:rgba(255,255,255,.25);border-radius:3px"></div></div></div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:13px;flex-shrink:0;width:20px">😴</span><div style="flex:1"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:3px"><span>Tired</span><span style="color:#ff5f6d">-$680 · 36% WR</span></div><div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px"><div style="height:100%;width:36%;background:#ff5f6d;border-radius:3px"></div></div></div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:13px;flex-shrink:0;width:20px">😤</span><div style="flex:1"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:3px"><span>Frustrated</span><span style="color:#ff5f6d">-$940 · 22% WR</span></div><div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px"><div style="height:100%;width:22%;background:#ff5f6d;border-radius:3px"></div></div></div></div></div><p style="font-size:12px;color:var(--muted);margin-top:14px;line-height:1.6">Your state of mind shows up in the numbers.</p></div>
-      <div class="spot-card reveal reveal-d6"><div class="spot-label"><i class="fa-solid fa-coins"></i> Most Traded Pairs — PNL Breakdown</div><div style="display:flex;flex-direction:column;gap:10px"><div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;color:var(--text)">BTC/USD</span><span style="font-size:10px;color:#19c37d">+$2,420 · 69% · 48t</span></div><div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px"><div style="height:100%;width:100%;background:rgba(25,195,125,.55);border-radius:3px"></div></div></div><div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;color:var(--text)">EUR/USD</span><span style="font-size:10px;color:#19c37d">+$1,180 · 65% · 31t</span></div><div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px"><div style="height:100%;width:65%;background:rgba(25,195,125,.55);border-radius:3px"></div></div></div><div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;color:var(--text)">XAU/USD</span><span style="font-size:10px;color:#19c37d">+$640 · 61% · 18t</span></div><div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px"><div style="height:100%;width:61%;background:rgba(25,195,125,.55);border-radius:3px"></div></div></div><div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;color:var(--text)">GBP/USD</span><span style="font-size:10px;color:var(--text2)">+$520 · 54% · 24t</span></div><div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px"><div style="height:100%;width:54%;background:rgba(255,255,255,.2);border-radius:3px"></div></div></div><div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;color:var(--text)">ETH/USD</span><span style="font-size:10px;color:#ff5f6d">-$240 · 45% · 22t</span></div><div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px"><div style="height:100%;width:45%;background:rgba(255,95,109,.55);border-radius:3px"></div></div></div></div><p style="font-size:12px;color:var(--muted);margin-top:14px;line-height:1.6">See which pairs are actually working for you.</p></div>
-      <div class="spot-card reveal" style="grid-column:1/-1"><div class="spot-label"><i class="fa-solid fa-calendar-days"></i> Trade Calendar — April 2025</div><div style="display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.05);border-radius:8px;margin-bottom:12px"><div style="display:flex;flex-direction:column;align-items:center;gap:1px;min-width:60px;flex:1"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-family:'Outfit',sans-serif;font-weight:700">Month PNL</div><div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#19c37d">+$4,280</div></div><div style="width:1px;background:rgba(255,255,255,.06)"></div><div style="display:flex;flex-direction:column;align-items:center;gap:1px;min-width:48px;flex:1"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-family:'Outfit',sans-serif;font-weight:700">Trades</div><div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:var(--text)">31</div></div><div style="width:1px;background:rgba(255,255,255,.06)"></div><div style="display:flex;flex-direction:column;align-items:center;gap:1px;min-width:56px;flex:1"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-family:'Outfit',sans-serif;font-weight:700">Win Days</div><div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#19c37d">12</div></div><div style="display:flex;flex-direction:column;align-items:center;gap:1px;min-width:56px;flex:1"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-family:'Outfit',sans-serif;font-weight:700">Loss Days</div><div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#ff5f6d">4</div></div><div style="width:1px;background:rgba(255,255,255,.06)"></div><div style="display:flex;flex-direction:column;align-items:center;gap:1px;min-width:56px;flex:1"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-family:'Outfit',sans-serif;font-weight:700">Win Rate</div><div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#19c37d">75%</div></div><div style="width:1px;background:rgba(255,255,255,.06)"></div><div style="display:flex;flex-direction:column;align-items:center;gap:1px;min-width:60px;flex:1"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-family:'Outfit',sans-serif;font-weight:700">Best Day</div><div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#19c37d">+$960</div></div><div style="display:flex;flex-direction:column;align-items:center;gap:1px;min-width:60px;flex:1"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-family:'Outfit',sans-serif;font-weight:700">Worst Day</div><div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#ff5f6d">-$240</div></div></div><div class="mini-cal-wrap"><div class="mini-cal-dow"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div><div class="mini-cal-grid"><div class="mini-cal-day empty"></div><div class="mini-cal-day has-trade"><span class="mcd-num">1</span><span class="mcd-tc">2t</span><span class="mcd-pnl pos">+$420</span><div class="mcd-bar pos"></div></div><div class="mini-cal-day has-trade"><span class="mcd-num">2</span><span class="mcd-tc">1t</span><span class="mcd-pnl neg">-$180</span><div class="mcd-bar neg"></div></div><div class="mini-cal-day has-trade"><span class="mcd-num">3</span><span class="mcd-tc">2t</span><span class="mcd-pnl pos">+$310</span><div class="mcd-bar pos"></div></div><div class="mini-cal-day has-trade"><span class="mcd-num">4</span><span class="mcd-tc">3t</span><span class="mcd-pnl pos">+$960</span><div class="mcd-bar pos"></div></div><div class="mini-cal-day"><span class="mcd-num" style="color:rgba(106,138,122,.3)">5</span></div><div class="mini-cal-day"><span class="mcd-num" style="color:rgba(106,138,122,.3)">6</span></div><div class="mini-cal-day has-trade"><span class="mcd-num">7</span><span class="mcd-tc">1t</span><span class="mcd-pnl pos">+$220</span><div class="mcd-bar pos"></div></div><div class="mini-cal-day has-trade"><span class="mcd-num">8</span><span class="mcd-tc">1t</span><span class="mcd-pnl neg">-$130</span><div class="mcd-bar neg"></div></div><div class="mini-cal-day has-trade"><span class="mcd-num">9</span><span class="mcd-tc">2t</span><span class="mcd-pnl pos">+$580</span><div class="mcd-bar pos"></div></div><div class="mini-cal-day has-trade"><span class="mcd-num">10</span><span class="mcd-tc">1t</span><span class="mcd-pnl pos">+$140</span><div class="mcd-bar pos"></div></div><div class="mini-cal-day has-trade"><span class="mcd-num">11</span><span class="mcd-tc">2t</span><span class="mcd-pnl neg">-$240</span><div class="mcd-bar neg"></div></div><div class="mini-cal-day"><span class="mcd-num" style="color:rgba(106,138,122,.3)">12</span></div><div class="mini-cal-day"><span class="mcd-num" style="color:rgba(106,138,122,.3)">13</span></div><div class="mini-cal-day has-trade"><span class="mcd-num">14</span><span class="mcd-tc">2t</span><span class="mcd-pnl pos">+$390</span><div class="mcd-bar pos"></div></div><div class="mini-cal-day has-trade"><span class="mcd-num">15</span><span class="mcd-tc">2t</span><span class="mcd-pnl pos">+$470</span><div class="mcd-bar pos"></div></div><div class="mini-cal-day"><span class="mcd-num" style="color:rgba(106,138,122,.3)">16</span></div><div class="mini-cal-day has-trade"><span class="mcd-num">17</span><span class="mcd-tc">1t</span><span class="mcd-pnl pos">+$290</span><div class="mcd-bar pos"></div></div><div class="mini-cal-day has-trade"><span class="mcd-num">18</span><span class="mcd-tc">1t</span><span class="mcd-pnl neg">-$160</span><div class="mcd-bar neg"></div></div><div class="mini-cal-day"><span class="mcd-num" style="color:rgba(106,138,122,.3)">19</span></div><div class="mini-cal-day"><span class="mcd-num" style="color:rgba(106,138,122,.3)">20</span></div><div class="mini-cal-day has-trade"><span class="mcd-num">21</span><span class="mcd-tc">3t</span><span class="mcd-pnl pos">+$520</span><div class="mcd-bar pos"></div></div><div class="mini-cal-day has-trade"><span class="mcd-num">22</span><span class="mcd-tc">1t</span><span class="mcd-pnl pos">+$180</span><div class="mcd-bar pos"></div></div><div class="mini-cal-day has-trade"><span class="mcd-num">23</span><span class="mcd-tc">2t</span><span class="mcd-pnl pos">+$340</span><div class="mcd-bar pos"></div></div><div class="mini-cal-day has-trade"><span class="mcd-num">24</span><span class="mcd-tc">1t</span><span class="mcd-pnl neg">-$90</span><div class="mcd-bar neg"></div></div><div class="mini-cal-day has-trade"><span class="mcd-num">25</span><span class="mcd-tc">3t</span><span class="mcd-pnl pos">+$630</span><div class="mcd-bar pos"></div></div><div class="mini-cal-day"><span class="mcd-num" style="color:rgba(106,138,122,.3)">26</span></div><div class="mini-cal-day"><span class="mcd-num" style="color:rgba(106,138,122,.3)">27</span></div><div class="mini-cal-day has-trade"><span class="mcd-num">28</span><span class="mcd-tc">1t</span><span class="mcd-pnl pos">+$200</span><div class="mcd-bar pos"></div></div><div class="mini-cal-day has-trade"><span class="mcd-num">29</span><span class="mcd-tc">2t</span><span class="mcd-pnl pos">+$480</span><div class="mcd-bar pos"></div></div><div class="mini-cal-day has-trade"><span class="mcd-num">30</span><span class="mcd-tc">2t</span><span class="mcd-pnl pos">+$156</span><div class="mcd-bar pos"></div></div><div class="mini-cal-day empty"></div><div class="mini-cal-day empty"></div><div class="mini-cal-day empty"></div><div class="mini-cal-day empty"></div></div></div><p style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6">Every green cell is a winning day. Every red cell is a day to study.</p></div>
-      <div class="spot-card reveal" style="grid-column:1/-1"><div class="spot-label"><i class="fa-solid fa-chart-area"></i> Equity Curve — Cumulative PNL</div><div class="eq-chart-wrap"><div class="eq-chart-label"><i class="fa-solid fa-circle" style="color:#19c37d;font-size:7px"></i> Running PNL · 148 trades logged</div><svg class="eq-svg" viewBox="0 0 800 180" preserveAspectRatio="none" style="height:160px"><defs><linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#19c37d" stop-opacity="0.22"/><stop offset="100%" stop-color="#19c37d" stop-opacity="0"/></linearGradient><linearGradient id="eqLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#19c37d" stop-opacity="0.6"/><stop offset="100%" stop-color="#00ff88" stop-opacity="1"/></linearGradient></defs><line x1="0" y1="36" x2="800" y2="36" stroke="rgba(255,255,255,.04)" stroke-width="1"/><line x1="0" y1="72" x2="800" y2="72" stroke="rgba(255,255,255,.04)" stroke-width="1"/><line x1="0" y1="108" x2="800" y2="108" stroke="rgba(255,255,255,.04)" stroke-width="1"/><line x1="0" y1="144" x2="800" y2="144" stroke="rgba(255,255,255,.04)" stroke-width="1"/><line x1="0" y1="160" x2="800" y2="160" stroke="rgba(255,255,255,.08)" stroke-width="1"/><text x="4" y="33" fill="rgba(106,138,122,.6)" font-size="9" font-family="Outfit,sans-serif">+$6k</text><text x="4" y="70" fill="rgba(106,138,122,.6)" font-size="9" font-family="Outfit,sans-serif">+$4k</text><text x="4" y="106" fill="rgba(106,138,122,.6)" font-size="9" font-family="Outfit,sans-serif">+$2k</text><text x="4" y="142" fill="rgba(106,138,122,.6)" font-size="9" font-family="Outfit,sans-serif">$0</text><path d="M 30,158 C 55,155 70,150 95,145 C 115,140 120,143 145,138 C 165,134 170,128 200,118 C 230,108 240,112 265,105 C 285,99 290,104 315,95 C 340,86 350,90 375,80 C 400,70 405,75 430,62 C 455,50 460,54 490,42 C 515,31 525,36 550,26 C 570,18 580,22 605,14 C 625,8 635,12 660,7 C 680,3 690,5 720,4 C 745,3 760,4 780,3 L 780,162 L 30,162 Z" fill="url(#eqGrad)"/><path d="M 30,158 C 55,155 70,150 95,145 C 115,140 120,143 145,138 C 165,134 170,128 200,118 C 230,108 240,112 265,105 C 285,99 290,104 315,95 C 340,86 350,90 375,80 C 400,70 405,75 430,62 C 455,50 460,54 490,42 C 515,31 525,36 550,26 C 570,18 580,22 605,14 C 625,8 635,12 660,7 C 680,3 690,5 720,4 C 745,3 760,4 780,3" stroke="url(#eqLine)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="780" cy="3" r="4" fill="#00ff88"/><circle cx="780" cy="3" r="8" fill="rgba(0,255,136,.18)"/><text x="30" y="175" fill="rgba(106,138,122,.5)" font-size="8" font-family="Outfit,sans-serif" text-anchor="middle">Jan</text><text x="170" y="175" fill="rgba(106,138,122,.5)" font-size="8" font-family="Outfit,sans-serif" text-anchor="middle">Feb</text><text x="320" y="175" fill="rgba(106,138,122,.5)" font-size="8" font-family="Outfit,sans-serif" text-anchor="middle">Mar</text><text x="470" y="175" fill="rgba(106,138,122,.5)" font-size="8" font-family="Outfit,sans-serif" text-anchor="middle">Apr</text><text x="620" y="175" fill="rgba(106,138,122,.5)" font-size="8" font-family="Outfit,sans-serif" text-anchor="middle">May</text><text x="780" y="175" fill="rgba(106,138,122,.5)" font-size="8" font-family="Outfit,sans-serif" text-anchor="middle">Jun</text></svg></div><div style="display:flex;gap:24px;margin-top:12px;flex-wrap:wrap"><div><div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:700;color:#19c37d">+$6,340</div><div style="font-size:11px;color:var(--muted)">Total PNL — 6 months</div></div><div><div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:700;color:var(--text)">148</div><div style="font-size:11px;color:var(--muted)">Trades logged</div></div><div><div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:700;color:#f5c518">67.6%</div><div style="font-size:11px;color:var(--muted)">Win Rate</div></div></div><p style="font-size:12px;color:var(--muted);margin-top:10px;line-height:1.6">The equity curve doesn't lie. See your capital growing consistently, and catch drawdown phases before they spiral.</p></div>
+
+      <!-- Strategy PNL — realistic mix, some negative -->
+      <div class="spot-card reveal reveal-d1">
+        <div class="spot-label"><i class="fa-solid fa-chess-knight"></i> Strategy PNL Breakdown</div>
+        <div class="mini-bars">
+          <div class="mini-bar pos" style="height:100%"></div>
+          <div class="mini-bar pos" style="height:58%"></div>
+          <div class="mini-bar neg" style="height:45%"></div>
+          <div class="mini-bar pos" style="height:38%"></div>
+          <div class="mini-bar neg" style="height:60%"></div>
+          <div class="mini-bar muted" style="height:18%"></div>
+        </div>
+        <div class="mini-labels"><span>B&amp;R</span><span>Trend</span><span>Reversal</span><span>FVG</span><span>Scalp</span><span>Range</span></div>
+        <p style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6">Not every strategy will work equally for you. Seeing them side by side makes it easier to focus your energy on what's actually performing.</p>
+      </div>
+
+      <!-- Win/Loss split — more realistic 58% -->
+      <div class="spot-card reveal reveal-d2">
+        <div class="spot-label"><i class="fa-solid fa-circle-half-stroke"></i> Win / Loss Split</div>
+        <div class="donut-row" style="margin-bottom:12px">
+          <div class="donut-mock"></div>
+          <div class="donut-legend">
+            <div class="dl-item"><div class="dl-dot" style="background:#19c37d"></div> Wins 58%</div>
+            <div class="dl-item"><div class="dl-dot" style="background:#ff5f6d"></div> Losses 34%</div>
+            <div class="dl-item"><div class="dl-dot" style="background:rgba(255,255,255,.15)"></div> Breakeven 8%</div>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--muted);line-height:1.6">A 58% win rate with good risk management can be more than enough. The chart helps you see where you actually stand, not where you assume you are.</p>
+      </div>
+
+      <!-- Hour heatmap — mixed, some bad afternoon hours -->
+      <div class="spot-card reveal reveal-d3">
+        <div class="spot-label"><i class="fa-solid fa-fire-flame-curved"></i> Hour Performance — Avg PNL by Hour</div>
+        <div style="font-size:9px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">AM</div>
+        <div class="heatmap-row" style="margin-bottom:2px">
+          <div class="hm-cell" style="background:rgba(255,255,255,.04)"></div>
+          <div class="hm-cell" style="background:rgba(255,255,255,.04)"></div>
+          <div class="hm-cell" style="background:rgba(255,255,255,.04)"></div>
+          <div class="hm-cell" style="background:rgba(255,255,255,.04)"></div>
+          <div class="hm-cell" style="background:rgba(255,255,255,.05)"></div>
+          <div class="hm-cell" style="background:rgba(25,195,125,.12)"></div>
+          <div class="hm-cell" style="background:rgba(25,195,125,.28)"></div>
+          <div class="hm-cell" style="background:rgba(25,195,125,.50)"></div>
+          <div class="hm-cell" style="background:rgba(25,195,125,.72)"></div>
+          <div class="hm-cell" style="background:rgba(25,195,125,.90)"></div>
+          <div class="hm-cell" style="background:rgba(25,195,125,.55)"></div>
+          <div class="hm-cell" style="background:rgba(25,195,125,.30)"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--muted);margin-bottom:10px"><span>12A</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11A</span></div>
+        <div style="font-size:9px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">PM</div>
+        <div class="heatmap-row" style="margin-bottom:2px">
+          <div class="hm-cell" style="background:rgba(25,195,125,.18)"></div>
+          <div class="hm-cell" style="background:rgba(255,255,255,.08)"></div>
+          <div class="hm-cell" style="background:rgba(255,95,109,.38)"></div>
+          <div class="hm-cell" style="background:rgba(255,95,109,.60)"></div>
+          <div class="hm-cell" style="background:rgba(255,95,109,.45)"></div>
+          <div class="hm-cell" style="background:rgba(255,95,109,.22)"></div>
+          <div class="hm-cell" style="background:rgba(255,255,255,.06)"></div>
+          <div class="hm-cell" style="background:rgba(255,255,255,.04)"></div>
+          <div class="hm-cell" style="background:rgba(255,255,255,.04)"></div>
+          <div class="hm-cell" style="background:rgba(255,255,255,.04)"></div>
+          <div class="hm-cell" style="background:rgba(255,255,255,.04)"></div>
+          <div class="hm-cell" style="background:rgba(255,255,255,.04)"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--muted);margin-bottom:12px"><span>12P</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11P</span></div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <div><div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#19c37d">9 AM</div><div style="font-size:10px;color:var(--muted)">Best hour · avg +$68</div></div>
+          <div><div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#ff5f6d">3 PM</div><div style="font-size:10px;color:var(--muted)">Worst hour · avg -$54</div></div>
+        </div>
+      </div>
+
+      <!-- Streaks — realistic, not too long -->
+      <div class="spot-card reveal reveal-d4">
+        <div class="spot-label"><i class="fa-solid fa-trophy"></i> Win &amp; Loss Streaks</div>
+        <div class="streak-row">
+          <div class="streak-win"></div><div class="streak-win"></div><div class="streak-win"></div>
+          <div class="streak-loss"></div><div class="streak-loss"></div>
+          <div class="streak-win"></div><div class="streak-win"></div><div class="streak-win"></div><div class="streak-win"></div>
+          <div class="streak-loss"></div>
+          <div class="streak-win"></div><div class="streak-win"></div>
+          <div class="streak-loss"></div><div class="streak-loss"></div><div class="streak-loss"></div>
+          <div class="streak-win"></div><div class="streak-win"></div><div class="streak-win"></div>
+          <div class="streak-be"></div>
+          <div class="streak-win"></div><div class="streak-win"></div><div class="streak-win"></div><div class="streak-win"></div><div class="streak-win"></div><div class="streak-win"></div>
+          <div class="streak-loss"></div><div class="streak-loss"></div><div class="streak-loss"></div><div class="streak-loss"></div><div class="streak-loss"></div>
+          <div class="streak-win"></div>
+        </div>
+        <div style="display:flex;gap:20px;margin-top:12px">
+          <div><div style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:700;color:#19c37d">6</div><div style="font-size:11px;color:var(--muted)">Best Win Streak</div></div>
+          <div><div style="font-family:'Outfit',sans-serif;font-size:24px;font-weight:700;color:#ff5f6d">5</div><div style="font-size:11px;color:var(--muted)">Worst Loss Streak</div></div>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin-top:10px;line-height:1.6">Loss streaks happen. Seeing where they fall in context of the broader picture is more useful than trying to avoid them entirely.</p>
+      </div>
+
+      <!-- Mood vs Performance — more realistic, calm still best but margin is honest -->
+      <div class="spot-card reveal reveal-d5">
+        <div class="spot-label"><i class="fa-solid fa-face-smile"></i> Mood vs Performance</div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <div style="display:flex;align-items:center;gap:10px"><span style="font-size:13px;flex-shrink:0;width:20px">😌</span><div style="flex:1"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:3px"><span>Calm</span><span style="color:#19c37d">+$1,420 · 64% WR</span></div><div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px"><div style="height:100%;width:64%;background:#19c37d;border-radius:3px"></div></div></div></div>
+          <div style="display:flex;align-items:center;gap:10px"><span style="font-size:13px;flex-shrink:0;width:20px">🎯</span><div style="flex:1"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:3px"><span>Focused</span><span style="color:#19c37d">+$980 · 60% WR</span></div><div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px"><div style="height:100%;width:60%;background:#19c37d;border-radius:3px"></div></div></div></div>
+          <div style="display:flex;align-items:center;gap:10px"><span style="font-size:13px;flex-shrink:0;width:20px">😐</span><div style="flex:1"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:3px"><span>Neutral</span><span style="color:var(--text2)">+$210 · 51% WR</span></div><div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px"><div style="height:100%;width:51%;background:rgba(255,255,255,.25);border-radius:3px"></div></div></div></div>
+          <div style="display:flex;align-items:center;gap:10px"><span style="font-size:13px;flex-shrink:0;width:20px">😴</span><div style="flex:1"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:3px"><span>Tired</span><span style="color:#ff5f6d">-$320 · 41% WR</span></div><div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px"><div style="height:100%;width:41%;background:#ff5f6d;border-radius:3px"></div></div></div></div>
+          <div style="display:flex;align-items:center;gap:10px"><span style="font-size:13px;flex-shrink:0;width:20px">😤</span><div style="flex:1"><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:3px"><span>Frustrated</span><span style="color:#ff5f6d">-$490 · 33% WR</span></div><div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px"><div style="height:100%;width:33%;background:#ff5f6d;border-radius:3px"></div></div></div></div>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin-top:14px;line-height:1.6">You may already suspect this. Logging it makes the connection concrete, and concrete things are easier to act on.</p>
+      </div>
+
+      <!-- Most Traded Pairs — some are losers, realistic -->
+      <div class="spot-card reveal reveal-d6">
+        <div class="spot-label"><i class="fa-solid fa-coins"></i> Most Traded Pairs — PNL Breakdown</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;color:var(--text)">EUR/USD</span><span style="font-size:10px;color:#19c37d">+$1,240 · 61% · 38t</span></div><div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px"><div style="height:100%;width:100%;background:rgba(25,195,125,.55);border-radius:3px"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;color:var(--text)">BTC/USD</span><span style="font-size:10px;color:#19c37d">+$870 · 57% · 29t</span></div><div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px"><div style="height:100%;width:70%;background:rgba(25,195,125,.55);border-radius:3px"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;color:var(--text)">GBP/USD</span><span style="font-size:10px;color:var(--text2)">+$190 · 52% · 21t</span></div><div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px"><div style="height:100%;width:52%;background:rgba(255,255,255,.2);border-radius:3px"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;color:var(--text)">XAU/USD</span><span style="font-size:10px;color:#ff5f6d">-$280 · 46% · 17t</span></div><div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px"><div style="height:100%;width:46%;background:rgba(255,95,109,.55);border-radius:3px"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px"><span style="font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;color:var(--text)">ETH/USD</span><span style="font-size:10px;color:#ff5f6d">-$180 · 43% · 14t</span></div><div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px"><div style="height:100%;width:43%;background:rgba(255,95,109,.55);border-radius:3px"></div></div></div>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin-top:14px;line-height:1.6">Sometimes a pair you trade regularly is quietly dragging your overall result. Easier to see when the numbers are right in front of you.</p>
+      </div>
+
+      <!-- Calendar — realistic mix -->
+      <div class="spot-card reveal" style="grid-column:1/-1">
+        <div class="spot-label"><i class="fa-solid fa-calendar-days"></i> Trade Calendar — April 2025</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px;background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.05);border-radius:8px;margin-bottom:12px">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:1px;min-width:60px;flex:1"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-family:'Outfit',sans-serif;font-weight:700">Month PNL</div><div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#19c37d">+$1,860</div></div>
+          <div style="width:1px;background:rgba(255,255,255,.06)"></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:1px;min-width:48px;flex:1"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-family:'Outfit',sans-serif;font-weight:700">Trades</div><div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:var(--text)">27</div></div>
+          <div style="width:1px;background:rgba(255,255,255,.06)"></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:1px;min-width:56px;flex:1"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-family:'Outfit',sans-serif;font-weight:700">Win Days</div><div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#19c37d">10</div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:1px;min-width:56px;flex:1"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-family:'Outfit',sans-serif;font-weight:700">Loss Days</div><div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#ff5f6d">6</div></div>
+          <div style="width:1px;background:rgba(255,255,255,.06)"></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:1px;min-width:56px;flex:1"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-family:'Outfit',sans-serif;font-weight:700">Win Rate</div><div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#19c37d">62%</div></div>
+          <div style="width:1px;background:rgba(255,255,255,.06)"></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:1px;min-width:60px;flex:1"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-family:'Outfit',sans-serif;font-weight:700">Best Day</div><div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#19c37d">+$640</div></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:1px;min-width:60px;flex:1"><div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-family:'Outfit',sans-serif;font-weight:700">Worst Day</div><div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;color:#ff5f6d">-$390</div></div>
+        </div>
+        <div class="mini-cal-wrap">
+          <div class="mini-cal-dow"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+          <div class="mini-cal-grid">
+            <div class="mini-cal-day empty"></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">1</span><span class="mcd-tc">2t</span><span class="mcd-pnl pos">+$280</span><div class="mcd-bar pos"></div></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">2</span><span class="mcd-tc">2t</span><span class="mcd-pnl neg">-$390</span><div class="mcd-bar neg"></div></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">3</span><span class="mcd-tc">1t</span><span class="mcd-pnl pos">+$140</span><div class="mcd-bar pos"></div></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">4</span><span class="mcd-tc">2t</span><span class="mcd-pnl pos">+$640</span><div class="mcd-bar pos"></div></div>
+            <div class="mini-cal-day"><span class="mcd-num" style="color:rgba(106,138,122,.3)">5</span></div>
+            <div class="mini-cal-day"><span class="mcd-num" style="color:rgba(106,138,122,.3)">6</span></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">7</span><span class="mcd-tc">1t</span><span class="mcd-pnl neg">-$170</span><div class="mcd-bar neg"></div></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">8</span><span class="mcd-tc">2t</span><span class="mcd-pnl pos">+$310</span><div class="mcd-bar pos"></div></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">9</span><span class="mcd-tc">1t</span><span class="mcd-pnl neg">-$220</span><div class="mcd-bar neg"></div></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">10</span><span class="mcd-tc">2t</span><span class="mcd-pnl pos">+$490</span><div class="mcd-bar pos"></div></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">11</span><span class="mcd-tc">1t</span><span class="mcd-pnl neg">-$130</span><div class="mcd-bar neg"></div></div>
+            <div class="mini-cal-day"><span class="mcd-num" style="color:rgba(106,138,122,.3)">12</span></div>
+            <div class="mini-cal-day"><span class="mcd-num" style="color:rgba(106,138,122,.3)">13</span></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">14</span><span class="mcd-tc">2t</span><span class="mcd-pnl pos">+$240</span><div class="mcd-bar pos"></div></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">15</span><span class="mcd-tc">1t</span><span class="mcd-pnl neg">-$180</span><div class="mcd-bar neg"></div></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">16</span><span class="mcd-tc">2t</span><span class="mcd-pnl pos">+$370</span><div class="mcd-bar pos"></div></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">17</span><span class="mcd-tc">1t</span><span class="mcd-pnl pos">+$190</span><div class="mcd-bar pos"></div></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">18</span><span class="mcd-tc">2t</span><span class="mcd-pnl neg">-$260</span><div class="mcd-bar neg"></div></div>
+            <div class="mini-cal-day"><span class="mcd-num" style="color:rgba(106,138,122,.3)">19</span></div>
+            <div class="mini-cal-day"><span class="mcd-num" style="color:rgba(106,138,122,.3)">20</span></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">21</span><span class="mcd-tc">2t</span><span class="mcd-pnl pos">+$320</span><div class="mcd-bar pos"></div></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">22</span><span class="mcd-tc">1t</span><span class="mcd-pnl pos">+$150</span><div class="mcd-bar pos"></div></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">23</span><span class="mcd-tc">2t</span><span class="mcd-pnl pos">+$440</span><div class="mcd-bar pos"></div></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">24</span><span class="mcd-tc">1t</span><span class="mcd-pnl neg">-$110</span><div class="mcd-bar neg"></div></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">25</span><span class="mcd-tc">1t</span><span class="mcd-pnl pos">+$290</span><div class="mcd-bar pos"></div></div>
+            <div class="mini-cal-day"><span class="mcd-num" style="color:rgba(106,138,122,.3)">26</span></div>
+            <div class="mini-cal-day"><span class="mcd-num" style="color:rgba(106,138,122,.3)">27</span></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">28</span><span class="mcd-tc">1t</span><span class="mcd-pnl pos">+$180</span><div class="mcd-bar pos"></div></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">29</span><span class="mcd-tc">2t</span><span class="mcd-pnl neg">-$150</span><div class="mcd-bar neg"></div></div>
+            <div class="mini-cal-day has-trade"><span class="mcd-num">30</span><span class="mcd-tc">1t</span><span class="mcd-pnl pos">+$210</span><div class="mcd-bar pos"></div></div>
+            <div class="mini-cal-day empty"></div><div class="mini-cal-day empty"></div><div class="mini-cal-day empty"></div><div class="mini-cal-day empty"></div>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6">Loss days are a normal part of the picture. What matters is how they fit into the overall month — and whether the pattern tells you something worth acting on.</p>
+      </div>
+
+      <!-- Equity Curve — realistic, with a dip in the middle -->
+      <div class="spot-card reveal" style="grid-column:1/-1">
+        <div class="spot-label"><i class="fa-solid fa-chart-area"></i> Equity Curve — Cumulative PNL</div>
+        <div class="eq-chart-wrap">
+          <div class="eq-chart-label"><i class="fa-solid fa-circle" style="color:#19c37d;font-size:7px"></i> Running PNL · 112 trades logged</div>
+          <svg class="eq-svg" viewBox="0 0 800 180" preserveAspectRatio="none" style="height:160px">
+            <defs>
+              <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#19c37d" stop-opacity="0.20"/><stop offset="100%" stop-color="#19c37d" stop-opacity="0"/></linearGradient>
+              <linearGradient id="eqLine" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#19c37d" stop-opacity="0.6"/><stop offset="100%" stop-color="#00ff88" stop-opacity="1"/></linearGradient>
+            </defs>
+            <line x1="0" y1="36" x2="800" y2="36" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+            <line x1="0" y1="72" x2="800" y2="72" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+            <line x1="0" y1="108" x2="800" y2="108" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+            <line x1="0" y1="144" x2="800" y2="144" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+            <line x1="0" y1="160" x2="800" y2="160" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+            <text x="4" y="33" fill="rgba(106,138,122,.6)" font-size="9" font-family="Outfit,sans-serif">+$3k</text>
+            <text x="4" y="70" fill="rgba(106,138,122,.6)" font-size="9" font-family="Outfit,sans-serif">+$2k</text>
+            <text x="4" y="106" fill="rgba(106,138,122,.6)" font-size="9" font-family="Outfit,sans-serif">+$1k</text>
+            <text x="4" y="142" fill="rgba(106,138,122,.6)" font-size="9" font-family="Outfit,sans-serif">$0</text>
+            <!-- Realistic equity curve: grows, dips, recovers, ends positive -->
+            <path d="M 30,155 C 60,148 80,140 110,132 C 135,126 145,128 170,120 C 195,112 205,108 230,98 C 255,88 265,84 290,78 C 310,73 320,76 345,72 C 365,68 375,72 400,80 C 425,88 435,92 460,88 C 480,85 490,82 515,72 C 540,62 550,58 575,48 C 598,39 608,42 635,32 C 658,23 668,28 695,18 C 718,10 730,12 760,8 L 760,162 L 30,162 Z" fill="url(#eqGrad)"/>
+            <path d="M 30,155 C 60,148 80,140 110,132 C 135,126 145,128 170,120 C 195,112 205,108 230,98 C 255,88 265,84 290,78 C 310,73 320,76 345,72 C 365,68 375,72 400,80 C 425,88 435,92 460,88 C 480,85 490,82 515,72 C 540,62 550,58 575,48 C 598,39 608,42 635,32 C 658,23 668,28 695,18 C 718,10 730,12 760,8" stroke="url(#eqLine)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="760" cy="8" r="4" fill="#00ff88"/>
+            <circle cx="760" cy="8" r="8" fill="rgba(0,255,136,.18)"/>
+            <text x="30" y="175" fill="rgba(106,138,122,.5)" font-size="8" font-family="Outfit,sans-serif" text-anchor="middle">Jan</text>
+            <text x="170" y="175" fill="rgba(106,138,122,.5)" font-size="8" font-family="Outfit,sans-serif" text-anchor="middle">Feb</text>
+            <text x="320" y="175" fill="rgba(106,138,122,.5)" font-size="8" font-family="Outfit,sans-serif" text-anchor="middle">Mar</text>
+            <text x="460" y="175" fill="rgba(106,138,122,.5)" font-size="8" font-family="Outfit,sans-serif" text-anchor="middle">Apr</text>
+            <text x="615" y="175" fill="rgba(106,138,122,.5)" font-size="8" font-family="Outfit,sans-serif" text-anchor="middle">May</text>
+            <text x="760" y="175" fill="rgba(106,138,122,.5)" font-size="8" font-family="Outfit,sans-serif" text-anchor="middle">Jun</text>
+          </svg>
+        </div>
+        <div style="display:flex;gap:24px;margin-top:12px;flex-wrap:wrap">
+          <div><div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:700;color:#19c37d">+$3,180</div><div style="font-size:11px;color:var(--muted)">Total PNL — 6 months</div></div>
+          <div><div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:700;color:var(--text)">112</div><div style="font-size:11px;color:var(--muted)">Trades logged</div></div>
+          <div><div style="font-family:'Outfit',sans-serif;font-size:20px;font-weight:700;color:#f5c518">54.5%</div><div style="font-size:11px;color:var(--muted)">Win Rate</div></div>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin-top:10px;line-height:1.6">Notice the small drawdown around March — it recovered. That kind of context is what makes a chart more useful than a single number.</p>
+      </div>
+
     </div>
   </div>
 </section>
 
 <!-- STATS -->
-<section id="stats"><div class="stats-inner"><div class="stats-row"><div class="stat-item reveal"><span class="stat-num">13+</span><span class="stat-lbl">Data points captured per trade</span></div><div class="stat-item reveal reveal-d1"><span class="stat-num">10+</span><span class="stat-lbl">Analytics charts &amp; breakdowns</span></div><div class="stat-item reveal reveal-d2"><span class="stat-num">∞</span><span class="stat-lbl">Journals on Pro plan</span></div><div class="stat-item reveal reveal-d3"><span class="stat-num">$0</span><span class="stat-lbl">To start — no card ever required</span></div></div></div></section>
+<section id="stats"><div class="stats-inner"><div class="stats-row">
+  <div class="stat-item reveal"><span class="stat-num">13+</span><span class="stat-lbl">Data points captured per trade</span></div>
+  <div class="stat-item reveal reveal-d1"><span class="stat-num">10+</span><span class="stat-lbl">Analytics charts &amp; breakdowns</span></div>
+  <div class="stat-item reveal reveal-d2"><span class="stat-num">∞</span><span class="stat-lbl">Journals on Pro plan</span></div>
+  <div class="stat-item reveal reveal-d3"><span class="stat-num">$0</span><span class="stat-lbl">To start — no card ever required</span></div>
+</div></div></section>
 
 <!-- HOW -->
-<section id="how"><div class="sec-inner"><h2 class="sec-title reveal">From zero to insights<br><span>in 30 seconds.</span></h2><div class="steps"><div class="step reveal reveal-d1"><div class="step-num">1</div><h3>Create Your Account</h3><p>Sign up with email — takes 15 seconds, no credit card. Your data is securely stored in the cloud and accessible from any device the moment you log in.</p></div><div class="step reveal reveal-d2"><div class="step-num">2</div><h3>Create a Journal</h3><p>Name it, configure your default pairs, strategies, moods, and timeframes. Free users get 1 journal. Pro unlocks unlimited — one per account, asset class, or prop firm.</p></div><div class="step reveal reveal-d3"><div class="step-num">3</div><h3>Log, Analyze, Improve</h3><p>Add trades after every session. Check Analytics weekly. Run your Pre-Session each morning. Watch patterns emerge from the data — and fix exactly what's costing you.</p></div></div></div></section>
+<section id="how"><div class="sec-inner">
+  <h2 class="sec-title reveal">From zero to your first insight<br><span>in a few minutes.</span></h2>
+  <div class="steps">
+    <div class="step reveal reveal-d1"><div class="step-num">1</div><h3>Create Your Account</h3><p>Sign up with an email address — takes about 15 seconds, no credit card. Your journal lives in the cloud and is accessible from any device you use.</p></div>
+    <div class="step reveal reveal-d2"><div class="step-num">2</div><h3>Set Up Your Journal</h3><p>Give it a name, choose your default pairs and strategies, set your preferred mood tags. Free users get one journal. Pro unlocks as many as you need.</p></div>
+    <div class="step reveal reveal-d3"><div class="step-num">3</div><h3>Log, Review, Improve</h3><p>Add your trades after each session. Check the analytics once a week. Over time, patterns will become clear — and the ones worth changing tend to be obvious once you see them.</p></div>
+  </div>
+</div></section>
 
 <!-- TESTIMONIALS -->
-<section id="testimonials"><div class="sec-inner"><h2 class="sec-title reveal">What traders found<br><span>in their logs.</span></h2><div class="testi-grid"><div class="testi-card reveal reveal-d1"><p class="testi-quote">"Didn't realize how bad my afternoon trades were until I checked the hour breakdown. Switched to London-only sessions and things started clicking."</p><div class="testi-author"><div class="testi-avatar" style="background:linear-gradient(135deg,#19c37d,#00ff88)">DK</div><div><div class="testi-name">Daniel K.</div><div class="testi-role">Forex, London session</div></div></div></div><div class="testi-card reveal reveal-d2"><p class="testi-quote">"I track my mood before every trade now. Once I saw how my 'frustrated' tag correlated with my worst losses, I just started closing the platform on those days."</p><div class="testi-author"><div class="testi-avatar" style="background:linear-gradient(135deg,#f5c518,#fbbf24)">MR</div><div><div class="testi-name">Maya R.</div><div class="testi-role">Crypto swing trader</div></div></div></div><div class="testi-card reveal reveal-d3"><p class="testi-quote">"The strategy breakdown made it obvious I was overtrading my weaker setups and ignoring the ones with the best stats. Took about a month of logging to see it."</p><div class="testi-author"><div class="testi-avatar" style="background:linear-gradient(135deg,#64b5f6,#42a5f5)">JA</div><div><div class="testi-name">James A.</div><div class="testi-role">SMC trader, prop firm</div></div></div></div></div></div></section>
+<section id="testimonials"><div class="sec-inner">
+  <h2 class="sec-title reveal">What traders found<br><span>when they started looking.</span></h2>
+  <div class="testi-grid">
+    <div class="testi-card reveal reveal-d1">
+      <p class="testi-quote">"I had been blaming bad setups for months. When I pulled up the hour breakdown, I realised most of my losses were happening in the same two-hour window every afternoon. I just stopped trading then."</p>
+      <div class="testi-author"><div class="testi-avatar" style="background:linear-gradient(135deg,#19c37d,#00ff88)">DK</div><div><div class="testi-name">Daniel K.</div></div></div>
+    </div>
+    <div class="testi-card reveal reveal-d2">
+      <p class="testi-quote">"Tracking my mood before each trade felt a bit odd at first. But after a few weeks the pattern was obvious — every time I logged 'frustrated' my results were significantly worse. It changed how I approach bad days."</p>
+      <div class="testi-author"><div class="testi-avatar" style="background:linear-gradient(135deg,#f5c518,#fbbf24)">MR</div><div><div class="testi-name">Maya R.</div></div></div>
+    </div>
+    <div class="testi-card reveal reveal-d3">
+      <p class="testi-quote">"The strategy breakdown was the most useful thing. I was taking my weakest setup three or four times a week and ignoring the one that actually worked. Took about a month of logging to see it clearly."</p>
+      <div class="testi-author"><div class="testi-avatar" style="background:linear-gradient(135deg,#64b5f6,#42a5f5)">JA</div><div><div class="testi-name">James A.</div></div></div>
+    </div>
+  </div>
+</div></section>
 
 <!-- COMPARE -->
-<section id="compare"><div class="sec-inner"><h2 class="sec-title reveal">TradingGrove vs<br><span>everything else.</span></h2><div class="cmp-wrap reveal"><table class="cmp-table"><thead><tr><th>Feature</th><th>TradingGrove</th><th>Other Platforms</th><th>Spreadsheet</th></tr></thead><tbody><tr><td>Free plan</td><td><i class="fa-solid fa-check yes"></i> 1 journal, forever</td><td class="no">$20–$50/mo to start</td><td><i class="fa-solid fa-check" style="color:var(--muted)"></i></td></tr><tr><td>Cloud sync across devices</td><td><i class="fa-solid fa-check yes"></i></td><td><i class="fa-solid fa-check" style="color:var(--muted)"></i></td><td class="no">Manual export</td></tr><tr><td>Mood &amp; psychology tracking</td><td><i class="fa-solid fa-check yes"></i></td><td>Rarely</td><td class="no">Manual</td></tr><tr><td>Hour heatmap analysis</td><td><i class="fa-solid fa-check yes"></i> Pro</td><td>Some</td><td class="no">Manual formula</td></tr><tr><td>Pre-session planning &amp; reflect</td><td><i class="fa-solid fa-check yes"></i></td><td>Rarely</td><td class="no">Not supported</td></tr><tr><td>Screenshot gallery per trade</td><td><i class="fa-solid fa-check yes"></i> Pro: unlimited</td><td>Some (paid)</td><td class="no">Not supported</td></tr><tr><td>Built-in risk calculator</td><td><i class="fa-solid fa-check yes"></i></td><td>Rarely</td><td class="no">Separate tool</td></tr><tr><td>Export / import backup</td><td><i class="fa-solid fa-check yes"></i> Pro</td><td>Varies</td><td><i class="fa-solid fa-check" style="color:var(--muted)"></i></td></tr><tr><td>PIN-protected journals</td><td><i class="fa-solid fa-check yes"></i> Pro</td><td class="no">Rarely</td><td class="no">No</td></tr></tbody></table></div></div></section>
+<section id="compare"><div class="sec-inner">
+  <h2 class="sec-title reveal">TradingGrove vs<br><span>everything else.</span></h2>
+  <div class="cmp-wrap reveal"><table class="cmp-table"><thead><tr><th>Feature</th><th>TradingGrove</th><th>Other Platforms</th><th>Spreadsheet</th></tr></thead><tbody>
+    <tr><td>Free plan</td><td><i class="fa-solid fa-check yes"></i> 1 journal, forever</td><td class="no">$20–$50/mo to start</td><td><i class="fa-solid fa-check" style="color:var(--muted)"></i></td></tr>
+    <tr><td>Cloud sync across devices</td><td><i class="fa-solid fa-check yes"></i></td><td><i class="fa-solid fa-check" style="color:var(--muted)"></i></td><td class="no">Manual export</td></tr>
+    <tr><td>Mood &amp; psychology tracking</td><td><i class="fa-solid fa-check yes"></i></td><td>Rarely</td><td class="no">Manual</td></tr>
+    <tr><td>Hour heatmap analysis</td><td><i class="fa-solid fa-check yes"></i> Pro</td><td>Some</td><td class="no">Manual formula</td></tr>
+    <tr><td>Pre-session planning &amp; reflect</td><td><i class="fa-solid fa-check yes"></i></td><td>Rarely</td><td class="no">Not supported</td></tr>
+    <tr><td>Screenshot gallery per trade</td><td><i class="fa-solid fa-check yes"></i> Pro: unlimited</td><td>Some (paid)</td><td class="no">Not supported</td></tr>
+    <tr><td>Built-in risk calculator</td><td><i class="fa-solid fa-check yes"></i></td><td>Rarely</td><td class="no">Separate tool</td></tr>
+    <tr><td>Export / import backup</td><td><i class="fa-solid fa-check yes"></i> Pro</td><td>Varies</td><td><i class="fa-solid fa-check" style="color:var(--muted)"></i></td></tr>
+    <tr><td>PIN-protected journals</td><td><i class="fa-solid fa-check yes"></i> Pro</td><td class="no">Rarely</td><td class="no">No</td></tr>
+  </tbody></table></div>
+</div></section>
 
 <!-- PRICING -->
-<section id="pricing"><div class="sec-inner"><h2 class="sec-title reveal" style="text-align:center">Simple, honest<br><span>pricing.</span></h2><p class="sec-sub reveal" style="margin:0 auto;text-align:center">Start free. Upgrade when your trading gets serious.</p><div class="pricing-grid"><div class="price-card reveal reveal-d1"><div class="price-plan">Free</div><div class="price-amount"><span class="price-dollar">$0</span><span class="price-period">/ forever</span></div><div class="price-annual-note">&nbsp;</div><p class="price-desc">Everything you need to build the habit of journaling and start seeing patterns in your trades.</p><hr class="price-divider"><ul class="price-features"><li><i class="fa-solid fa-check yes"></i><span>1 Trading journal</span></li><li><i class="fa-solid fa-check yes"></i><span>Unlimited trade logs</span></li><li><i class="fa-solid fa-check yes"></i><span>1 image per trade note</span></li><li><i class="fa-solid fa-check yes"></i><span>Basic analytics<span class="feat-limit">Total PNL, Win Rate, Streaks, Equity Curve</span></span></li><li><i class="fa-solid fa-check yes"></i><span>Trade Calendar<span class="feat-limit">Last 90 days</span></span></li><li><i class="fa-solid fa-check yes"></i><span>Pre-session planning</span></li><li><i class="fa-solid fa-check yes"></i><span>Risk Calculator</span></li><li><i class="fa-solid fa-check yes"></i><span>Cloud sync across devices</span></li><li class="locked"><i class="fa-solid fa-xmark no"></i><span>Multiple journals</span></li><li class="locked"><i class="fa-solid fa-xmark no"></i><span>Advanced analytics suite</span></li><li class="locked"><i class="fa-solid fa-xmark no"></i><span>Export / Import</span></li><li class="locked"><i class="fa-solid fa-xmark no"></i><span>Themes &amp; fonts</span></li></ul><a href="/auth" class="price-btn free">Get Started Free</a></div><div class="price-card pro reveal reveal-d2"><div class="price-badge">⚡ Most Popular</div><div class="price-plan pro">Pro</div><div class="price-amount"><span class="price-dollar pro">$15</span><span class="price-period">/ month</span></div><div class="price-annual-note">Or <span class="save">save $60</span> — ~$10/mo billed annually</div><p class="price-desc">For traders serious about finding their edge, building consistency, and tracking every variable that matters.</p><hr class="price-divider"><ul class="price-features"><li><i class="fa-solid fa-check yes"></i><span>Unlimited journals<span class="feat-limit">Forex, Crypto, Futures, Prop accounts — all separate</span></span></li><li><i class="fa-solid fa-check yes"></i><span>Unlimited trade logs</span></li><li><i class="fa-solid fa-check yes"></i><span>Unlimited images per trade</span></li><li><i class="fa-solid fa-check yes"></i><span>Full analytics suite<span class="feat-limit">Strategy PNL, Mood heatmaps, Hour analysis, Day-of-week, Long vs Short, Most traded pairs</span></span></li><li><i class="fa-solid fa-check yes"></i><span>Full calendar history</span></li><li><i class="fa-solid fa-check yes"></i><span>Export &amp; Import (JSON + CSV)</span></li><li><i class="fa-solid fa-check yes"></i><span>Themes &amp; font customization</span></li><li><i class="fa-solid fa-check yes"></i><span>PIN-protected journals</span></li><li><i class="fa-solid fa-check yes"></i><span>Cloud sync across devices</span></li></ul><a href="/auth" class="price-btn pro-btn"><i class="fa-solid fa-rocket" style="margin-right:7px"></i>Upgrade to Pro — $15/mo</a></div></div><p style="text-align:center;margin-top:24px;font-size:12px;color:var(--muted)"><i class="fa-solid fa-shield-halved" style="color:var(--accent2);margin-right:5px"></i>Cancel anytime &nbsp;·&nbsp; Your data is always yours &nbsp;·&nbsp; No hidden fees</p></div></section>
+<section id="pricing"><div class="sec-inner">
+  <h2 class="sec-title reveal" style="text-align:center">Simple, honest<br><span>pricing.</span></h2>
+  <p class="sec-sub reveal" style="margin:0 auto;text-align:center">Start free. Upgrade when your trading gets serious.</p>
+  <div class="pricing-grid">
+    <div class="price-card reveal reveal-d1">
+      <div class="price-plan">Free</div>
+      <div class="price-amount"><span class="price-dollar">$0</span><span class="price-period">/ forever</span></div>
+      <div class="price-annual-note">&nbsp;</div>
+      <p class="price-desc">A solid starting point for building the habit of journaling and starting to notice patterns in your own trading.</p>
+      <hr class="price-divider">
+      <ul class="price-features">
+        <li><i class="fa-solid fa-check yes"></i><span>1 Trading journal</span></li>
+        <li><i class="fa-solid fa-check yes"></i><span>Unlimited trade logs</span></li>
+        <li><i class="fa-solid fa-check yes"></i><span>1 image per trade note</span></li>
+        <li><i class="fa-solid fa-check yes"></i><span>Basic analytics<span class="feat-limit">Total PNL, Win Rate, Streaks, Equity Curve</span></span></li>
+        <li><i class="fa-solid fa-check yes"></i><span>Trade Calendar<span class="feat-limit">Last 90 days</span></span></li>
+        <li><i class="fa-solid fa-check yes"></i><span>Pre-session planning</span></li>
+        <li><i class="fa-solid fa-check yes"></i><span>Risk Calculator</span></li>
+        <li><i class="fa-solid fa-check yes"></i><span>Cloud sync across devices</span></li>
+        <li class="locked"><i class="fa-solid fa-xmark no"></i><span>Multiple journals</span></li>
+        <li class="locked"><i class="fa-solid fa-xmark no"></i><span>Advanced analytics suite</span></li>
+        <li class="locked"><i class="fa-solid fa-xmark no"></i><span>Export / Import</span></li>
+        <li class="locked"><i class="fa-solid fa-xmark no"></i><span>Themes &amp; fonts</span></li>
+      </ul>
+      <a href="/auth" class="price-btn free">Get Started Free</a>
+    </div>
+    <div class="price-card pro reveal reveal-d2">
+      <div class="price-badge">⚡ Most Popular</div>
+      <div class="price-plan pro">Pro</div>
+      <div class="price-amount"><span class="price-dollar pro">$15</span><span class="price-period">/ month</span></div>
+      <div class="price-annual-note">Or <span class="save">save $60</span> — ~$10/mo billed annually</div>
+      <p class="price-desc">For traders who want a complete picture — across multiple accounts, with the full analytics suite and no limits on images or history.</p>
+      <hr class="price-divider">
+      <ul class="price-features">
+        <li><i class="fa-solid fa-check yes"></i><span>Unlimited journals<span class="feat-limit">Keep separate journals for different accounts or markets</span></span></li>
+        <li><i class="fa-solid fa-check yes"></i><span>Unlimited trade logs</span></li>
+        <li><i class="fa-solid fa-check yes"></i><span>Unlimited images per trade</span></li>
+        <li><i class="fa-solid fa-check yes"></i><span>Full analytics suite<span class="feat-limit">Strategy PNL, Mood charts, Hour analysis, Day-of-week, Long vs Short, Most traded pairs</span></span></li>
+        <li><i class="fa-solid fa-check yes"></i><span>Full calendar history</span></li>
+        <li><i class="fa-solid fa-check yes"></i><span>Export &amp; Import (JSON + CSV)</span></li>
+        <li><i class="fa-solid fa-check yes"></i><span>Themes &amp; font customization</span></li>
+        <li><i class="fa-solid fa-check yes"></i><span>PIN-protected journals</span></li>
+        <li><i class="fa-solid fa-check yes"></i><span>Cloud sync across devices</span></li>
+      </ul>
+      <a href="/auth" class="price-btn pro-btn"><i class="fa-solid fa-rocket" style="margin-right:7px"></i>Upgrade to Pro — $15/mo</a>
+    </div>
+  </div>
+  <p style="text-align:center;margin-top:24px;font-size:12px;color:var(--muted)"><i class="fa-solid fa-shield-halved" style="color:var(--accent2);margin-right:5px"></i>Cancel anytime &nbsp;·&nbsp; Your data is always yours &nbsp;·&nbsp; No hidden fees</p>
+</div></section>
 
 <!-- CALC CTA -->
 <section id="calc-cta">
   <div class="calc-cta-inner">
     <div class="calc-cta-card reveal">
       <div class="calc-cta-left">
-        <h2 style="font-family:'Outfit',sans-serif;font-size:clamp(22px,3vw,32px);font-weight:700;letter-spacing:-.5px;line-height:1.15;margin-bottom:12px">Calculate your risk<br>before every trade.</h2>
-        <p style="font-size:14px;color:var(--text2);line-height:1.7;max-width:400px">Know your exact position size, risk amount, and R:R ratio in seconds. Works for Crypto and Forex — no account required.</p>
+        <h2 style="font-family:'Outfit',sans-serif;font-size:clamp(22px,3vw,32px);font-weight:700;letter-spacing:-.5px;line-height:1.15;margin-bottom:12px">Know your position size<br>before every trade.</h2>
+        <p style="font-size:14px;color:var(--text2);line-height:1.7;max-width:400px">Work out your exact risk amount, position size, and R:R ratio in a few seconds. Works for Crypto and Forex — no account needed.</p>
         <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:22px">
           <a href="#crypto-calculator" class="btn-calc-cta"><span class="ico-btc">₿</span> Open Crypto Calculator</a>
           <a href="#forex-calculator" class="btn-calc-cta"><i class="fa-solid fa-dollar-sign"></i> Open Forex Calculator</a>
-          <a href="/auth" class="btn-hero-ghost" style="padding:13px 22px;font-size:14px">Start Journaling Free</a>
+          <a href="/auth" class="btn-hero-ghost" style="padding:13px 22px;font-size:14px">Start Journaling</a>
         </div>
       </div>
       <div class="calc-cta-preview">
@@ -739,24 +997,39 @@ footer{background:var(--bg);border-top:1px solid var(--border2);padding:52px 40p
 </section>
 
 <!-- CTA -->
-<section id="cta"><div class="glow-orb"></div><div class="cta-inner"><h2>Your edge is<br>hiding in your <span>data.</span></h2><p>Every trade you've ever taken holds a clue. TradingGrove surfaces them. Start free — no card needed.</p><div class="cta-btns"><a href="/auth" class="btn-hero"><i class="fa-solid fa-rocket"></i> Start Journaling Free</a><a href="#features" class="btn-hero-ghost">Explore Features</a></div><p class="cta-note"><i class="fa-solid fa-lock"></i> Secure cloud storage &nbsp;·&nbsp; Accessible from any device &nbsp;·&nbsp; Free forever for 1 journal</p></div></section>
+<section id="cta"><div class="glow-orb"></div><div class="cta-inner">
+  <h2>The answers are already<br>in your <span>trade history.</span></h2>
+  <p>You just need a clear way to read them. Start a journal today — it's free, takes less than a minute to set up, and gets more useful the longer you use it.</p>
+  <div class="cta-btns">
+    <a href="/auth" class="btn-hero"><i class="fa-solid fa-rocket"></i> Start Journaling</a>
+    <a href="#features" class="btn-hero-ghost">Explore Features</a>
+  </div>
+  <p class="cta-note"><i class="fa-solid fa-lock"></i> Secure cloud storage &nbsp;·&nbsp; Accessible from any device &nbsp;·&nbsp; Free forever for 1 journal</p>
+</div></section>
 
 <!-- FAQ -->
-<section id="faq"><div class="sec-inner"><h2 class="sec-title reveal" style="text-align:center">Quick answers.</h2><div class="faq-list"><div class="faq-item reveal reveal-d1"><div class="faq-q" onclick="toggleFaq(this)">Is TradingGrove really free? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Yes. The Free plan is free forever — 1 journal, basic analytics, unlimited trades, no credit card required. The Pro plan is $15/month (or ~$10/month billed annually) and unlocks unlimited journals, the full analytics suite, screenshot gallery, export/import, themes, PIN lock, and more. Cancel anytime.</div></div><div class="faq-item reveal reveal-d2"><div class="faq-q" onclick="toggleFaq(this)">Where is my data stored? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Your trades are stored securely in our cloud database powered by Supabase with row-level security — meaning only you can ever access your journals and trade data. We never sell your data or use it for any purpose beyond running your journal.</div></div><div class="faq-item reveal reveal-d3"><div class="faq-q" onclick="toggleFaq(this)">Can I use TradingGrove on multiple devices? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Yes — sign in on any device (phone, tablet, desktop) and your trades, journals, notes, and settings are there instantly. No manual syncing, no exports needed. This works on both Free and Pro plans.</div></div><div class="faq-item reveal reveal-d4"><div class="faq-q" onclick="toggleFaq(this)">Can I track multiple trading accounts separately? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Pro users can create unlimited journals — one for your Forex account, one for Crypto, one for your funded prop account. Each journal has its own separate trade history, analytics, PIN, default tags, and capital. Free users get 1 journal.</div></div><div class="faq-item reveal reveal-d5"><div class="faq-q" onclick="toggleFaq(this)">What analytics does the Free plan include? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Free users get the core stats (Total PNL, Win Rate, Wins, Losses, Avg R, Best/Worst trade), win and loss streak counters, and a full equity curve chart. Pro unlocks everything else: Strategy PNL, Mood heatmaps, Hour analysis, Day-of-week breakdown, Long vs Short, Timeframe breakdown, and Most Traded Pairs.</div></div><div class="faq-item reveal reveal-d5"><div class="faq-q" onclick="toggleFaq(this)">Can I export my trade data? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Yes — Pro users can export a full journal backup as JSON (trades + all settings + notes) or as a CSV for use in spreadsheets. You can also import from TradingGrove JSON or from CSV exports from Binance, Bybit, or MT4. Your data is always yours.</div></div><div class="faq-item reveal reveal-d6"><div class="faq-q" onclick="toggleFaq(this)">What happens to my data if I cancel Pro? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Your trades are never deleted. If you cancel, you revert to the Free plan limits — 1 journal visible, basic analytics, 90-day calendar. Your data stays safe and you can re-upgrade at any time to access everything again.</div></div></div></div></section>
+<section id="faq"><div class="sec-inner">
+  <h2 class="sec-title reveal" style="text-align:center">Common questions.</h2>
+  <div class="faq-list">
+    <div class="faq-item reveal reveal-d1"><div class="faq-q" onclick="toggleFaq(this)">Is TradingGrove really free? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Yes. The Free plan is free forever — 1 journal, basic analytics, unlimited trades, no credit card required. The Pro plan is $15/month (or ~$10/month billed annually) and unlocks unlimited journals, the full analytics suite, screenshot gallery, export/import, themes, PIN lock, and more. Cancel anytime.</div></div>
+    <div class="faq-item reveal reveal-d2"><div class="faq-q" onclick="toggleFaq(this)">Where is my data stored? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Your trades are stored securely in our cloud database powered by Supabase with row-level security — meaning only you can ever access your journals and trade data. We never sell your data or use it for any purpose beyond running your journal.</div></div>
+    <div class="faq-item reveal reveal-d3"><div class="faq-q" onclick="toggleFaq(this)">Can I use TradingGrove on multiple devices? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Yes — sign in on any device (phone, tablet, desktop) and your trades, journals, notes, and settings are there instantly. No manual syncing, no exports needed. This works on both Free and Pro plans.</div></div>
+    <div class="faq-item reveal reveal-d4"><div class="faq-q" onclick="toggleFaq(this)">Can I track multiple trading accounts separately? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Pro users can create unlimited journals — one for Forex, one for Crypto, one for a funded account, and so on. Each journal has its own separate trade history, analytics, PIN, default tags, and capital. Free users get 1 journal.</div></div>
+    <div class="faq-item reveal reveal-d5"><div class="faq-q" onclick="toggleFaq(this)">What analytics does the Free plan include? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Free users get the core stats (Total PNL, Win Rate, Wins, Losses, Avg R, Best/Worst trade), win and loss streak counters, and a full equity curve chart. Pro unlocks everything else: Strategy PNL, Mood charts, Hour analysis, Day-of-week breakdown, Long vs Short, Timeframe breakdown, and Most Traded Pairs.</div></div>
+    <div class="faq-item reveal reveal-d5"><div class="faq-q" onclick="toggleFaq(this)">Can I export my trade data? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Yes — Pro users can export a full journal backup as JSON (trades + all settings + notes) or as a CSV for use in spreadsheets. You can also import from TradingGrove JSON or from CSV exports from Binance, Bybit, or MT4. Your data is always yours.</div></div>
+    <div class="faq-item reveal reveal-d6"><div class="faq-q" onclick="toggleFaq(this)">What happens to my data if I cancel Pro? <i class="fa-solid fa-chevron-down"></i></div><div class="faq-a">Your trades are never deleted. If you cancel, you revert to the Free plan limits — 1 journal visible, basic analytics, 90-day calendar. Your data stays safe and you can re-upgrade at any time to access everything again.</div></div>
+  </div>
+</div></section>
 
 </div><!-- #homePage -->
 
-<!-- Dynamic page content container (hidden by default, shown when navigating) -->
-<div id="pageContent" style="display:none">
-  <div class="pw"></div>
-</div>
+<div id="pageContent" style="display:none"><div class="pw"></div></div>
 
-<!-- FOOTER -->
 <footer>
   <div class="footer-inner">
     <div class="footer-brand">
       <div class="footer-logo">Trading<span>Grove</span></div>
-      <p class="footer-tagline">The trading journal that finds your edge.</p>
+      <p class="footer-tagline">A trading journal that helps you understand your own trading.</p>
       <div class="footer-badges">
         <span class="footer-badge"><i class="fa-solid fa-cloud"></i> Cloud-Powered</span>
         <span class="footer-badge"><i class="fa-solid fa-lock"></i> Secure</span>
@@ -797,13 +1070,11 @@ footer{background:var(--bg);border-top:1px solid var(--border2);padding:52px 40p
 </footer>
 
 <script>
-// Scroll reveal
 const ro = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
 }, { threshold: 0.1 });
 document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
 
-// FAQ accordion
 function toggleFaq(btn) {
   const item = btn.closest('.faq-item');
   const isOpen = item.classList.contains('open');
@@ -811,221 +1082,53 @@ function toggleFaq(btn) {
   if (!isOpen) item.classList.add('open');
 }
 
-// Tools dropdown
 let dropdownCloseTimer;
 const toolsDropdown = document.getElementById('toolsDropdown');
+function toggleToolsDropdown() { toolsDropdown.classList.toggle('open'); clearTimeout(dropdownCloseTimer); }
+toolsDropdown.addEventListener('mouseenter', () => { clearTimeout(dropdownCloseTimer); toolsDropdown.classList.add('open'); });
+toolsDropdown.addEventListener('mouseleave', () => { dropdownCloseTimer = setTimeout(() => { toolsDropdown.classList.remove('open'); }, 150); });
+document.addEventListener('click', function(e) { if (!toolsDropdown.contains(e.target)) { clearTimeout(dropdownCloseTimer); toolsDropdown.classList.remove('open'); } });
 
-function toggleToolsDropdown() {
-  toolsDropdown.classList.toggle('open');
-  clearTimeout(dropdownCloseTimer);
-}
+function toggleMobileNav() { document.getElementById('mobileNav').classList.toggle('open'); document.getElementById('navHamburger').classList.toggle('open'); }
+function closeMobileNav() { document.getElementById('mobileNav').classList.remove('open'); document.getElementById('navHamburger').classList.remove('open'); }
+window.addEventListener('scroll', () => { if (document.getElementById('mobileNav').classList.contains('open')) closeMobileNav(); }, { passive: true });
 
-// Hover to open/close with delay
-toolsDropdown.addEventListener('mouseenter', () => {
-  clearTimeout(dropdownCloseTimer);
-  toolsDropdown.classList.add('open');
-});
-
-toolsDropdown.addEventListener('mouseleave', () => {
-  dropdownCloseTimer = setTimeout(() => {
-    toolsDropdown.classList.remove('open');
-  }, 150);
-});
-
-// Close dropdown when clicking outside
-document.addEventListener('click', function(e) {
-  const dd = document.getElementById('toolsDropdown');
-  if (!dd.contains(e.target)) {
-    clearTimeout(dropdownCloseTimer);
-    dd.classList.remove('open');
-  }
-});
-
-// Mobile nav
-function toggleMobileNav() {
-  const nav = document.getElementById('mobileNav');
-  const hamburger = document.getElementById('navHamburger');
-  nav.classList.toggle('open');
-  hamburger.classList.toggle('open');
-}
-function closeMobileNav() {
-  document.getElementById('mobileNav').classList.remove('open');
-  document.getElementById('navHamburger').classList.remove('open');
-}
-// Close mobile nav on scroll
-window.addEventListener('scroll', () => {
-  if (document.getElementById('mobileNav').classList.contains('open')) closeMobileNav();
-}, { passive: true });
-
-/* ══════════════════════════════════════
-   CALCULATOR JAVASCRIPT
-═══════════════════════════════════════ */
 const CALC_KEY='tradeCalcDefaults_v4';
-let cAsset='crypto';
-let cRiskMode='pct';
-let cSlMode='price';
-let cTpMode='price';
-let fRiskMode='pct';
-let fSlMode='pips';
-let fTpMode='pips';
-
+let cAsset='crypto',cRiskMode='pct',cSlMode='price',cTpMode='price',fRiskMode='pct',fSlMode='pips',fTpMode='pips';
 const CURRENCY_SYMBOLS={USD:'$',EUR:'€',GBP:'£',JPY:'¥',CHF:'Fr',AUD:'A$',CAD:'C$',NZD:'NZ$'};
 const CONTRACT_SIZE=100000;
 const APPROX_RATES={USD:1,EUR:1.08,GBP:1.27,JPY:0.0067,CHF:1.12,AUD:0.65,CAD:0.74,NZD:0.60};
-
 function _getPipSize(pair){return pair.includes('JPY')?0.01:0.0001;}
 function _getLotLabel(lots){if(lots>=0.9)return 'Standard lot'+(lots>=1.9?'s':'');if(lots>=0.09)return 'Mini lot'+(lots>=0.19?'s':'');return 'Micro lot'+(lots>=0.019?'s':'');}
-function _getPipValuePerLot(pair,acctCcy,entryPrice){
-  const pipSize=_getPipSize(pair);const pipValueInQuote=pipSize*CONTRACT_SIZE;
-  let base,quote;
-  const specials={XAUUSD:['XAU','USD'],XAGUSD:['XAG','USD'],US30:['US30','USD'],NAS100:['NAS100','USD']};
-  if(specials[pair]){[base,quote]=specials[pair];}else{base=pair.slice(0,3);quote=pair.slice(3,6);}
-  if(quote===acctCcy)return pipValueInQuote;
-  if(base===acctCcy&&entryPrice>0)return pipValueInQuote/entryPrice;
-  const quoteToUSD=APPROX_RATES[quote]||1;const acctToUSD=APPROX_RATES[acctCcy]||1;
-  return pipValueInQuote*(quoteToUSD/acctToUSD);
-}
-
+function _getPipValuePerLot(pair,acctCcy,entryPrice){const pipSize=_getPipSize(pair);const pipValueInQuote=pipSize*CONTRACT_SIZE;let base,quote;const specials={XAUUSD:['XAU','USD'],XAGUSD:['XAG','USD'],US30:['US30','USD'],NAS100:['NAS100','USD']};if(specials[pair]){[base,quote]=specials[pair];}else{base=pair.slice(0,3);quote=pair.slice(3,6);}if(quote===acctCcy)return pipValueInQuote;if(base===acctCcy&&entryPrice>0)return pipValueInQuote/entryPrice;const quoteToUSD=APPROX_RATES[quote]||1;const acctToUSD=APPROX_RATES[acctCcy]||1;return pipValueInQuote*(quoteToUSD/acctToUSD);}
 function _fmtMoney(n,ccy='USD',d=2){if(n===null||n===undefined||isNaN(n))return'—';const sym=CURRENCY_SYMBOLS[ccy]||ccy+' ';return sym+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});}
 function _fmtUSD(n,d=2){return _fmtMoney(n,'USD',d);}
 function _fmt(n,d=2){if(n===null||n===undefined||isNaN(n))return'—';return n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});}
 function _sv(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
 function _rrColor(rr){if(rr>=3)return'#00c896';if(rr>=2)return _lerpHex('#f59e0b','#00c896',rr-2);if(rr>=1)return _lerpHex('#ff4f6a','#f59e0b',rr-1);return'#ff4f6a';}
 function _lerpHex(a,b,t){const ah=parseInt(a.slice(1),16),bh=parseInt(b.slice(1),16);const[ar,ag,ab_]=[(ah>>16)&0xff,(ah>>8)&0xff,ah&0xff];const[br,bg,bb]=[(bh>>16)&0xff,(bh>>8)&0xff,bh&0xff];const r=Math.round(ar+(br-ar)*t),g=Math.round(ag+(bg-ag)*t),b2=Math.round(ab_+(bb-ab_)*t);return'#'+[r,g,b2].map(x=>x.toString(16).padStart(2,'0')).join('');}
-
-function _updateRR(rr){
-  const elem=document.getElementById('cRrSection');if(!elem)return;
-  if(rr===null||isNaN(rr)||rr<=0){elem.style.display='none';return;}
-  elem.style.display='block';
-  const col=_rrColor(rr),rrEl=document.getElementById('cRrVal');
-  rrEl.textContent='1 : '+_fmt(rr,2);rrEl.style.color=col;
-  const fill=document.getElementById('cRrFill');
-  fill.style.width=Math.min((rr/3)*100,100)+'%';
-  fill.style.background=rr>=3?'#00c896':`linear-gradient(to right, #ff4f6a, ${_rrColor(rr)})`;
-}
-
-function cSetAsset(t){
-  cAsset=t;
-  ['cBtnCrypto','cBtnForex','cryptoInputs','forexInputs','cCryptoResults','cForexResults'].forEach(id=>{
-    const e=document.getElementById(id);if(!e)return;
-    if(id.includes('Crypto'))e.classList?.toggle('active',t==='crypto');
-    else if(id.includes('Forex'))e.classList?.toggle('active',t==='forex');
-    else if(id==='cryptoInputs')e.style.display=t==='crypto'?'':'none';
-    else if(id==='forexInputs')e.style.display=t==='forex'?'':'none';
-    else if(id==='cCryptoResults')e.style.display=t==='crypto'?'':'none';
-    else if(id==='cForexResults')e.style.display=t==='forex'?'':'none';
-  });
-  const acctCcy=document.getElementById('cAcctCurrency')?.value||'USD';
-  const pre=document.getElementById('fBalancePre');if(pre)pre.textContent=CURRENCY_SYMBOLS[acctCcy]||'$';
-  cCalc();
-}
-
+function _updateRR(rr){const elem=document.getElementById('cRrSection');if(!elem)return;if(rr===null||isNaN(rr)||rr<=0){elem.style.display='none';return;}elem.style.display='block';const col=_rrColor(rr),rrEl=document.getElementById('cRrVal');rrEl.textContent='1 : '+_fmt(rr,2);rrEl.style.color=col;const fill=document.getElementById('cRrFill');fill.style.width=Math.min((rr/3)*100,100)+'%';fill.style.background=rr>=3?'#00c896':`linear-gradient(to right, #ff4f6a, ${_rrColor(rr)})`;}
+function cSetAsset(t){cAsset=t;['cBtnCrypto','cBtnForex','cryptoInputs','forexInputs','cCryptoResults','cForexResults'].forEach(id=>{const e=document.getElementById(id);if(!e)return;if(id.includes('Crypto'))e.classList?.toggle('active',t==='crypto');else if(id.includes('Forex'))e.classList?.toggle('active',t==='forex');else if(id==='cryptoInputs')e.style.display=t==='crypto'?'':'none';else if(id==='forexInputs')e.style.display=t==='forex'?'':'none';else if(id==='cCryptoResults')e.style.display=t==='crypto'?'':'none';else if(id==='cForexResults')e.style.display=t==='forex'?'':'none';});const acctCcy=document.getElementById('cAcctCurrency')?.value||'USD';const pre=document.getElementById('fBalancePre');if(pre)pre.textContent=CURRENCY_SYMBOLS[acctCcy]||'$';cCalc();}
 function cSetRiskMode(m){cRiskMode=m;['cRiskPctBtn','cRiskUsdBtn'].forEach(id=>document.getElementById(id)?.classList.toggle('active',id.includes('Pct')?m==='pct':m==='usd'));const suf=document.getElementById('cRiskSuf');if(suf)suf.textContent=m==='pct'?'%':'$';cCalc();}
 function cSetSlMode(m){cSlMode=m;['cSlPriceBtn','cSlPctBtn'].forEach(id=>document.getElementById(id)?.classList.toggle('active',id.includes('Price')?m==='price':m==='pct'));document.getElementById('cSlPriceWrap').style.display=m==='price'?'':'none';document.getElementById('cSlPctWrap').style.display=m==='pct'?'':'none';cCalc();}
 function cSetTpMode(m){cTpMode=m;['cTpPriceBtn','cTpPctBtn'].forEach(id=>document.getElementById(id)?.classList.toggle('active',id.includes('Price')?m==='price':m==='pct'));document.getElementById('cTpPriceWrap').style.display=m==='price'?'':'none';document.getElementById('cTpPctWrap').style.display=m==='pct'?'':'none';cCalc();}
 function fSetRiskMode(m){fRiskMode=m;['fRiskPctBtn','fRiskUsdBtn'].forEach(id=>document.getElementById(id)?.classList.toggle('active',id.includes('Pct')?m==='pct':m==='usd'));const suf=document.getElementById('fRiskSuf');if(suf)suf.textContent=m==='pct'?'%':(CURRENCY_SYMBOLS[document.getElementById('cAcctCurrency')?.value||'USD']||'$');cCalc();}
 function fSetSlMode(m){fSlMode=m;['fSlPipsBtn','fSlPriceBtn2'].forEach(id=>document.getElementById(id)?.classList.toggle('active',id.includes('Pips')?m==='pips':m==='price'));document.getElementById('fSlPipsWrap').style.display=m==='pips'?'':'none';document.getElementById('fSlPriceWrap2').style.display=m==='price'?'':'none';cCalc();}
 function fSetTpMode(m){fTpMode=m;['fTpPipsBtn','fTpPriceBtn2'].forEach(id=>document.getElementById(id)?.classList.toggle('active',id.includes('Pips')?m==='pips':m==='price'));document.getElementById('fTpPipsWrap').style.display=m==='pips'?'':'none';document.getElementById('fTpPriceWrap2').style.display=m==='price'?'':'none';cCalc();}
-
 function cLoadDefaults(){try{const d=JSON.parse(localStorage.getItem(CALC_KEY));if(!d)return;if(d.capital)document.getElementById('cCapital').value=d.capital;if(d.riskVal)document.getElementById('cRiskVal').value=d.riskVal;if(d.riskMode)cSetRiskMode(d.riskMode);if(d.leverage)document.getElementById('cLeverage').value=d.leverage;if(d.asset)cSetAsset(d.asset);}catch(e){}}
-
 function cSaveDefault(){const d={capital:document.getElementById('cCapital').value,riskVal:document.getElementById('cRiskVal').value,riskMode:cRiskMode,leverage:document.getElementById('cLeverage').value,asset:cAsset};localStorage.setItem(CALC_KEY,JSON.stringify(d));const btn=document.getElementById('cBtnSetDef'),fb=document.getElementById('cSaveFeedback');btn.classList.add('saved');fb.classList.add('show');setTimeout(()=>{btn.classList.remove('saved');fb.classList.remove('show');},2000);}
-
 function cCalc(){if(cAsset==='crypto')_calcCrypto();else _calcForex();}
-
 function _calcCrypto(){const capital=parseFloat(document.getElementById('cCapital').value),riskVal=parseFloat(document.getElementById('cRiskVal').value),entry=parseFloat(document.getElementById('cEntry').value),leverage=Math.max(1,parseFloat(document.getElementById('cLeverage').value)||1);_sv('cLevDisplay',leverage+'×');let riskAmt=null;if(!isNaN(capital)&&capital>0&&!isNaN(riskVal)&&riskVal>0)riskAmt=cRiskMode==='pct'?capital*(riskVal/100):riskVal;let slDist=null,slPct=null;if(!isNaN(entry)&&entry>0){if(cSlMode==='price'){const slP=parseFloat(document.getElementById('cSLPrice').value);if(!isNaN(slP)&&slP>0&&slP!==entry){slDist=Math.abs(entry-slP);slPct=(slDist/entry)*100;}}else{const sp=parseFloat(document.getElementById('cSLPct').value);if(!isNaN(sp)&&sp>0){slPct=sp;slDist=entry*(sp/100);}}}let tpDist=null,tpPct=null;if(!isNaN(entry)&&entry>0){if(cTpMode==='price'){const tpP=parseFloat(document.getElementById('cTPPrice').value);if(!isNaN(tpP)&&tpP>0&&tpP!==entry){tpDist=Math.abs(tpP-entry);tpPct=(tpDist/entry)*100;}}else{const tp=parseFloat(document.getElementById('cTPPct').value);if(!isNaN(tp)&&tp>0){tpPct=tp;tpDist=entry*(tp/100);}}}if(riskAmt!==null&&slDist!==null&&slDist>0){const posSize=riskAmt/slDist,posVal=posSize*entry,margin=posVal/leverage,profit=tpDist!==null?posSize*tpDist:null,rr=profit!==null?profit/riskAmt:null;_sv('cOutRisk',_fmtUSD(riskAmt));const riskSubParts=[];if(cRiskMode==='pct')riskSubParts.push(riskVal.toFixed(2)+'% of capital');else riskSubParts.push('fixed risk');if(slPct)riskSubParts.push('SL '+slPct.toFixed(3)+'% away');_sv('cOutRiskSub',riskSubParts.join(' · '));if(profit!==null){document.getElementById('cProfitCard').style.opacity='1';_sv('cOutProfit',_fmtUSD(profit));_sv('cOutProfitSub',tpPct?'TP '+tpPct.toFixed(3)+'% from entry':'if TP hit');}else{document.getElementById('cProfitCard').style.opacity='.35';_sv('cOutProfit','—');_sv('cOutProfitSub','set a take profit to calculate');}_sv('cOutMargin',_fmtUSD(margin));if(leverage>1){_sv('cOutMarginSub',`Position: ${_fmtUSD(posVal)} · ${leverage}× leverage`);document.getElementById('cLevNote').style.display='block';_sv('cLevNoteX',leverage+'×');_sv('cLevNotePos',_fmtUSD(posVal));_sv('cLevNoteMargin',_fmtUSD(margin));}else{_sv('cOutMarginSub',`Full position: ${_fmtUSD(posVal)}`);document.getElementById('cLevNote').style.display='none';}_updateRR(rr);}else{_cryptoClear();}}
-
 function _cryptoClear(){_sv('cOutRisk','0');_sv('cOutRiskSub','if stop loss is hit');_sv('cOutProfit','0');_sv('cOutProfitSub','set a take profit to calculate');_sv('cOutMargin','0');_sv('cOutMarginSub','enter trade details to calculate');document.getElementById('cProfitCard').style.opacity='.35';document.getElementById('cLevNote').style.display='none';_sv('cLevDisplay',(parseFloat(document.getElementById('cLeverage').value)||1)+'×');_updateRR(null);}
-
 function _calcForex(){const pair=document.getElementById('cPair').value||'EURUSD',acctCcy=document.getElementById('cAcctCurrency').value||'USD',balance=parseFloat(document.getElementById('cFBalance').value),riskInput=parseFloat(document.getElementById('cFRisk').value),entryRaw=parseFloat(document.getElementById('cFEntry').value),entry=!isNaN(entryRaw)&&entryRaw>0?entryRaw:0,pre=document.getElementById('fBalancePre');if(pre)pre.textContent=CURRENCY_SYMBOLS[acctCcy]||'$';if(isNaN(balance)||balance<=0||isNaN(riskInput)||riskInput<=0){_forexClear();return;}const riskAmt=fRiskMode==='pct'?balance*(riskInput/100):riskInput,pipSize=_getPipSize(pair);let slPips=null;if(fSlMode==='pips'){const p=parseFloat(document.getElementById('cFSLPips').value);if(!isNaN(p)&&p>0)slPips=p;}else{const slPrice=parseFloat(document.getElementById('cFSLPrice').value);if(!isNaN(slPrice)&&slPrice>0&&entry>0&&slPrice!==entry)slPips=Math.abs(entry-slPrice)/pipSize;}let tpPips=null;if(fTpMode==='pips'){const p=parseFloat(document.getElementById('cFTPPips').value);if(!isNaN(p)&&p>0)tpPips=p;}else{const tpPrice=parseFloat(document.getElementById('cFTPPrice').value);if(!isNaN(tpPrice)&&tpPrice>0&&entry>0&&tpPrice!==entry)tpPips=Math.abs(tpPrice-entry)/pipSize;}if(slPips===null||slPips<=0){_forexClear();return;}const pipValPerLot=_getPipValuePerLot(pair,acctCcy,entry),lots=riskAmt/(slPips*pipValPerLot),units=lots*CONTRACT_SIZE,moneyAtRisk=lots*slPips*pipValPerLot;let tpProfit=null,rr=null;if(tpPips!==null&&tpPips>0){tpProfit=lots*tpPips*pipValPerLot;rr=tpPips/slPips;}const pipValTotal=lots*pipValPerLot,sym=CURRENCY_SYMBOLS[acctCcy]||'$',fmtA=(n,d=2)=>n===null||isNaN(n)?'—':sym+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});_sv('fOutRiskAmt',fmtA(moneyAtRisk));_sv('fOutRiskPct',fRiskMode==='pct'?riskInput.toFixed(2)+'% of balance':'fixed risk');const lotsRounded=Math.round(lots*100)/100;_sv('fOutLots',_fmt(lotsRounded,lotsRounded<0.01?4:lotsRounded<0.1?3:2));_sv('fOutLotType',_getLotLabel(lotsRounded));_sv('fOutUnits',Math.round(units).toLocaleString('en-US'));_sv('fOutPipVal',fmtA(pipValPerLot,pipValPerLot<1?3:2));_sv('fOutPipValSub','per pip · 1 std lot');const slInfoEl=document.getElementById('fSlInfo');if(slInfoEl)slInfoEl.style.display='';_sv('fOutSlPips',_fmt(slPips,slPips%1===0?0:1));_sv('fOutPipSize',pipSize===0.0001?'0.0001':'0.01');_sv('fOutContract',CONTRACT_SIZE.toLocaleString('en-US'));if(tpProfit!==null){document.getElementById('fPnlSec').style.display='';_sv('fOutProfit',fmtA(tpProfit));_sv('fOutProfitPips',_fmt(tpPips,tpPips%1===0?0:1)+' pips');_sv('fOutPipValTotal',fmtA(pipValTotal,pipValTotal<1?3:2));}else{document.getElementById('fPnlSec').style.display='none';}_updateRR(rr);}
-
 function _forexClear(){['fOutRiskAmt','fOutRiskPct','fOutLots','fOutLotType','fOutUnits','fOutPipVal','fOutPipValSub','fOutSlPips','fOutPipSize'].forEach(k=>_sv(k,'0'));const slInfoEl=document.getElementById('fSlInfo');if(slInfoEl)slInfoEl.style.display='none';document.getElementById('fPnlSec').style.display='none';_updateRR(null);}
-
 document.addEventListener('DOMContentLoaded',()=>{document.getElementById('cAcctCurrency')?.addEventListener('change',()=>{const acctCcy=document.getElementById('cAcctCurrency').value,pre=document.getElementById('fBalancePre');if(pre)pre.textContent=CURRENCY_SYMBOLS[acctCcy]||'$';if(fRiskMode==='usd'){const suf=document.getElementById('fRiskSuf');if(suf)suf.textContent=CURRENCY_SYMBOLS[acctCcy]||'$';}cCalc();});});
 
-/* ══════════════════════════════════════
-   CLIENT-SIDE ROUTER
-═══════════════════════════════════════ */
-const PAGES = {
-  calculator: { title: 'Free Crypto & Forex Risk Calculator | TradingGrove', file: 'pages/calculator.html' },
-  'crypto-calculator': { title: 'Free Crypto Position Size Calculator | TradingGrove', file: 'pages/crypto-calculator.html' },
-  'forex-calculator': { title: 'Free Forex Lot Size Calculator | TradingGrove', file: 'pages/forex-calculator.html' }
-};
-
-async function loadPage(pageName) {
-  const page = PAGES[pageName];
-  if (!page) {
-    showHomePage();
-    return;
-  }
-
-  try {
-    const response = await fetch(page.file);
-    if (!response.ok) throw new Error('Page not found');
-    const html = await response.text();
-
-    // Update page title and content
-    document.getElementById('pageTitle').textContent = page.title;
-    document.getElementById('pageContent').querySelector('.pw').innerHTML = html;
-
-    // Show page content, hide home
-    document.getElementById('homePage').style.display = 'none';
-    document.getElementById('pageContent').style.display = 'block';
-
-    // Initialize page-specific logic
-    if (pageName === 'crypto-calculator') {
-      cLoadDefaults();
-      cCalc();
-    } else if (pageName === 'forex-calculator') {
-      cLoadDefaults();
-      // Auto-switch to forex mode
-      setTimeout(() => {
-        fSetRiskMode(fRiskMode);
-        cCalc();
-      }, 100);
-    } else if (pageName === 'calculator') {
-      cLoadDefaults();
-      cCalc();
-      // Check for #forex hash to auto-switch to forex mode
-      if (window.location.hash.includes('forex')) {
-        setTimeout(() => cSetAsset('forex'), 100);
-      }
-    }
-
-    // Scroll to top
-    window.scrollTo(0, 0);
-  } catch (error) {
-    console.error('Error loading page:', error);
-    showHomePage();
-  }
-}
-
-function showHomePage() {
-  document.getElementById('pageTitle').textContent = 'TradingGrove | Find Your Edge. Stop Losing to the Same Mistakes.';
-  document.getElementById('homePage').style.display = 'block';
-  document.getElementById('pageContent').style.display = 'none';
-  window.scrollTo(0, 0);
-}
-
-// Handle hash changes for routing
-window.addEventListener('hashchange', () => {
-  const hash = window.location.hash.slice(1); // Remove #
-  const pageName = hash.split('#')[0]; // Get page name before any secondary hash
-  if (pageName && PAGES[pageName]) {
-    loadPage(pageName);
-  } else {
-    showHomePage();
-  }
-});
-
-// Handle initial load
-window.addEventListener('load', () => {
-  const hash = window.location.hash.slice(1);
-  const pageName = hash.split('#')[0];
-  if (pageName && PAGES[pageName]) {
-    loadPage(pageName);
-  }
-});
+const PAGES={calculator:{title:'Free Crypto & Forex Risk Calculator | TradingGrove',file:'pages/calculator.html'},'crypto-calculator':{title:'Free Crypto Position Size Calculator | TradingGrove',file:'pages/crypto-calculator.html'},'forex-calculator':{title:'Free Forex Lot Size Calculator | TradingGrove',file:'pages/forex-calculator.html'}};
+async function loadPage(pageName){const page=PAGES[pageName];if(!page){showHomePage();return;}try{const response=await fetch(page.file);if(!response.ok)throw new Error('Page not found');const html=await response.text();document.getElementById('pageTitle').textContent=page.title;document.getElementById('pageContent').querySelector('.pw').innerHTML=html;document.getElementById('homePage').style.display='none';document.getElementById('pageContent').style.display='block';if(pageName==='crypto-calculator'){cLoadDefaults();cCalc();}else if(pageName==='forex-calculator'){cLoadDefaults();setTimeout(()=>{fSetRiskMode(fRiskMode);cCalc();},100);}else if(pageName==='calculator'){cLoadDefaults();cCalc();if(window.location.hash.includes('forex'))setTimeout(()=>cSetAsset('forex'),100);}window.scrollTo(0,0);}catch(error){console.error('Error loading page:',error);showHomePage();}}
+function showHomePage(){document.getElementById('pageTitle').textContent='TradingGrove | A trading journal that helps you understand your own trading.';document.getElementById('homePage').style.display='block';document.getElementById('pageContent').style.display='none';window.scrollTo(0,0);}
+window.addEventListener('hashchange',()=>{const hash=window.location.hash.slice(1);const pageName=hash.split('#')[0];if(pageName&&PAGES[pageName])loadPage(pageName);else showHomePage();});
+window.addEventListener('load',()=>{const hash=window.location.hash.slice(1);const pageName=hash.split('#')[0];if(pageName&&PAGES[pageName])loadPage(pageName);});
 </script>
 </body>
 </html>

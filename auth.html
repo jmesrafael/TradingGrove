@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdnjs.cloudflare.com">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
 <style>
@@ -26,7 +26,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .orb2{width:420px;height:420px;background:rgba(25,195,125,.05);bottom:-80px;right:-80px}
 /* nav */
 .top-nav{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:18px 32px;border-bottom:1px solid var(--border2)}
-.logo{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--text);text-decoration:none}
+.logo{font-family:'Outfit',sans-serif;font-size:18px;font-weight:700;color:var(--text);text-decoration:none}
 .logo span{color:var(--accent)}
 .back-link{font-size:13px;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .18s}
 .back-link:hover{color:var(--accent2)}
@@ -35,11 +35,11 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .auth-box{width:100%;max-width:420px}
 /* tabs */
 .auth-tabs{display:flex;background:var(--panel2);border:1px solid var(--border2);border-radius:12px;padding:4px;margin-bottom:24px}
-.auth-tab{flex:1;text-align:center;padding:10px;border-radius:9px;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;color:var(--muted);border:none;background:none}
+.auth-tab{flex:1;text-align:center;padding:10px;border-radius:9px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;color:var(--muted);border:none;background:none}
 .auth-tab.active{background:var(--accent);color:#070a08;box-shadow:0 2px 12px rgba(0,255,136,.25)}
 /* card */
 .auth-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:32px}
-.auth-title{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin-bottom:6px}
+.auth-title{font-family:'Outfit',sans-serif;font-size:22px;font-weight:700;margin-bottom:6px}
 .auth-subtitle{font-size:13px;color:var(--muted);margin-bottom:28px;line-height:1.5}
 /* fields */
 .field{margin-bottom:16px}
@@ -53,8 +53,8 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .toggle-pw:hover{color:var(--text2)}
 /* referral field special styles */
 .ref-field-wrap{position:relative}
-.ref-field-wrap input{text-transform:uppercase;letter-spacing:2px;font-family:'Space Grotesk','Inter',sans-serif;font-weight:600;padding-right:90px}
-.ref-validate-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:1px solid var(--border2);border-radius:6px;color:var(--muted);cursor:pointer;font-size:11px;font-family:'Space Grotesk',sans-serif;font-weight:600;padding:4px 8px;transition:all .2s;white-space:nowrap}
+.ref-field-wrap input{text-transform:uppercase;letter-spacing:2px;font-family:'Outfit','Inter',sans-serif;font-weight:600;padding-right:90px}
+.ref-validate-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:1px solid var(--border2);border-radius:6px;color:var(--muted);cursor:pointer;font-size:11px;font-family:'Outfit',sans-serif;font-weight:600;padding:4px 8px;transition:all .2s;white-space:nowrap}
 .ref-validate-btn:hover{border-color:var(--accent2);color:var(--accent2)}
 .ref-status{font-size:11px;margin-top:5px;min-height:16px;display:flex;align-items:center;gap:5px;transition:all .2s}
 .ref-status.valid{color:var(--accent2)}
@@ -69,15 +69,15 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .pw-strength-bar{height:100%;width:0;border-radius:2px;transition:width .3s,background .3s}
 .pw-hint{font-size:11px;color:var(--muted);margin-top:4px}
 /* submit */
-.btn-submit{width:100%;padding:13px;border:none;border-radius:10px;background:var(--accent);color:#070a08;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .22s;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px}
+.btn-submit{width:100%;padding:13px;border:none;border-radius:10px;background:var(--accent);color:#070a08;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .22s;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px}
 .btn-submit:hover:not(:disabled){background:#00e67a;box-shadow:0 0 24px rgba(0,255,136,.35)}
 .btn-submit:disabled{opacity:.5;cursor:not-allowed}
 /* resend button */
-.btn-resend{width:100%;padding:11px;border:1px solid var(--border);border-radius:10px;background:none;color:var(--accent2);font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .22s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px}
+.btn-resend{width:100%;padding:11px;border:1px solid var(--border);border-radius:10px;background:none;color:var(--accent2);font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .22s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px}
 .btn-resend:hover:not(:disabled){background:rgba(0,255,136,.06);border-color:rgba(0,255,136,.3)}
 .btn-resend:disabled{opacity:.45;cursor:not-allowed}
 /* google button */
-.btn-google{width:100%;padding:12px;border:1px solid var(--border2);border-radius:10px;background:rgba(255,255,255,.04);color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .22s;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:4px}
+.btn-google{width:100%;padding:12px;border:1px solid var(--border2);border-radius:10px;background:rgba(255,255,255,.04);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .22s;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:4px}
 .btn-google:hover:not(:disabled){background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.18)}
 .btn-google:disabled{opacity:.5;cursor:not-allowed}
 .btn-google svg{width:18px;height:18px;flex-shrink:0}
@@ -98,7 +98,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .confirm-panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:32px;text-align:center;display:none}
 .confirm-panel.show{display:block}
 .confirm-icon{width:64px;height:64px;border-radius:50%;background:rgba(0,255,136,.1);border:2px solid rgba(0,255,136,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:26px}
-.confirm-title{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;margin-bottom:8px}
+.confirm-title{font-family:'Outfit',sans-serif;font-size:20px;font-weight:700;margin-bottom:8px}
 .confirm-subtitle{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:24px}
 .confirm-email-badge{display:inline-block;background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.2);border-radius:8px;padding:6px 14px;font-size:13px;color:var(--accent2);font-weight:600;margin-bottom:20px;word-break:break-all}
 .confirm-steps{text-align:left;background:rgba(0,0,0,.2);border-radius:10px;padding:16px;margin-bottom:20px}
@@ -116,7 +116,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 /* page loader */
 .page-loader{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s}
 .page-loader.gone{opacity:0;pointer-events:none}
-.pl-logo{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;color:var(--text);margin-bottom:20px;text-align:center}
+.pl-logo{font-family:'Outfit',sans-serif;font-size:26px;font-weight:700;color:var(--text);margin-bottom:20px;text-align:center}
 .pl-logo span{color:var(--accent)}
 .pl-spin{width:32px;height:32px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto}
 </style>
@@ -269,7 +269,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
             autocomplete="off"
             autocapitalize="characters"
             oninput="onRefCodeInput(this.value)"
-            style="text-transform:uppercase;letter-spacing:2px;font-family:'Space Grotesk','Inter',sans-serif;font-weight:600;padding-right:80px"
+            style="text-transform:uppercase;letter-spacing:2px;font-family:'Outfit','Inter',sans-serif;font-weight:600;padding-right:80px"
           >
           <button class="ref-validate-btn" id="refValidateBtn" onclick="validateRefCode()" type="button">Verify</button>
         </div>

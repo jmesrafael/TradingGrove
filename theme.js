@@ -62,22 +62,6 @@ TZ.tokens = {
     '--blue':    '#38bdf8',
   },
 
-  golden: {
-    '--bg':      '#0e0c09',
-    '--panel':   '#16120c',
-    '--panel2':  '#1e1910',
-    '--accent':  '#f5c842',
-    '--accent2': '#d4a017',
-    '--border':  '#2e2412',
-    '--border2': '#3d3018',
-    '--text':    '#f5ead8',
-    '--muted':   '#a08c6a',
-    '--muted2':  '#6b5c3e',
-    '--red':     '#e05c5c',
-    '--amber':   '#f59e0b',
-    '--blue':    '#7eb8d4',
-  },
-
   void: {
     '--bg':      '#000000',
     '--panel':   '#0d0d0d',
@@ -93,6 +77,38 @@ TZ.tokens = {
     '--amber':   '#ccaa00',
     '--blue':    '#88aaff',
   },
+
+  'grove-dusk': {
+    '--bg':      '#08080f',
+    '--panel':   '#0f0f1e',
+    '--panel2':  '#141428',
+    '--accent':  '#a78bfa',
+    '--accent2': '#7c5ce8',
+    '--border':  '#1a1a38',
+    '--border2': '#252550',
+    '--text':    '#e2e0f0',
+    '--muted':   '#8880aa',
+    '--muted2':  '#504878',
+    '--red':     '#e07080',
+    '--amber':   '#c4a060',
+    '--blue':    '#60a0e0',
+  },
+
+  moss: {
+    '--bg':      '#050e08',
+    '--panel':   '#0b1a10',
+    '--panel2':  '#0f2015',
+    '--accent':  '#3a9858',
+    '--accent2': '#2b7a45',
+    '--border':  '#0d2e1c',
+    '--border2': '#154025',
+    '--text':    '#d8f0df',
+    '--muted':   '#7dca92',
+    '--muted2':  '#2b7a45',
+    '--red':     '#e05050',
+    '--amber':   '#d4a04a',
+    '--blue':    '#6ab8d4',
+  },
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -102,9 +118,10 @@ TZ.themeList = [
   { id: 'system',         label: 'System',       desc: 'Follows your OS setting',   icon: 'fa-solid fa-circle-half-stroke', pro: false, swatches: ['#111111', '#1a1a1a', '#aaaaaa'] },
   { id: 'dark',           label: 'Dark',         desc: 'Deep green-tinted dark',    icon: 'fa-solid fa-moon',               pro: false, swatches: ['#0b0f0c', '#111816', '#00ff88'] },
   { id: 'light',          label: 'Light',        desc: 'Clean light mode',          icon: 'fa-solid fa-sun',                pro: false, swatches: ['#eef3f0', '#ffffff', '#19c37d'] },
-  { id: 'blue-electric',  label: 'Electric',     desc: 'Deep navy · neon cyan',     icon: 'fa-solid fa-bolt',               pro: true,  swatches: ['#060d18', '#0a1628', '#00e5ff'] },
-  { id: 'golden',         label: 'Golden Hour',  desc: 'Warm dark · rich gold',     icon: 'fa-solid fa-crown',              pro: true,  swatches: ['#0e0c09', '#16120c', '#f5c842'] },
-  { id: 'void',           label: 'Void',         desc: 'Pure black · crisp white',  icon: 'fa-solid fa-circle',             pro: true,  swatches: ['#000000', '#0d0d0d', '#f0f0f0'] },
+  { id: 'blue-electric',  label: 'Electric',    desc: 'Deep navy · neon cyan',          icon: 'fa-solid fa-bolt',               pro: true,  swatches: ['#060d18', '#0a1628', '#00e5ff'] },
+  { id: 'void',           label: 'Void',        desc: 'Pure black · crisp white',       icon: 'fa-solid fa-circle',             pro: true,  swatches: ['#000000', '#0d0d0d', '#f0f0f0'] },
+  { id: 'grove-dusk',     label: 'Grove Dusk',  desc: 'Deep indigo dark · soft violet', icon: 'fa-solid fa-moon',               pro: true,  swatches: ['#08080f', '#0f0f1e', '#a78bfa'] },
+  { id: 'moss',           label: 'Moss',        desc: 'Forest floor dark · moss green', icon: 'fa-solid fa-seedling',           pro: true,  swatches: ['#050e08', '#0b1a10', '#3a9858'] },
 ];
 
 // ══════════════════════════════════════════════════════════════

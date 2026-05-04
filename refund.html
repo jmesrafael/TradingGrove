@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradingGrove | Refund Policy</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#070a08;--panel:#0d1410;--panel2:#111e17;
+  --accent:#00ff88;--accent2:#19c37d;
+  --accent-dim:rgba(0,255,136,.08);--accent-glow:rgba(0,255,136,.18);
+  --border:rgba(0,255,136,.1);--border2:rgba(255,255,255,.07);
+  --text:#e8f5ee;--text2:#b0c8bc;--muted:#6a8a7a;--red:#ff5f6d;--gold:#f5c518;
+  --accent-rgb:0,255,136;--bg-raw:7,12,9;
+  --font-heading:'Outfit',sans-serif;--font-body:'Inter',sans-serif;
+}
+html{scroll-behavior:smooth}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body,'Inter',sans-serif);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── Ambient background ── */
+.bg-orb{position:fixed;border-radius:50%;pointer-events:none;z-index:0;filter:blur(140px)}
+.bg-orb1{width:600px;height:600px;background:rgba(var(--accent-rgb,0,255,136),.035);top:-180px;right:-120px}
+.bg-orb2{width:450px;height:450px;background:rgba(var(--accent-rgb,0,255,136),.025);bottom:-100px;left:-80px}
+
+/* ── Page loader ── */
+.page-loader{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s}
+.page-loader.gone{opacity:0;pointer-events:none}
+.pl-logo{font-family:var(--font-heading,'Outfit',sans-serif);font-size:26px;font-weight:800;margin-bottom:18px;text-align:center}
+.pl-logo span{color:var(--accent)}
+.pl-spin{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto}
+
+/* ── Header ── */
+header{
+  position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 32px;
+  background:rgba(var(--bg-raw,7,12,9),.92);
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(20px);
+}
+.logo{font-family:var(--font-heading,'Outfit',sans-serif);font-size:18px;font-weight:700;text-decoration:none;color:var(--text)}
+.logo span{color:var(--accent)}
+.btn-ghost{background:none;border:1px solid var(--border);color:var(--muted);border-radius:10px;padding:8px 14px;font-family:var(--font-body,'Inter',sans-serif);font-size:13px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.btn-ghost:hover{border-color:var(--accent2);color:var(--text)}
+
+/* ── Layout ── */
+main{position:relative;z-index:1;max-width:820px;margin:0 auto;padding:56px 24px 100px}
+
+/* ── Hero block ── */
+.doc-hero{margin-bottom:48px;animation:fadeUp .5s ease both}
+.doc-eyebrow{display:inline-flex;align-items:center;gap:7px;background:rgba(var(--accent-rgb,0,255,136),.08);border:1px solid rgba(var(--accent-rgb,0,255,136),.18);border-radius:999px;padding:5px 14px;font-size:11px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;margin-bottom:18px}
+.doc-hero h1{font-family:var(--font-heading,'Outfit',sans-serif);font-size:40px;font-weight:800;line-height:1.1;letter-spacing:-.5px;margin-bottom:14px}
+.doc-hero h1 span{color:var(--accent)}
+.doc-meta{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.doc-meta-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.doc-meta-item i{font-size:11px;color:var(--accent2)}
+
+/* ── Guarantee banner ── */
+.guarantee-banner{
+  background:linear-gradient(135deg,rgba(var(--accent-rgb,0,255,136),.09),rgba(var(--accent-rgb,0,255,136),.04));
+  border:1px solid rgba(var(--accent-rgb,0,255,136),.25);
+  border-left:4px solid var(--accent2);
+  border-radius:14px;
+  padding:20px 22px;
+  margin-bottom:40px;
+  display:flex;gap:16px;
+  animation:fadeUp .5s .05s ease both;
+}
+.guarantee-icon{width:44px;height:44px;background:rgba(var(--accent-rgb,0,255,136),.12);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;margin-top:2px}
+.guarantee-title{font-family:var(--font-heading,'Outfit',sans-serif);font-size:15px;font-weight:800;color:var(--accent2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.guarantee-text{font-size:13px;color:var(--muted);line-height:1.75}
+.guarantee-text strong{color:var(--accent2)}
+
+/* ── TOC ── */
+.toc-card{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:22px 24px;margin-bottom:40px;animation:fadeUp .5s .08s ease both}
+.toc-title{font-family:var(--font-heading,'Outfit',sans-serif);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.toc-list{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+@media(max-width:540px){.toc-list{grid-template-columns:1fr}}
+.toc-list a{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);text-decoration:none;padding:5px 8px;border-radius:7px;transition:all .18s}
+.toc-list a:hover{background:rgba(var(--accent-rgb,0,255,136),.07);color:var(--accent2)}
+.toc-list a i{font-size:9px;color:var(--accent2);flex-shrink:0}
+
+/* ── Sections ── */
+.doc-section{margin-bottom:44px;animation:fadeUp .5s ease both}
+.section-hdr{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.section-num{font-family:var(--font-heading,'Outfit',sans-serif);font-size:11px;font-weight:800;color:var(--accent2);background:rgba(var(--accent-rgb,0,255,136),.1);border:1px solid rgba(var(--accent-rgb,0,255,136),.2);border-radius:6px;padding:3px 9px;text-transform:uppercase;letter-spacing:.5px;flex-shrink:0}
+.section-hdr h2{font-family:var(--font-heading,'Outfit',sans-serif);font-size:20px;font-weight:700}
+
+.doc-p{font-size:14px;color:var(--muted);line-height:1.85;margin-bottom:14px}
+.doc-p:last-child{margin-bottom:0}
+.doc-p strong{color:var(--text);font-weight:600}
+.doc-p a{color:var(--accent2);text-decoration:underline;text-underline-offset:2px}
+
+.doc-ul{list-style:none;margin:10px 0 14px;display:flex;flex-direction:column;gap:8px}
+.doc-ul li{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;color:var(--muted);line-height:1.6}
+.doc-ul li i{color:var(--accent2);font-size:10px;margin-top:4px;flex-shrink:0}
+.doc-ul li strong{color:var(--text)}
+
+/* Inline highlight box */
+.inline-box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin:14px 0;font-size:13px;color:var(--muted);line-height:1.7}
+.inline-box.warn{background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.25)}
+.inline-box.info{background:rgba(var(--accent-rgb,0,255,136),.05);border-color:rgba(var(--accent-rgb,0,255,136),.18)}
+.inline-box.success{background:rgba(var(--accent-rgb,0,255,136),.05);border-color:rgba(var(--accent-rgb,0,255,136),.25)}
+.inline-box strong{color:var(--text)}
+
+/* ── Footer ── */
+.doc-footer{border-top:1px solid var(--border);padding-top:32px;margin-top:60px;text-align:center;animation:fadeUp .5s ease both}
+.doc-footer p{font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:14px}
+.footer-links{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
+.footer-links a{font-size:12px;color:var(--muted);text-decoration:underline;text-underline-offset:2px}
+.footer-links a:hover{color:var(--text)}
+.footer-sep{opacity:.25;font-size:12px;color:var(--muted)}
+
+/* ── Footer ── */
+footer{background:var(--bg);border-top:1px solid var(--border2);padding:52px 40px 28px}
+.footer-inner{max-width:1080px;margin:0 auto;display:flex;gap:56px;flex-wrap:wrap;margin-bottom:40px}
+.footer-brand{flex:1;min-width:200px}
+.footer-logo{font-family:var(--font-heading,'Outfit',sans-serif);font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px}
+.footer-logo span{color:var(--accent)}
+.footer-tagline{font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+.footer-badges{display:flex;flex-wrap:wrap;gap:7px}
+.footer-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);background:rgba(255,255,255,.04);border:1px solid var(--border2);border-radius:20px;padding:3px 10px;font-family:var(--font-heading,'Outfit',sans-serif);font-weight:600}
+.footer-badge i{color:var(--accent2);font-size:10px}
+.footer-links-group{display:flex;gap:48px;flex-wrap:wrap}
+.footer-col{display:flex;flex-direction:column;gap:8px;min-width:100px}
+.footer-col-title{font-family:var(--font-heading,'Outfit',sans-serif);font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.9px;margin-bottom:4px}
+.footer-col a{font-size:13px;color:var(--muted);text-decoration:none;transition:color .18s}
+.footer-col a:hover{color:var(--accent2)}
+.footer-bottom{max-width:1080px;margin:0 auto;padding-top:24px;border-top:1px solid var(--border2);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--muted)}
+@media(max-width:640px){.footer-inner{flex-direction:column;gap:32px}.footer-bottom{flex-direction:column;align-items:center;text-align:center}}
+
+@media(max-width:600px){
+  header{padding:12px 16px}
+  main{padding:36px 16px 80px}
+  .doc-hero h1{font-size:30px}
+  .guarantee-banner{flex-direction:column;gap:12px}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-orb bg-orb1"></div>
+<div class="bg-orb bg-orb2"></div>
+
+<div class="page-loader" id="pageLoader">
+  <div>
+    <div class="pl-logo">Trading<span>Grove</span></div>
+    <div class="pl-spin"></div>
+  </div>
+</div>
+
+<header>
+  <a href="/" class="logo">Trading<span>Grove</span></a>
+  <a href="/dashboard" class="btn-ghost"><i class="fa-solid fa-chevron-left"></i> Back</a>
+</header>
+
+<main>
+
+  <!-- Hero -->
+  <div class="doc-hero">
+    <div class="doc-eyebrow"><i class="fa-solid fa-receipt"></i> Legal</div>
+    <h1>Refund <span>Policy</span></h1>
+    <div class="doc-meta">
+      <div class="doc-meta-item"><i class="fa-solid fa-calendar-days"></i> Effective: January 1, 2025</div>
+      <div class="doc-meta-item"><i class="fa-solid fa-rotate"></i> Last updated: May 2026</div>
+      <div class="doc-meta-item"><i class="fa-solid fa-globe"></i> Applies globally</div>
+    </div>
+  </div>
+
+  <!-- Guarantee banner -->
+  <div class="guarantee-banner">
+    <div class="guarantee-icon">✅</div>
+    <div>
+      <div class="guarantee-title">Your Satisfaction Matters</div>
+      <div class="guarantee-text">
+        We stand behind our product. If you're not happy with TradingGrove Pro within the first <strong>14 days</strong>, we'll issue a full refund, no questions asked. Your money is protected.
+      </div>
+    </div>
+  </div>
+
+  <!-- Table of Contents -->
+  <div class="toc-card">
+    <div class="toc-title"><i class="fa-solid fa-list"></i> Table of Contents</div>
+    <ul class="toc-list">
+      <li><a href="#r1"><i class="fa-solid fa-chevron-right"></i> 1. 14-Day Money-Back Guarantee</a></li>
+      <li><a href="#r2"><i class="fa-solid fa-chevron-right"></i> 2. How to Request a Refund</a></li>
+      <li><a href="#r3"><i class="fa-solid fa-chevron-right"></i> 3. Refund Eligibility</a></li>
+      <li><a href="#r4"><i class="fa-solid fa-chevron-right"></i> 4. Refund Processing</a></li>
+      <li><a href="#r5"><i class="fa-solid fa-chevron-right"></i> 5. Non-Refundable Items</a></li>
+      <li><a href="#r6"><i class="fa-solid fa-chevron-right"></i> 6. Referral Reward Days</a></li>
+      <li><a href="#r7"><i class="fa-solid fa-chevron-right"></i> 7. Cancellation vs. Refund</a></li>
+      <li><a href="#r8"><i class="fa-solid fa-chevron-right"></i> 8. Disputes & Chargebacks</a></li>
+      <li><a href="#r9"><i class="fa-solid fa-chevron-right"></i> 9. Contact Support</a></li>
+    </ul>
+  </div>
+
+  <!-- Sections -->
+
+  <div class="doc-section" id="r1" style="animation-delay:.1s">
+    <div class="section-hdr">
+      <span class="section-num">01</span>
+      <h2>14-Day Money-Back Guarantee</h2>
+    </div>
+    <p class="doc-p">If you purchase a TradingGrove Pro subscription and are not satisfied within the first <strong>14 days</strong> of your purchase, we will refund your payment in full. No explanations required. No hidden terms.</p>
+    <p class="doc-p">This guarantee applies to:</p>
+    <ul class="doc-ul">
+      <li><i class="fa-solid fa-check" style="color:var(--accent2)"></i><span><strong>First-time monthly Pro subscriptions</strong> — Full refund of the $15.00 USD charge</span></li>
+      <li><i class="fa-solid fa-check" style="color:var(--accent2)"></i><span><strong>First-time annual Pro subscriptions</strong> — Full refund of the $120.00 USD charge</span></li>
+      <li><i class="fa-solid fa-check" style="color:var(--accent2)"></i><span><strong>Upgrades from Free to Pro</strong> — Full refund of the subscription amount</span></li>
+    </ul>
+    <div class="inline-box success">
+      <strong>Pro tip:</strong> If you have questions before purchasing, contact us at <a href="mailto:support@tradzona.com">support@tradzona.com</a>. We'll help you understand what Pro includes before you buy.
+    </div>
+  </div>
+
+  <div class="doc-section" id="r2" style="animation-delay:.12s">
+    <div class="section-hdr">
+      <span class="section-num">02</span>
+      <h2>How to Request a Refund</h2>
+    </div>
+    <p class="doc-p">Requesting a refund is simple:</p>
+    <ol class="doc-ul" style="list-style:none">
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Email us</strong> at <a href="mailto:support@tradzona.com">support@tradzona.com</a> with the subject line "Refund Request"</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span>Include your email address and the email associated with your TradingGrove account</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span>Let us know what would make TradingGrove better for you (optional feedback)</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span>We'll review your request and process your refund within <strong>3 business days</strong></span></li>
+    </ol>
+    <p class="doc-p">Your refund will be issued to the original payment method used. If paying by credit card, the credit typically appears within 5–10 business days, depending on your bank.</p>
+  </div>
+
+  <div class="doc-section" id="r3" style="animation-delay:.14s">
+    <div class="section-hdr">
+      <span class="section-num">03</span>
+      <h2>Refund Eligibility</h2>
+    </div>
+    <p class="doc-p">To be eligible for a refund under this guarantee:</p>
+    <ul class="doc-ul">
+      <li><i class="fa-solid fa-check" style="color:var(--accent2)"></i><span>Your refund request must be submitted <strong>within 14 calendar days</strong> of your initial purchase</span></li>
+      <li><i class="fa-solid fa-check" style="color:var(--accent2)"></i><span>Your account must be in good standing (no violations of our Terms of Service)</span></li>
+      <li><i class="fa-solid fa-check" style="color:var(--accent2)"></i><span>You must not have previously received a refund for the same billing cycle</span></li>
+      <li><i class="fa-solid fa-check" style="color:var(--accent2)"></i><span>The refund applies only to the subscription price itself, not to any bonuses or credits you may have earned</span></li>
+    </ul>
+    <p class="doc-p">If your account has been flagged for suspicious activity (e.g., fraudulent signup, Terms violations), we may decline a refund at our discretion and report the account to our payment processor.</p>
+  </div>
+
+  <div class="doc-section" id="r4" style="animation-delay:.16s">
+    <div class="section-hdr">
+      <span class="section-num">04</span>
+      <h2>Refund Processing</h2>
+    </div>
+    <p class="doc-p">Once a refund is approved:</p>
+    <ul class="doc-ul">
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Refund issued</strong> to your original payment method (credit card, debit card, PayPal, etc.) within 3 business days</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Subscription cancelled</strong> immediately — your Pro access ends right away</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Account downgraded</strong> to the Free plan — you'll keep your primary journal and basic features</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Additional journals** become read-only — if you created extra journals during your Pro trial, they'll be locked to viewing only. All your data is preserved.</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span>You'll receive a <strong>confirmation email</strong> once the refund has been processed by your bank</span></li>
+    </ul>
+    <div class="inline-box info">
+      <strong>Bank processing time:</strong> Most refunds appear within 5–10 business days depending on your bank. If you don't see your refund after 10 days, check with your bank or contact us.
+    </div>
+  </div>
+
+  <div class="doc-section" id="r5" style="animation-delay:.18s">
+    <div class="section-hdr">
+      <span class="section-num">05</span>
+      <h2>Non-Refundable Items</h2>
+    </div>
+    <p class="doc-p">The following items are <strong>non-refundable</strong> and cannot be returned for a refund:</p>
+    <ul class="doc-ul">
+      <li><i class="fa-solid fa-xmark" style="color:var(--red,#ff5f6d)"></i><span><strong>Referral reward days</strong> — Free Pro days earned through the referral program cannot be refunded or converted to cash</span></li>
+      <li><i class="fa-solid fa-xmark" style="color:var(--red,#ff5f6d)"></i><span><strong>Promotional credits</strong> — Any discount codes, promo credits, or bundle offers applied to your subscription</span></li>
+      <li><i class="fa-solid fa-xmark" style="color:var(--red,#ff5f6d)"></i><span><strong>Renewal subscriptions</strong> — If you've already allowed a second billing cycle to occur beyond the 14-day window, that charge cannot be refunded through this guarantee</span></li>
+      <li><i class="fa-solid fa-xmark" style="color:var(--red,#ff5f6d)"></i><span><strong>Partial refunds</strong> — Refunds are all-or-nothing. If you've used the service, the entire subscription price is refundable within 14 days only.</span></li>
+    </ul>
+  </div>
+
+  <div class="doc-section" id="r6" style="animation-delay:.2s">
+    <div class="section-hdr">
+      <span class="section-num">06</span>
+      <h2>Referral Reward Days</h2>
+    </div>
+    <p class="doc-p">If you've earned free Pro days through our referral program, those days are <strong>non-transferable and non-refundable</strong>. They are:</p>
+    <ul class="doc-ul">
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Free</strong> — You earned them at no cost by referring friends</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Non-exchangeable for cash</strong> — They have no monetary value and cannot be converted to a refund or payment</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Valid for the subscription period</strong> — You can use them to extend your Pro access or start a new subscription, but they cannot be returned</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Subject to referral program terms</strong> — See our <a href="/terms">Terms of Service</a>, Section 7, for full referral program rules</span></li>
+    </ul>
+    <p class="doc-p">If you request a refund and you have unused referral reward days on your account, the refund is for your paid subscription only. Your earned days remain credited to your account in case you decide to upgrade again.</p>
+  </div>
+
+  <div class="doc-section" id="r7" style="animation-delay:.22s">
+    <div class="section-hdr">
+      <span class="section-num">07</span>
+      <h2>Cancellation vs. Refund</h2>
+    </div>
+    <p class="doc-p">There is an important difference between cancelling your subscription and requesting a refund:</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0">
+      <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px">
+        <strong style="color:var(--accent2)">Cancellation</strong>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5">You keep your Pro access until the end of your current billing period. Then you drop to Free. No refund issued.</p>
+      </div>
+      <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px">
+        <strong style="color:var(--accent2)">Refund</strong>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5">Within 14 days of purchase, you get your money back. Your subscription ends immediately, and your account reverts to Free.</p>
+      </div>
+    </div>
+    <p class="doc-p"><strong>Cancel without refunding:</strong> Go to <strong>Manage Billing</strong> in your Pro subscription page. This keeps your access through the end of your billing cycle.</p>
+    <p class="doc-p"><strong>Request a refund:</strong> Email <a href="mailto:support@tradzona.com">support@tradzona.com</a> within 14 days of purchase. Refunds end your Pro access immediately.</p>
+  </div>
+
+  <div class="doc-section" id="r8" style="animation-delay:.24s">
+    <div class="section-hdr">
+      <span class="section-num">08</span>
+      <h2>Disputes & Chargebacks</h2>
+    </div>
+    <p class="doc-p">If you dispute a TradingGrove charge with your bank or payment processor (a chargeback), you forfeit your right to use the service and your account will be permanently suspended. Please contact us first before filing a dispute:</p>
+    <ul class="doc-ul">
+      <li><i class="fa-solid fa-circle-dot"></i><span>Contact <a href="mailto:support@tradzona.com">support@tradzona.com</a> if there's a billing issue</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span>We'll resolve billing problems quickly and fairly</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span>Filing a chargeback without trying to resolve it with us first may result in account suspension and legal action</span></li>
+    </ul>
+    <p class="doc-p">Chargebacks create unnecessary work for our payment processors and are a violation of our Terms of Service. We appreciate your cooperation in resolving any issues directly with our support team.</p>
+  </div>
+
+  <div class="doc-section" id="r9" style="animation-delay:.26s">
+    <div class="section-hdr">
+      <span class="section-num">09</span>
+      <h2>Contact Support</h2>
+    </div>
+    <p class="doc-p">Questions about refunds or your subscription? We're here to help:</p>
+    <div class="inline-box info">
+      <strong>TradingGrove Support</strong><br>
+      Email: <a href="mailto:support@tradzona.com">support@tradzona.com</a><br>
+      Website: <a href="/">tradzona.com</a><br><br>
+      <strong>Response time:</strong> We aim to respond to all refund requests and billing enquiries within <strong>2 business days</strong>.
+    </div>
+    <p class="doc-p" style="margin-top:16px">If you have any questions about this refund policy or your subscription, don't hesitate to reach out. Your satisfaction is our priority.</p>
+  </div>
+
+  <div class="doc-footer">
+    <p>Need help? View our <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a></p>
+  </div>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo">Trading<span>Grove</span></div>
+      <p class="footer-tagline">A trading journal that helps you understand your own trading.</p>
+      <div class="footer-badges">
+        <span class="footer-badge"><i class="fa-solid fa-cloud"></i> Cloud-Powered</span>
+        <span class="footer-badge"><i class="fa-solid fa-lock"></i> Secure</span>
+        <span class="footer-badge"><i class="fa-solid fa-database"></i> Your Data</span>
+      </div>
+    </div>
+    <div class="footer-links-group">
+      <div class="footer-col">
+        <div class="footer-col-title">Product</div>
+        <a href="/#features">Features</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/#compare">Compare</a>
+        <a href="/#how">How It Works</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Free Tools</div>
+        <a href="/#crypto-calculator">Crypto Calculator</a>
+        <a href="/#forex-calculator">Forex Calculator</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Account</div>
+        <a href="/auth">Sign Up Free</a>
+        <a href="/auth">Log In</a>
+        <a href="/pricing">Upgrade to Pro</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Legal</div>
+        <a href="/terms">Terms of Service</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/refund">Refund Policy</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 TradingGrove. Secure cloud-powered trading journal.</span>
+    <span>Free forever for 1 journal · Pro at $15/mo</span>
+  </div>
+</footer>
+
+<script>
+(async () => {
+  const loader = document.getElementById('pageLoader');
+  loader.classList.add('gone');
+  setTimeout(() => { if (loader) loader.style.display = 'none'; }, 400);
+})();
+</script>
+</body>
+</html>
