@@ -870,6 +870,9 @@ function validateImg(file){if(!ALLOWED_IMG.includes(file.type)){showToast('Only 
         // already-resolved image URLs here so we don't re-sign every visible
         // thumb on every notes/pnl/r-factor edit.
         images:existing.images,
+        // Pin state changes might arrive before full record update; ensure
+        // incoming.pinned (from UPDATE event) is used, or keep existing
+        pinned:incoming.pinned!==undefined?incoming.pinned:existing.pinned,
       }));
     }else if(payload.eventType==='DELETE'){
       const id=payload.old?.id;
@@ -1551,7 +1554,7 @@ async function toggleLogPin(tradeId){
 
   // Save to database
   try{
-    const{error}=await db.from('trades').update({pinned:newState}).eq('id',id);
+    const{data,error}=await db.from('trades').update({pinned:newState}).eq('id',id).select('id,pinned');
     if(error){
       console.error('[pin] Update failed:',error);
       // Revert on failure
@@ -1561,8 +1564,14 @@ async function toggleLogPin(tradeId){
       showToast(`Failed to ${newState?'pin':'unpin'} note: ${error.message||'Unknown error'}`, 'fa-solid fa-triangle-exclamation', 'r');
       return;
     }
-    console.log('[pin] Success:',id,'pinned=',newState);
-    showToast(newState?'Note pinned ✓':'Note unpinned ✓','fa-solid fa-thumbtack','g');
+    // Verify the update was applied
+    if(data&&data[0]&&data[0].pinned===newState){
+      console.log('[pin] Verified in DB:',id,'pinned=',newState);
+      showToast(newState?'Note pinned ✓':'Note unpinned ✓','fa-solid fa-thumbtack','g');
+    }else{
+      console.warn('[pin] Update succeeded but verification failed',{expected:newState,got:data?.[0]?.pinned});
+      showToast('Pin updated (but verification failed)','fa-solid fa-info','y');
+    }
   }catch(e){
     console.error('[pin] Error:',e);
     // Revert on exception
