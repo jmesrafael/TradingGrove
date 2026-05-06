@@ -414,6 +414,7 @@ function dbToTrade(row) {
     confidence: row.confidence   || 0,
     mood:       row.mood         || [],
     notes:      row.notes        || '',
+    pinned:     row.pinned       || false,
     images:     [],   // loaded separately via getTradeImages
   };
 }
