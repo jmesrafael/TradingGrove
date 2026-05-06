@@ -1536,15 +1536,41 @@ function buildCustomCard(n,i,isPinned){
 
 // ─── Pin: Logs ─────────────────────────────────────────────────────────────
 async function toggleLogPin(tradeId){
-  const id=tradeId||currentTradeId;if(!id)return;
-  const trade=allTrades.find(t=>t.id===id);if(!trade)return;
-  trade.pinned=!trade.pinned;
-  // Update modal pin button if open
+  const id=tradeId||currentTradeId;
+  if(!id){console.warn('[pin] No trade ID');return;}
+  const trade=allTrades.find(t=>t.id===id);
+  if(!trade){console.warn('[pin] Trade not found:',id);return;}
+
+  const newState=!trade.pinned;
+  trade.pinned=newState;
+
+  // Update UI optimistically
   const btn=document.getElementById('modalPinBtn');
-  if(btn){btn.classList.toggle('pinned',trade.pinned);}
+  if(btn)btn.classList.toggle('pinned',newState);
   render();
-  try{const{error}=await db.from('trades').update({pinned:trade.pinned}).eq('id',id);if(error)throw error;}
-  catch(e){showToast('Pin save failed.','fa-solid fa-triangle-exclamation','r');}
+
+  // Save to database
+  try{
+    const{error}=await db.from('trades').update({pinned:newState}).eq('id',id);
+    if(error){
+      console.error('[pin] Update failed:',error);
+      // Revert on failure
+      trade.pinned=!newState;
+      if(btn)btn.classList.toggle('pinned',!newState);
+      render();
+      showToast(`Failed to ${newState?'pin':'unpin'} note: ${error.message||'Unknown error'}`, 'fa-solid fa-triangle-exclamation', 'r');
+      return;
+    }
+    console.log('[pin] Success:',id,'pinned=',newState);
+    showToast(newState?'Note pinned ✓':'Note unpinned ✓','fa-solid fa-thumbtack','g');
+  }catch(e){
+    console.error('[pin] Error:',e);
+    // Revert on exception
+    trade.pinned=!newState;
+    if(btn)btn.classList.toggle('pinned',!newState);
+    render();
+    showToast(`Error: ${e.message||'Pin failed'}`, 'fa-solid fa-triangle-exclamation', 'r');
+  }
 }
 
 // ─── Pin: Custom ───────────────────────────────────────────────────────────
