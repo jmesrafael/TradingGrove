@@ -32,7 +32,7 @@ class FaviconGenerator {
     // Map theme IDs to their accent colors
     const themeColorMap = {
       dark: { bg: '#0b0f0c', accent: '#00ff88', accent2: '#19c37d' },
-      light: { bg: '#eef3f0', accent: '#19c37d', accent2: '#0a9460' },
+      light: { bg: '#eef3f0', accent: '#0d8c4f', accent2: '#056b3a' },
       'blue-electric': { bg: '#060d18', accent: '#00e5ff', accent2: '#0ea5e9' },
       void: { bg: '#000000', accent: '#ffffff', accent2: '#b0b0b0' },
       'grove-dusk': { bg: '#08080f', accent: '#a78bfa', accent2: '#7c5ce8' },
@@ -53,6 +53,7 @@ class FaviconGenerator {
     const colors = this.getThemeColors();
     const canvas = this.canvas;
     const ctx = this.ctx;
+    const themeId = localStorage.getItem('tl_theme') || 'dark';
 
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -73,16 +74,25 @@ class FaviconGenerator {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // "T" in primary accent color (green/cyan/etc)
-    ctx.fillStyle = colors.accent;
+    // For light theme: T is black, G is dark green. For others: use accent colors
+    let tColor = colors.accent;
+    let gColor = colors.accent2;
+
+    if (themeId === 'light' || (themeId === 'system' && !window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      tColor = '#000000';
+      gColor = '#056b3a';
+    }
+
+    // "T"
+    ctx.fillStyle = tColor;
     ctx.fillText('T', canvas.width * 0.35, canvas.height * 0.5);
 
-    // "G" in secondary accent color (lighter green/white/etc)
-    ctx.fillStyle = colors.accent2;
+    // "G"
+    ctx.fillStyle = gColor;
     ctx.fillText('G', canvas.width * 0.65, canvas.height * 0.5);
 
-    // Add subtle glow effect
-    ctx.strokeStyle = colors.accent;
+    // Add subtle glow effect (use tColor for glow)
+    ctx.strokeStyle = tColor;
     ctx.lineWidth = 2;
     ctx.globalAlpha = 0.2;
     ctx.strokeText('T', canvas.width * 0.35, canvas.height * 0.5);

@@ -7,6 +7,7 @@
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <title>Logs</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="/theme.js"></script>
 <script src="/supabase.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -236,7 +237,13 @@
         </div>
         <div>
           <div class="share-section-lbl"><i class="fa-solid fa-eye"></i> Live Preview</div>
-          <div class="share-preview-wrap" id="sharePreviewWrap"><canvas id="sharePreviewCanvas"></canvas></div>
+          <div class="share-preview-wrap" id="sharePreviewWrap">
+            <div class="share-loading" id="shareLoading" style="display:none">
+              <i class="fa-solid fa-spinner" style="animation:spin 1s linear infinite;font-size:24px;color:var(--accent2);margin-bottom:8px"></i>
+              <div style="font-size:12px;color:var(--muted)">Generating snapshot...</div>
+            </div>
+            <canvas id="sharePreviewCanvas"></canvas>
+          </div>
         </div>
         <div>
           <div class="share-section-lbl"><i class="fa-solid fa-table-cells"></i> Visible Metrics</div>
@@ -277,6 +284,10 @@
             <label class="share-tog on" id="togReferral" style="cursor:pointer" onclick="toggleShareBranding('referral')">
               <span class="share-tog-chk" id="chkReferral">✓</span>
               <span class="share-tog-lbl" style="font-size:12px">Show Referral Code</span>
+            </label>
+            <label class="share-tog on" id="togQRCode" style="cursor:pointer" onclick="toggleShareBranding('qrcode')">
+              <span class="share-tog-chk" id="chkQRCode">✓</span>
+              <span class="share-tog-lbl" style="font-size:12px">Show QR Code</span>
             </label>
           </div>
         </div>

@@ -1324,8 +1324,283 @@ let _shareBranding={username:true,referral:true};
 const METRIC_DEFS={totalPnl:{label:'Total PNL',format:(d)=>{const n=d.totalPnl;return{val:(n>=0?'+':'-')+'$'+Math.abs(n).toFixed(2),pos:n>0,neg:n<0};}},winRate:{label:'Win Rate',format:(d)=>{return{val:d.vldCount?d.wr.toFixed(1)+'%':'—',pos:d.vldCount&&d.wr>=50,neg:d.vldCount&&d.wr<50};}},totalTrades:{label:'Total Trades',format:(d)=>{return{val:String(d.count),pos:false,neg:false};}},wins:{label:'Wins',format:(d)=>{return{val:String(d.winCount),pos:true,neg:false};}},losses:{label:'Losses',format:(d)=>{return{val:String(d.lossCount),pos:false,neg:true};}},avgR:{label:'Avg R',format:(d)=>{return{val:(d.rv&&d.rv.length)?(d.avgR>=0?'+':'')+d.avgR.toFixed(2)+'R':'—',pos:d.avgR>0,neg:d.avgR<0};}},winStreak:{label:'Win Streak',format:(d)=>{return{val:String(d.mxW),pos:true,neg:false};}},lossStreak:{label:'Loss Streak',format:(d)=>{return{val:String(d.mxL),pos:false,neg:true};}},};
 function getThemeVars(){const s=getComputedStyle(document.documentElement);const get=v=>s.getPropertyValue(v).trim();const accent=get('--accent')||'#19c37d';const accent2=get('--accent2')||accent;function hexToRgb(hex){hex=hex.replace('#','');if(hex.length===3)hex=hex.split('').map(c=>c+c).join('');const n=parseInt(hex,16);return{r:(n>>16)&255,g:(n>>8)&255,b:n&255};}const ac=hexToRgb(accent2.startsWith('#')?accent2:'#19c37d');return{bg:get('--bg')||'#0b0f0c',panel:get('--panel')||'#111816',border:get('--border')||'#1c2a25',text:get('--text')||'#e6f2ec',muted:get('--muted')||'#8fa39a',accent,accent2,accentRgb:ac,fontHead:(get('--font-heading')||'Space Grotesk').replace(/['"]/g,'').split(',')[0].trim(),fontBody:(get('--font-body')||'Inter').replace(/['"]/g,'').split(',')[0].trim()};}
 const CARD_W_LAND=600,CARD_W_PORT=380,PAD=32;
-function _drawCard(ctx,scale,data,visKeys,highlighted,orientation,branding){if(!scale||scale<=0||!isFinite(scale))scale=1;const tv=getThemeVars();const isPort=orientation==='portrait';const CARD_W=isPort?CARD_W_PORT:CARD_W_LAND;const W=Math.ceil(CARD_W*scale);const ac=tv.accentRgb;const accentHex=tv.accent2;const fh=tv.fontHead||'Space Grotesk';const fb=tv.fontBody||'Inter';const LABEL_SZ=(isPort?9:10)*scale;const VALUE_SZ=(isPort?22:26)*scale;const METRIC_PAD=(isPort?14:16)*scale;const METRIC_GAP=(isPort?8:10)*scale;const maxCols=isPort?2:4;const COLS=visKeys.length===0?1:Math.min(maxCols,visKeys.length<=2?visKeys.length:visKeys.length<=4?2:isPort?2:visKeys.length<=6?3:4);const ROWS=Math.ceil(Math.max(1,visKeys.length)/COLS);const CELL_W=(W-PAD*scale*2-METRIC_GAP*(COLS-1))/COLS;const CELL_H=Math.ceil(LABEL_SZ+8*scale+VALUE_SZ+METRIC_PAD*2);const GRID_H=ROWS*CELL_H+(ROWS-1)*METRIC_GAP;const LOGO_SZ=(isPort?15:17)*scale;const SUBTITLE_SZ=(isPort?8:9)*scale;const LOGO_TOP=18*scale;const LOGO_LINE_H=LOGO_SZ*1.3;const SUB_LINE_H=SUBTITLE_SZ*1.6;const HEADER_H=LOGO_TOP+LOGO_LINE_H+4*scale+SUB_LINE_H+14*scale;const DIV_Y=HEADER_H;const GRID_Y=DIV_Y+12*scale;let brandingLines=0;if(_shareBranding.username&&branding?.displayName)brandingLines++;if(_shareBranding.referral&&branding?.referralCode)brandingLines++;const BRANDING_LINE_H=(isPort?14:13)*scale;const FOOTER_INNER_H=brandingLines>0?brandingLines*BRANDING_LINE_H+4*scale:0;const FOOTER_Y=GRID_Y+(visKeys.length>0?GRID_H+20*scale:50*scale);const TOTAL_H=Math.ceil(FOOTER_Y+FOOTER_INNER_H+18*scale);ctx.canvas.width=Math.max(1,W);ctx.canvas.height=Math.max(1,TOTAL_H);ctx.fillStyle=tv.bg;ctx.fillRect(0,0,W,TOTAL_H);const glow=ctx.createRadialGradient(W/2,0,0,W/2,0,W*.65);glow.addColorStop(0,`rgba(${ac.r},${ac.g},${ac.b},0.16)`);glow.addColorStop(1,`rgba(${ac.r},${ac.g},${ac.b},0)`);ctx.fillStyle=glow;ctx.fillRect(0,0,W,TOTAL_H);const g2=ctx.createRadialGradient(W,TOTAL_H,0,W,TOTAL_H,W*.4);g2.addColorStop(0,`rgba(${ac.r},${ac.g},${ac.b},0.07)`);g2.addColorStop(1,`rgba(${ac.r},${ac.g},${ac.b},0)`);ctx.fillStyle=g2;ctx.fillRect(0,0,W,TOTAL_H);const x0=PAD*scale;const LOGO_CY=LOGO_TOP+LOGO_LINE_H/2;ctx.font=`700 ${LOGO_SZ}px '${fh}','Inter',sans-serif`;ctx.textBaseline='middle';ctx.textAlign='left';ctx.fillStyle=tv.text;ctx.fillText('Trade',x0,LOGO_CY);const tradeW=ctx.measureText('Trade').width;ctx.fillStyle=accentHex;ctx.fillText('Zona',x0+tradeW,LOGO_CY);const SUB_CY=LOGO_TOP+LOGO_LINE_H+4*scale+SUB_LINE_H/2;ctx.font=`600 ${SUBTITLE_SZ}px '${fh}','Inter',sans-serif`;ctx.fillStyle=`rgba(${ac.r},${ac.g},${ac.b},0.55)`;ctx.textAlign='left';ctx.fillText('PERFORMANCE SUMMARY',x0,SUB_CY);const divGrad=ctx.createLinearGradient(x0,DIV_Y,W-x0,DIV_Y);divGrad.addColorStop(0,`rgba(${ac.r},${ac.g},${ac.b},0.35)`);divGrad.addColorStop(.6,`rgba(${ac.r},${ac.g},${ac.b},0.08)`);divGrad.addColorStop(1,`rgba(${ac.r},${ac.g},${ac.b},0)`);ctx.strokeStyle=divGrad;ctx.lineWidth=1*scale;ctx.beginPath();ctx.moveTo(x0,DIV_Y);ctx.lineTo(W-x0,DIV_Y);ctx.stroke();if(visKeys.length===0){ctx.font=`400 ${13*scale}px '${fh}','Inter',sans-serif`;ctx.fillStyle='rgba(255,255,255,0.2)';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Select metrics to display',W/2,GRID_Y+25*scale);ctx.textAlign='left';}else{visKeys.forEach((k,i)=>{const col=i%COLS,row=Math.floor(i/COLS);const cx=x0+col*(CELL_W+METRIC_GAP),cy=GRID_Y+row*(CELL_H+METRIC_GAP);const hl=highlighted.has(k),def=METRIC_DEFS[k];const{val,pos,neg}=def.format(data);_roundRect(ctx,cx,cy,CELL_W,CELL_H,10*scale);ctx.fillStyle=hl?`rgba(${ac.r},${ac.g},${ac.b},0.1)`:'rgba(255,255,255,0.04)';ctx.fill();_roundRect(ctx,cx+.5,cy+.5,CELL_W-1,CELL_H-1,10*scale);ctx.strokeStyle=hl?`rgba(${ac.r},${ac.g},${ac.b},0.3)`:'rgba(255,255,255,0.08)';ctx.lineWidth=1*scale;ctx.stroke();if(hl){const barGrad=ctx.createLinearGradient(cx,cy,cx+CELL_W,cy);barGrad.addColorStop(0,`rgba(${ac.r},${ac.g},${ac.b},0)`);barGrad.addColorStop(.5,`rgba(${ac.r},${ac.g},${ac.b},0.9)`);barGrad.addColorStop(1,`rgba(${ac.r},${ac.g},${ac.b},0)`);ctx.save();ctx.beginPath();_roundRect(ctx,cx,cy,CELL_W,2.5*scale,10*scale);ctx.clip();ctx.fillStyle=barGrad;ctx.fillRect(cx,cy,CELL_W,2.5*scale);ctx.restore();}ctx.font=`500 ${LABEL_SZ}px '${fh}','Inter',sans-serif`;ctx.fillStyle='rgba(255,255,255,0.38)';ctx.textBaseline='top';ctx.textAlign='left';ctx.fillText(def.label.toUpperCase(),cx+METRIC_PAD,cy+METRIC_PAD);ctx.font=`700 ${VALUE_SZ}px '${fh}','Inter',sans-serif`;ctx.textBaseline='top';if(hl)ctx.fillStyle=accentHex;else if(pos)ctx.fillStyle='#19c37d';else if(neg)ctx.fillStyle='#ff5f6d';else ctx.fillStyle=tv.text;ctx.fillText(val,cx+METRIC_PAD,cy+METRIC_PAD+LABEL_SZ+7*scale);});}const d=new Date();const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];const todayFormatted=`${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]} ${d.getFullYear()}`;ctx.font=`500 ${(isPort?9:10)*scale}px '${fb}','Inter',sans-serif`;ctx.fillStyle='rgba(255,255,255,0.28)';ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(todayFormatted,W-x0,FOOTER_Y+BRANDING_LINE_H/2);ctx.textAlign='left';let brandingY=FOOTER_Y;if(_shareBranding.username&&branding?.displayName){ctx.font=`600 ${(isPort?11:12)*scale}px '${fh}','Inter',sans-serif`;ctx.fillStyle=tv.text;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(branding.displayName,x0,brandingY+BRANDING_LINE_H/2);brandingY+=BRANDING_LINE_H;}if(_shareBranding.referral&&branding?.referralCode){ctx.font=`500 ${(isPort?9:10)*scale}px '${fb}','Inter',sans-serif`;ctx.fillStyle=`rgba(${ac.r},${ac.g},${ac.b},0.65)`;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText('ref: '+branding.referralCode,x0,brandingY+BRANDING_LINE_H/2);}}
+async function _drawCard(ctx,scale,data,visKeys,highlighted,orientation,branding){
+  if(!scale||scale<=0||!isFinite(scale))scale=1;
+  const tv=getThemeVars();
+  const isPort=orientation==='portrait';
+  const CARD_W=isPort?CARD_W_PORT:CARD_W_LAND;
+  const W=Math.ceil(CARD_W*scale);
+  const ac=tv.accentRgb;
+  const accentHex=tv.accent2;
+  const fh=tv.fontHead||'Space Grotesk';
+  const fb=tv.fontBody||'Inter';
+  const LABEL_SZ=(isPort?9:10)*scale;
+  const VALUE_SZ=(isPort?22:26)*scale;
+  const METRIC_PAD=(isPort?14:16)*scale;
+  const METRIC_GAP=(isPort?8:10)*scale;
+  const maxCols=isPort?2:4;
+  const COLS=visKeys.length===0?1:Math.min(maxCols,visKeys.length<=2?visKeys.length:visKeys.length<=4?2:isPort?2:visKeys.length<=6?3:4);
+  const ROWS=Math.ceil(Math.max(1,visKeys.length)/COLS);
+  const CELL_W=(W-PAD*scale*2-METRIC_GAP*(COLS-1))/COLS;
+  const CELL_H=Math.ceil(LABEL_SZ+8*scale+VALUE_SZ+METRIC_PAD*2);
+  const GRID_H=ROWS*CELL_H+(ROWS-1)*METRIC_GAP;
+  const LOGO_SZ=(isPort?15:17)*scale;
+  const SUBTITLE_SZ=(isPort?8:9)*scale;
+  const LOGO_TOP=18*scale;
+  const LOGO_LINE_H=LOGO_SZ*1.3;
+  const SUB_LINE_H=SUBTITLE_SZ*1.6;
+  const HEADER_H=LOGO_TOP+LOGO_LINE_H+4*scale+SUB_LINE_H+14*scale;
+  const DIV_Y=HEADER_H;
+  const GRID_Y=DIV_Y+12*scale;
+  let brandingLines=0;
+  if(_shareBranding.username&&branding?.displayName)brandingLines++;
+  if(_shareBranding.referral&&branding?.referralCode)brandingLines++;
+  const BRANDING_LINE_H=(isPort?14:13)*scale;
+  const FOOTER_INNER_H=brandingLines>0?brandingLines*BRANDING_LINE_H+4*scale:0;
+  const FOOTER_Y=GRID_Y+(visKeys.length>0?GRID_H+20*scale:50*scale);
+  const QR_SIZE=isPort?60:80;
+  const TOTAL_H=Math.ceil(FOOTER_Y+Math.max(FOOTER_INNER_H,QR_SIZE*scale)+14*scale);
+  ctx.canvas.width=Math.max(1,W);
+  ctx.canvas.height=Math.max(1,TOTAL_H);
+
+  ctx.fillStyle=tv.bg;
+  ctx.fillRect(0,0,W,TOTAL_H);
+
+  await _drawBrandWatermark(ctx,W,TOTAL_H,scale);
+
+  const glow=ctx.createRadialGradient(W/2,0,0,W/2,0,W*.65);
+  glow.addColorStop(0,`rgba(${ac.r},${ac.g},${ac.b},0.16)`);
+  glow.addColorStop(1,`rgba(${ac.r},${ac.g},${ac.b},0)`);
+  ctx.fillStyle=glow;
+  ctx.fillRect(0,0,W,TOTAL_H);
+
+  const g2=ctx.createRadialGradient(W,TOTAL_H,0,W,TOTAL_H,W*.4);
+  g2.addColorStop(0,`rgba(${ac.r},${ac.g},${ac.b},0.07)`);
+  g2.addColorStop(1,`rgba(${ac.r},${ac.g},${ac.b},0)`);
+  ctx.fillStyle=g2;
+  ctx.fillRect(0,0,W,TOTAL_H);
+
+  const x0=PAD*scale;
+  const LOGO_CY=LOGO_TOP+LOGO_LINE_H/2;
+  ctx.font=`700 ${LOGO_SZ}px '${fh}','Inter',sans-serif`;
+  ctx.textBaseline='middle';
+  ctx.textAlign='left';
+  ctx.fillStyle=tv.text;
+  ctx.fillText('Trading',x0,LOGO_CY);
+  const tradeW=ctx.measureText('Trading').width;
+  ctx.fillStyle=accentHex;
+  ctx.fillText('Grove',x0+tradeW,LOGO_CY);
+
+  const SUB_CY=LOGO_TOP+LOGO_LINE_H+4*scale+SUB_LINE_H/2;
+  ctx.font=`600 ${SUBTITLE_SZ}px '${fh}','Inter',sans-serif`;
+  ctx.fillStyle=`rgba(${ac.r},${ac.g},${ac.b},0.55)`;
+  ctx.textAlign='left';
+  ctx.fillText('PERFORMANCE SUMMARY',x0,SUB_CY);
+
+  const divGrad=ctx.createLinearGradient(x0,DIV_Y,W-x0,DIV_Y);
+  divGrad.addColorStop(0,`rgba(${ac.r},${ac.g},${ac.b},0.35)`);
+  divGrad.addColorStop(.6,`rgba(${ac.r},${ac.g},${ac.b},0.08)`);
+  divGrad.addColorStop(1,`rgba(${ac.r},${ac.g},${ac.b},0)`);
+  ctx.strokeStyle=divGrad;
+  ctx.lineWidth=1*scale;
+  ctx.beginPath();
+  ctx.moveTo(x0,DIV_Y);
+  ctx.lineTo(W-x0,DIV_Y);
+  ctx.stroke();
+
+  if(visKeys.length===0){
+    ctx.font=`400 ${13*scale}px '${fh}','Inter',sans-serif`;
+    ctx.fillStyle='rgba(255,255,255,0.2)';
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillText('Select metrics to display',W/2,GRID_Y+25*scale);
+    ctx.textAlign='left';
+  } else {
+    visKeys.forEach((k,i)=>{
+      const col=i%COLS,row=Math.floor(i/COLS);
+      const cx=x0+col*(CELL_W+METRIC_GAP),cy=GRID_Y+row*(CELL_H+METRIC_GAP);
+      const hl=highlighted.has(k),def=METRIC_DEFS[k];
+      const{val,pos,neg}=def.format(data);
+      _roundRect(ctx,cx,cy,CELL_W,CELL_H,10*scale);
+      ctx.fillStyle=hl?`rgba(${ac.r},${ac.g},${ac.b},0.1)`:'rgba(255,255,255,0.04)';
+      ctx.fill();
+      _roundRect(ctx,cx+.5,cy+.5,CELL_W-1,CELL_H-1,10*scale);
+      ctx.strokeStyle=hl?`rgba(${ac.r},${ac.g},${ac.b},0.3)`:'rgba(255,255,255,0.08)';
+      ctx.lineWidth=1*scale;
+      ctx.stroke();
+      if(hl){
+        const barGrad=ctx.createLinearGradient(cx,cy,cx+CELL_W,cy);
+        barGrad.addColorStop(0,`rgba(${ac.r},${ac.g},${ac.b},0)`);
+        barGrad.addColorStop(.5,`rgba(${ac.r},${ac.g},${ac.b},0.9)`);
+        barGrad.addColorStop(1,`rgba(${ac.r},${ac.g},${ac.b},0)`);
+        ctx.save();
+        ctx.beginPath();
+        _roundRect(ctx,cx,cy,CELL_W,2.5*scale,10*scale);
+        ctx.clip();
+        ctx.fillStyle=barGrad;
+        ctx.fillRect(cx,cy,CELL_W,2.5*scale);
+        ctx.restore();
+      }
+      ctx.font=`500 ${LABEL_SZ}px '${fh}','Inter',sans-serif`;
+      ctx.fillStyle='rgba(255,255,255,0.38)';
+      ctx.textBaseline='top';
+      ctx.textAlign='left';
+      ctx.fillText(def.label.toUpperCase(),cx+METRIC_PAD,cy+METRIC_PAD);
+      ctx.font=`700 ${VALUE_SZ}px '${fh}','Inter',sans-serif`;
+      ctx.textBaseline='top';
+      if(hl)ctx.fillStyle=accentHex;
+      else if(pos)ctx.fillStyle='#19c37d';
+      else if(neg)ctx.fillStyle='#ff5f6d';
+      else ctx.fillStyle=tv.text;
+      ctx.fillText(val,cx+METRIC_PAD,cy+METRIC_PAD+LABEL_SZ+7*scale);
+    });
+  }
+
+  const d=new Date();
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const todayFormatted=`${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]} ${d.getFullYear()}`;
+
+  ctx.textAlign='left';
+  let brandingY=FOOTER_Y;
+
+  if(_shareBranding.username&&branding?.displayName){
+    ctx.font=`600 ${(isPort?11:12)*scale}px '${fh}','Inter',sans-serif`;
+    ctx.fillStyle=tv.text;
+    ctx.textAlign='left';
+    ctx.textBaseline='middle';
+    ctx.fillText(branding.displayName,x0,brandingY+BRANDING_LINE_H/2);
+    brandingY+=BRANDING_LINE_H;
+  }
+
+  if(_shareBranding.referral&&branding?.referralCode){
+    ctx.font=`500 ${(isPort?9:10)*scale}px '${fb}','Inter',sans-serif`;
+    ctx.fillStyle=`rgba(${ac.r},${ac.g},${ac.b},0.65)`;
+    ctx.textAlign='left';
+    ctx.textBaseline='middle';
+    ctx.fillText('REFERRAL CODE: '+branding.referralCode,x0,brandingY+BRANDING_LINE_H/2);
+    brandingY+=BRANDING_LINE_H;
+  }
+
+  ctx.font=`500 ${(isPort?9:10)*scale}px '${fb}','Inter',sans-serif`;
+  ctx.fillStyle='rgba(255,255,255,0.28)';
+  ctx.textAlign='left';
+  ctx.textBaseline='middle';
+  ctx.fillText(todayFormatted,x0,brandingY+BRANDING_LINE_H/2);
+
+  if(_shareBranding.qrcode&&branding?.referralCode){
+    const qrX=W-x0-QR_SIZE*scale;
+    const qrY=FOOTER_Y;
+    await _drawQRCodeOnCanvas(ctx,qrX,qrY,QR_SIZE*scale,branding.referralCode);
+  }
+}
 function _roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
+async function _drawBrandWatermark(ctx,W,H,scale){
+  return new Promise((resolve)=>{
+    try{
+      const img=new Image();
+      img.onload=()=>{
+        const zoom=1.3;
+        const wmHeight=H*0.95*zoom;
+        const wmWidth=wmHeight;
+        const wmX=(W-wmWidth)/2;
+        const wmY=(H-wmHeight)/2;
+
+        ctx.save();
+        ctx.globalAlpha=0.05;
+
+        ctx.drawImage(img,wmX,wmY,wmWidth,wmHeight);
+
+        ctx.restore();
+        resolve();
+      };
+      img.onerror=()=>{
+        console.warn('Brand logo failed to load');
+        resolve();
+      };
+      img.src='/assets/brandlogo.webp';
+    }catch(e){
+      console.error('Watermark drawing failed:',e);
+      resolve();
+    }
+  });
+}
+async function _drawQRCodeOnCanvas(ctx,x,y,size,referralCode){
+  return new Promise((resolve)=>{
+    try{
+      const qrUrl=REFERRAL_SNAPSHOT_URL+referralCode;
+      const QRSize=Math.floor(size);
+      const padding=8;
+      const paddedSize=QRSize+padding*2;
+
+      const tempContainer=document.createElement('div');
+      tempContainer.style.position='fixed';
+      tempContainer.style.left='-9999px';
+      tempContainer.style.top='-9999px';
+      tempContainer.style.width=QRSize+'px';
+      tempContainer.style.height=QRSize+'px';
+      document.body.appendChild(tempContainer);
+
+      let qrCanvas=null;
+      const qr=new QRCode(tempContainer,{
+        text:qrUrl,
+        width:QRSize,
+        height:QRSize,
+        colorDark:'#000000',
+        colorLight:'#ffffff',
+        correctLevel:QRCode.CorrectLevel.L,
+        useSVG:false
+      });
+
+      let attempts=0;
+      const checkAndDraw=()=>{
+        qrCanvas=tempContainer.querySelector('canvas');
+        if(qrCanvas&&qrCanvas.width>0&&qrCanvas.height>0){
+          try{
+            const bgCanvas=document.createElement('canvas');
+            bgCanvas.width=paddedSize;
+            bgCanvas.height=paddedSize;
+            const bgCtx=bgCanvas.getContext('2d');
+
+            bgCtx.fillStyle='#ffffff';
+            const radius=8;
+            _roundRect(bgCtx,0,0,paddedSize,paddedSize,radius);
+            bgCtx.fill();
+
+            bgCtx.strokeStyle='#cccccc';
+            bgCtx.lineWidth=1;
+            _roundRect(bgCtx,0.5,0.5,paddedSize-1,paddedSize-1,radius);
+            bgCtx.stroke();
+
+            bgCtx.drawImage(qrCanvas,padding,padding,QRSize,QRSize);
+
+            ctx.drawImage(bgCanvas,x-padding,y-padding,size,size);
+            console.log('[QR] Successfully drew QR code with border to canvas');
+          }catch(e){
+            console.error('Failed to draw QR to canvas:',e);
+          }
+          if(document.body.contains(tempContainer)){
+            document.body.removeChild(tempContainer);
+          }
+          resolve();
+        }else if(attempts<150){
+          attempts++;
+          setTimeout(checkAndDraw,20);
+        }else{
+          console.warn('[QR] QR code rendering timeout');
+          if(document.body.contains(tempContainer)){
+            document.body.removeChild(tempContainer);
+          }
+          resolve();
+        }
+      };
+
+      setTimeout(checkAndDraw,0);
+    }catch(e){
+      console.error('QR code generation failed:',e);
+      resolve();
+    }
+  });
+}
 let _cachedReferralCount=null;
 async function getBrandingData(){
   const displayName=currentProfile?.name||currentUser?.user_metadata?.username||currentUser?.email?.split('@')[0]||'';
@@ -1337,13 +1612,13 @@ async function getBrandingData(){
 }
 function setOrientation(o){_shareOrientation=o;document.getElementById('orientLand').classList.toggle('active',o==='landscape');document.getElementById('orientPort').classList.toggle('active',o==='portrait');_refreshPreview().catch(e=>console.warn('[logs] Preview update failed:',e));}
 function toggleShareBranding(key){_shareBranding[key]=!_shareBranding[key];const togId='tog'+key.charAt(0).toUpperCase()+key.slice(1);const chkId='chk'+key.charAt(0).toUpperCase()+key.slice(1);const tog=document.getElementById(togId);const chk=document.getElementById(chkId);if(tog)tog.classList.toggle('on',_shareBranding[key]);if(chk)chk.textContent=_shareBranding[key]?'✓':'';_refreshPreview().catch(e=>console.warn('[logs] Preview update failed:',e));}
-function openShareModal(){document.getElementById('btnShareNative').style.display=navigator.share?'flex':'none';_shareHighlighted=new Set();_shareOrientation='landscape';_shareBranding={username:true,referral:true};Object.keys(_shareVisibility).forEach(k=>_shareVisibility[k]=true);document.querySelectorAll('.share-tog[data-metric]').forEach(el=>{el.classList.add('on');el.querySelector('.share-tog-chk').textContent='✓';});document.querySelectorAll('.share-hl').forEach(el=>el.classList.remove('on'));document.getElementById('orientLand').classList.add('active');document.getElementById('orientPort').classList.remove('active');const tuEl=document.getElementById('togUsername');const cuEl=document.getElementById('chkUsername');if(tuEl)tuEl.classList.add('on');if(cuEl)cuEl.textContent='✓';const trEl=document.getElementById('togReferral');const crEl=document.getElementById('chkReferral');if(trEl)trEl.classList.add('on');if(crEl)crEl.textContent='✓';document.getElementById('shareGenerating').classList.remove('show');document.getElementById('shareOverlay').classList.add('open');setTimeout(()=>_refreshPreview().catch(e=>console.warn('[logs] Preview update failed:',e)),80);}
+function openShareModal(){document.getElementById('btnShareNative').style.display=navigator.share?'flex':'none';_shareHighlighted=new Set();_shareOrientation='landscape';_shareBranding={username:true,referral:true,qrcode:true};Object.keys(_shareVisibility).forEach(k=>_shareVisibility[k]=true);document.querySelectorAll('.share-tog[data-metric]').forEach(el=>{el.classList.add('on');el.querySelector('.share-tog-chk').textContent='✓';});document.querySelectorAll('.share-hl').forEach(el=>el.classList.remove('on'));document.getElementById('orientLand').classList.add('active');document.getElementById('orientPort').classList.remove('active');const tuEl=document.getElementById('togUsername');const cuEl=document.getElementById('chkUsername');if(tuEl)tuEl.classList.add('on');if(cuEl)cuEl.textContent='✓';const trEl=document.getElementById('togReferral');const crEl=document.getElementById('chkReferral');if(trEl)trEl.classList.add('on');if(crEl)crEl.textContent='✓';const tqEl=document.getElementById('togQRCode');const cqEl=document.getElementById('chkQRCode');if(tqEl)tqEl.classList.add('on');if(cqEl)cqEl.textContent='✓';document.getElementById('shareGenerating').classList.remove('show');document.getElementById('shareOverlay').classList.add('open');setTimeout(()=>_refreshPreview().catch(e=>console.warn('[logs] Preview update failed:',e)),80);}
 function closeShareModal(){document.getElementById('shareOverlay').classList.remove('open');}
 function toggleShareMetric(el){const m=el.dataset.metric;_shareVisibility[m]=!_shareVisibility[m];el.classList.toggle('on',_shareVisibility[m]);el.querySelector('.share-tog-chk').textContent=_shareVisibility[m]?'✓':'';if(!_shareVisibility[m]){_shareHighlighted.delete(m);const hl=document.querySelector(`.share-hl[data-metric="${m}"]`);if(hl)hl.classList.remove('on');}_refreshPreview().catch(e=>console.warn('[logs] Preview update failed:',e));}
 function toggleShareHighlight(el){const m=el.dataset.metric;if(!_shareVisibility[m])return;if(_shareHighlighted.has(m)){_shareHighlighted.delete(m);el.classList.remove('on');}else{_shareHighlighted.add(m);el.classList.add('on');}_refreshPreview().catch(e=>console.warn('[logs] Preview update failed:',e));}
 function _getVisibleKeys(){return Object.keys(METRIC_DEFS).filter(k=>_shareVisibility[k]);}
-async function _refreshPreview(){const wrap=document.getElementById('sharePreviewWrap'),cv=document.getElementById('sharePreviewCanvas');if(!wrap||!cv)return;const isPort=_shareOrientation==='portrait';const CARD_W_USE=isPort?CARD_W_PORT:CARD_W_LAND;const maxW=Math.max(wrap.clientWidth-32,180);const scale=Math.max(.25,Math.min(1,maxW/CARD_W_USE));const ctx=cv.getContext('2d');const data=computeAnalytics(getFilteredTrades());const visKeys=_getVisibleKeys();const branding=await getBrandingData();_drawCard(ctx,scale,data,visKeys,_shareHighlighted,_shareOrientation,branding);cv.style.width=cv.width+'px';cv.style.height=cv.height+'px';}
-async function _buildExportCanvas(){const offscreen=document.createElement('canvas');const ctx=offscreen.getContext('2d');const data=computeAnalytics(getFilteredTrades());const visKeys=_getVisibleKeys();const branding=await getBrandingData();_drawCard(ctx,2,data,visKeys,_shareHighlighted,_shareOrientation,branding);return offscreen;}
+async function _refreshPreview(){const wrap=document.getElementById('sharePreviewWrap'),cv=document.getElementById('sharePreviewCanvas'),loader=document.getElementById('shareLoading');if(!wrap||!cv)return;const isPort=_shareOrientation==='portrait';const CARD_W_USE=isPort?CARD_W_PORT:CARD_W_LAND;const maxW=Math.max(wrap.clientWidth-32,180);const scale=Math.max(.25,Math.min(1,maxW/CARD_W_USE));if(loader)loader.style.display='flex';const ctx=cv.getContext('2d');const data=computeAnalytics(getFilteredTrades());const visKeys=_getVisibleKeys();const branding=await getBrandingData();await _drawCard(ctx,scale,data,visKeys,_shareHighlighted,_shareOrientation,branding);cv.style.width=cv.width+'px';cv.style.height=cv.height+'px';if(loader)loader.style.display='none';}
+async function _buildExportCanvas(){const offscreen=document.createElement('canvas');const ctx=offscreen.getContext('2d');const data=computeAnalytics(getFilteredTrades());const visKeys=_getVisibleKeys();const branding=await getBrandingData();await _drawCard(ctx,2,data,visKeys,_shareHighlighted,_shareOrientation,branding);return offscreen;}
 function _setExporting(on){document.getElementById('shareGenerating').classList.toggle('show',on);const stack=document.getElementById('shareActionsStack');if(stack)stack.style.opacity=on?'0.4':'';}
 async function doShareDownload(){_setExporting(true);await document.fonts.ready;try{const cv=await _buildExportCanvas();const a=document.createElement('a');a.href=cv.toDataURL('image/png');a.download=`tradinggrove-${todayLocal()}.png`;document.body.appendChild(a);a.click();document.body.removeChild(a);showToast('Downloaded!','fa-solid fa-circle-check','green');}catch(e){showToast('Export failed: '+e.message,'fa-solid fa-circle-exclamation','red');}finally{_setExporting(false);}}
 async function doShareCopy(){_setExporting(true);await document.fonts.ready;try{const cv=await _buildExportCanvas();cv.toBlob(async blob=>{try{await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);showToast('Copied!','fa-solid fa-circle-check','green');}catch(clipErr){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`tradinggrove-${todayLocal()}.png`;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);showToast('Clipboard unavailable — downloaded instead.','fa-solid fa-triangle-exclamation','');}finally{_setExporting(false);}},'image/png');}catch(e){showToast('Export failed: '+e.message,'fa-solid fa-circle-exclamation','red');_setExporting(false);}}
@@ -1420,3 +1695,8 @@ document.addEventListener('dragstart',e=>e.preventDefault());
   `;
   document.head.appendChild(style);
 })();
+
+// ═══════════════════════════════════════════════════════════════════════
+//  SHARE SNAPSHOT QR CODE
+// ═══════════════════════════════════════════════════════════════════════
+const REFERRAL_SNAPSHOT_URL = 'https://tradinggrove.com/auth?ref=';

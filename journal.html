@@ -8,7 +8,6 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <script src="favicon.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="theme.js"></script>
 <script src="supabase.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -591,26 +590,6 @@ iframe.ready{opacity:1}
 .bnb-done-btn:hover{opacity:.85}
 
 /* ══════════════════════════════════════════
-   REFERRAL SNAPSHOT SECTION
-═══════════════════════════════════════════ */
-.referral-snapshot{background:linear-gradient(135deg,rgba(25,195,125,.08) 0%,rgba(25,195,125,.02) 100%);border:1px solid rgba(25,195,125,.2);border-radius:var(--radius-lg);padding:24px 20px;display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center}
-.referral-left{display:flex;flex-direction:column;gap:16px}
-.referral-branding{display:flex;align-items:center;gap:8px;margin-bottom:4px}
-.referral-branding-icon{font-size:24px}
-.referral-branding-text{font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:18px;font-weight:700;color:var(--text)}
-.referral-code-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;font-weight:600;margin-bottom:4px}
-.referral-code-value{font-family:var(--font-mono,'Space Grotesk',sans-serif);font-size:28px;font-weight:700;color:var(--accent2);word-break:break-all;line-height:1.2}
-.referral-copy-btn{background:rgba(25,195,125,.15);border:1px solid rgba(25,195,125,.3);color:var(--accent2);border-radius:var(--radius-md);padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all var(--transition-fast);display:inline-flex;align-items:center;gap:6px;width:fit-content}
-.referral-copy-btn:hover{background:rgba(25,195,125,.25);border-color:rgba(25,195,125,.5)}
-.referral-copy-btn.copied{color:#19c37d}
-.referral-qr{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
-.referral-qr-container{width:200px;height:200px;background:white;border-radius:var(--radius-lg);padding:8px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.15)}
-.referral-qr-container canvas,.referral-qr-container img{max-width:100%;max-height:100%;width:auto;height:auto}
-.referral-qr-text{font-size:11px;color:var(--muted);text-align:center}
-.referral-url-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:var(--radius-md);padding:8px 12px;font-size:12px;font-family:var(--font-mono,'Space Grotesk',sans-serif);margin-top:8px;cursor:text}
-@media(max-width:900px){.referral-snapshot{grid-template-columns:1fr;gap:16px}.referral-qr{order:-1}.referral-qr-container{width:160px;height:160px}}
-
-/* ══════════════════════════════════════════
    FLOATING CALCULATOR FAB + DRAGGABLE MODAL
 ═══════════════════════════════════════════ */
 #calcFab{position:fixed;bottom:22px;right:22px;z-index:8900;width:52px;height:52px;border-radius:50%;background:var(--accent);border:none;color:#0b0f0c;font-size:19px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.4),0 0 0 0 rgba(var(--accent-rgb,0,255,136),.4);transition:transform .2s,box-shadow .2s,background .2s,color .2s,border .2s}
@@ -1085,33 +1064,6 @@ iframe.ready{opacity:1}
                 <div class="bnb-result-title"><i class="fa-solid fa-circle-check" id="bnbResultIcon"></i><span id="bnbResultTitle">Import Complete</span></div>
                 <div class="bnb-result-body" id="bnbResultBody"></div>
                 <button class="bnb-done-btn" onclick="bnbClearFile()">Done</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="ssec full" id="referralSection">
-            <div class="ssec-title"><i class="fa-solid fa-share-nodes"></i>Referral Code</div>
-            <div class="referral-snapshot">
-              <div class="referral-left">
-                <div>
-                  <div class="referral-branding">
-                    <span class="referral-branding-icon">🌿</span>
-                    <span class="referral-branding-text">TradingGrove</span>
-                  </div>
-                </div>
-                <div>
-                  <div class="referral-code-label">Your Referral Code</div>
-                  <div class="referral-code-value" id="referralCodeDisplay">LOADING</div>
-                  <button class="referral-copy-btn" id="referralCopyBtn" onclick="copyReferralCode()">
-                    <i class="fa-solid fa-copy"></i>
-                    <span id="referralCopyText">Copy Code</span>
-                  </button>
-                  <input type="text" class="referral-url-input" id="referralUrlInput" readonly placeholder="Referral URL will appear here">
-                </div>
-              </div>
-              <div class="referral-qr">
-                <div class="referral-qr-container" id="referralQrContainer"></div>
-                <div class="referral-qr-text">Scan to share with friends</div>
               </div>
             </div>
           </div>
@@ -2416,78 +2368,6 @@ document.getElementById('cAcctCurrency')?.addEventListener('change',()=>{
   document.addEventListener('touchmove',e=>{if(!drag)return;const nx=Math.max(0,Math.min(e.touches[0].clientX-ox,window.innerWidth-modal.offsetWidth));const ny=Math.max(0,Math.min(e.touches[0].clientY-oy,window.innerHeight-modal.offsetHeight));modal.style.left=nx+'px';modal.style.top=ny+'px';e.preventDefault();},{passive:false});
   document.addEventListener('touchend',()=>{drag=false;});
 })();
-
-// ═══════════════════════════════════════════════════════════════════════
-//  REFERRAL CODE SECTION
-// ═══════════════════════════════════════════════════════════════════════
-const REFERRAL_BASE_URL = 'https://tradinggrove.com/auth?ref=';
-let _referralCode = null;
-
-function initReferralSection(){
-  _referralCode = currentUser?.id?.substring(0, 8).toUpperCase() || 'DEMO0000';
-  const codeDisplay = document.getElementById('referralCodeDisplay');
-  const urlInput = document.getElementById('referralUrlInput');
-
-  if(codeDisplay) codeDisplay.textContent = _referralCode;
-  if(urlInput) urlInput.value = REFERRAL_BASE_URL + _referralCode;
-
-  generateReferralQR();
-}
-
-function generateReferralQR(){
-  const container = document.getElementById('referralQrContainer');
-  if(!container) return;
-
-  container.innerHTML = '';
-  const referralUrl = REFERRAL_BASE_URL + _referralCode;
-
-  try {
-    new QRCode(container, {
-      text: referralUrl,
-      width: 184,
-      height: 184,
-      colorDark: '#000000',
-      colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.H
-    });
-  } catch(err) {
-    console.error('QR Code generation failed:', err);
-    container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted)">QR code unavailable</div>';
-  }
-}
-
-function copyReferralCode(){
-  const btn = document.getElementById('referralCopyBtn');
-  const text = document.getElementById('referralCopyText');
-  const urlInput = document.getElementById('referralUrlInput');
-
-  if(!_referralCode) return;
-
-  navigator.clipboard.writeText(_referralCode).then(()=>{
-    btn.classList.add('copied');
-    text.textContent = 'Copied!';
-    setTimeout(()=>{
-      btn.classList.remove('copied');
-      text.textContent = 'Copy Code';
-    }, 2000);
-  }).catch(err=>{
-    console.error('Failed to copy:', err);
-    if(urlInput){
-      urlInput.select();
-      document.execCommand('copy');
-      btn.classList.add('copied');
-      text.textContent = 'Copied!';
-      setTimeout(()=>{
-        btn.classList.remove('copied');
-        text.textContent = 'Copy Code';
-      }, 2000);
-    }
-  });
-}
-
-document.addEventListener('DOMContentLoaded', ()=>{
-  setTimeout(initReferralSection, 500);
-});
 </script>
 </body>
 </html>

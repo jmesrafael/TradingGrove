@@ -27,6 +27,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body,'Inter',
 .bg-orb.orb2{width:500px;height:500px;bottom:-80px;right:-80px;background:radial-gradient(circle,var(--accent,#00ff88),transparent 70%);animation-duration:25s;animation-delay:-8s}
 .bg-orb.orb3{width:300px;height:300px;top:50%;left:55%;background:radial-gradient(circle,var(--accent2,#00ff88),transparent 70%);opacity:0.025;animation-duration:30s;animation-delay:-13s}
 .bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,#000 40%,transparent 100%)}
+.bg-logo{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:url(/assets/brandlogo.webp);background-size:clamp(200px,60vmin,600px);background-position:center 50%;background-repeat:no-repeat;background-attachment:fixed;opacity:0.04}
 @keyframes orbDrift{0%{transform:translate(0,0) scale(1)}33%{transform:translate(60px,-40px) scale(1.08)}66%{transform:translate(-30px,50px) scale(.95)}100%{transform:translate(40px,20px) scale(1.04)}}
 
 header,main,.overlay{position:relative;z-index:1}
@@ -337,10 +338,11 @@ main{padding:32px;max-width:1140px;margin:0 auto}
   <div class="bg-orb orb3"></div>
 </div>
 <div class="bg-grid" aria-hidden="true"></div>
+<div class="bg-logo" aria-hidden="true"></div>
 <div id="pageLoader"></div>
 
 <header>
-  <div class="logo" onclick="location.href='/dashboard'">Trading<span>Grove</span></div>
+  <div class="logo" onclick="location.href='/dashboard'"><img src="assets/light.png" alt="TradingGrove" id="headerLogo" style="height:28px;width:auto;margin-right:4px;padding-bottom:3px;vertical-align:middle">Trading<span>Grove</span></div>
   <div class="hright">
     <!-- Plan badge -->
     <span class="plan-badge badge-free" id="planBadge" onclick="location.href='/subscription'" title="View subscription">Free</span>
@@ -649,10 +651,11 @@ function initDrag(){
   });
 }
 
-// ── Theme picker ─────────────────────────────────────────────────────────────
+// ── Theme picker & logo swap ─────────────────────────────────────────────────
+function applyLogoTheme(themeId){const logo=document.getElementById('headerLogo');if(!logo)return;logo.src=themeId==='light'?'assets/dark.png':'assets/light.png';}
 function _buildThemeDropdown(){const dd=document.getElementById('themeDropdown');if(!dd||!window.TZ)return;const cur=localStorage.getItem('tl_theme')||'dark';dd.innerHTML='';TZ.themeList.forEach(th=>{const locked=th.pro&&!isPro,active=th.id===cur;const row=document.createElement('div');row.className='theme-row'+(active?' active':'')+(locked?' locked':'');const swatchHtml=th.swatches.map(c=>`<span class="tr-swatch" style="background:${c}"></span>`).join('');const proBadgeClass={'blue-electric':'electric','golden':'golden','void':'void'}[th.id]||'generic';const proHtml=(th.pro&&!isPro)?`<span class="tr-pro ${proBadgeClass}">PRO</span>`:'';row.innerHTML=`<div class="tr-swatches">${swatchHtml}</div><div class="tr-info"><div class="tr-name">${th.label}</div><div class="tr-desc">${th.desc}</div></div><div class="tr-right">${active?'<i class="fa-solid fa-check tr-check"></i>':''}${proHtml}</div>`;if(!locked){row.addEventListener('click',()=>{_applyThemeSelection(th.id);closeThemeDropdown();});}else{row.addEventListener('click',()=>{document.getElementById('themeProHint').classList.add('show');showToast(`${th.label} is a Pro theme.`,'fa-solid fa-crown','red');});}dd.appendChild(row);});}
 function _updateThemeTrigger(themeId){const cur=themeId||localStorage.getItem('tl_theme')||'dark';const meta=TZ.themeList?.find(t=>t.id===cur)||TZ.themeList?.[1]||{label:'Dark',desc:'',swatches:['#111','#1a1a1a','#aaa']};const swEl=document.getElementById('triggerSwatches'),nameEl=document.getElementById('triggerName'),descEl=document.getElementById('triggerDesc');if(swEl)swEl.innerHTML=meta.swatches.map(c=>`<span class="theme-trigger-swatch" style="background:${c}"></span>`).join('');if(nameEl)nameEl.textContent=meta.label;if(descEl)descEl.textContent=meta.desc;const mini=document.getElementById('menuThemeSwatches');if(mini)mini.innerHTML=meta.swatches.map(c=>`<span class="tsm" style="background:${c}"></span>`).join('');}
-async function _applyThemeSelection(id){if(window.TZ)TZ.setTheme(id);else localStorage.setItem('tl_theme',id);_updateThemeTrigger(id);_buildThemeDropdown();try{await updateProfile(currentUser.id,{color_theme:id});}catch(e){}}
+async function _applyThemeSelection(id){if(window.TZ)TZ.setTheme(id);else localStorage.setItem('tl_theme',id);_updateThemeTrigger(id);_buildThemeDropdown();applyLogoTheme(id);try{await updateProfile(currentUser.id,{color_theme:id});}catch(e){}}
 function toggleThemeDropdown(){if(_fontDropOpen)closeFontDropdown();const dd=document.getElementById('themeDropdown'),btn=document.getElementById('themeTrigger');_themeDropOpen=!_themeDropOpen;dd.classList.toggle('open',_themeDropOpen);btn.classList.toggle('open',_themeDropOpen);if(_themeDropOpen){_buildThemeDropdown();document.getElementById('themeProHint').classList.remove('show');}}
 function closeThemeDropdown(){_themeDropOpen=false;document.getElementById('themeDropdown')?.classList.remove('open');document.getElementById('themeTrigger')?.classList.remove('open');}
 
@@ -694,8 +697,10 @@ function renderSubBanner(s){const banner=document.getElementById('subBanner'),te
   }
 
   // Theme/font triggers
-  _updateThemeTrigger(localStorage.getItem('tl_theme')||'dark');
+  const currentTheme=localStorage.getItem('tl_theme')||'dark';
+  _updateThemeTrigger(currentTheme);
   _updateFontTrigger(localStorage.getItem('tl_font')||'default');
+  applyLogoTheme(currentTheme);
 
   // Referral badge (load actual count from database)
   try{
