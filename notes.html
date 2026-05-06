@@ -802,7 +802,7 @@ let allTrades=[], customNotes=[], settings=null, currentUser=null;
 let userIsPro=false;
 let currentTradeId=null, modalImgBuffer=[], saveTimer=null, _saveIndicatorTimer=null;
 let activeTab='logs';
-let pinnedTradeIds=new Set(), searchQuery='', sortDir='desc';
+let searchQuery='', sortDir='desc';
 let cnEditId=null, cnTags=[], cnColor='', cnImgBuffer=[];
 let lbImages=[],lbIndex=0,lbScale=1,lbPanX=0,lbPanY=0,lbDragging=false,lbLastX=0,lbLastY=0;
 
@@ -834,7 +834,6 @@ function validateImg(file){if(!ALLOWED_IMG.includes(file.type)){showToast('Only 
   if(!userIsPro){document.getElementById('notesAdSlot').classList.add('visible');try{(adsbygoogle=window.adsbygoogle||[]).push({});}catch(e){}}
 
   settings=await getJournalSettings(jid);
-  pinnedTradeIds=new Set(settings?.pinned_trade_ids||[]);
 
   const [raw, cnRaw]=await Promise.all([getTrades(jid), getCustomNotesFn(jid)]);
   allTrades=await Promise.all(raw.map(dbToTrade).map(loadTradeWithImages));
@@ -1212,7 +1211,7 @@ async function exportFilteredToPdf(){
     if(activeTab==='logs'){
       for(const t of items){
         const pnl=fmtPnl(t.pnl);const rVal=fmtR(t.r);const tags=[...(t.strategy||[]),...(t.timeframe||[]),...(t.mood||[])];
-        const isPinned=pinnedTradeIds.has(t.id);const imgs=(t.images||[]).filter(img=>img._previewUrl);
+        const isPinned=t.pinned;const imgs=(t.images||[]).filter(img=>img._previewUrl);
         bodyHtml+=`<div class="pdf-card ${pnl?.pos?'win':pnl?.neg?'loss':''}"><div class="pdf-card-header"><div class="pdf-pair">${esc(t.pair||'—')}<span class="pdf-pos ${t.position==='Short'?'short':'long'}">${t.position||'Long'}</span>${isPinned?'<span class="pdf-pin">📌</span>':''}</div><div class="pdf-meta">${t.date?`<span>📅 ${esc(t.date)}${t.time?` ${esc(t.time)}`:''}</span>`:''}${pnl?`<span class="pdf-pnl ${pnl.pos?'pos':'neg'}">${pnl.str}</span>`:''}${rVal?`<span class="pdf-r ${rVal.pos?'pos':'neg'}">${rVal.str}</span>`:''}${t.confidence?`<span class="pdf-stars">${'★'.repeat(t.confidence)}</span>`:''}</div>${tags.length?`<div class="pdf-tags">${tags.map(tg=>`<span class="pdf-tag">${esc(tg)}</span>`).join('')}</div>`:''}</div>${t.notes&&t.notes.trim()?`<div class="pdf-notes">${esc(t.notes.trim()).replace(/\n/g,'<br>')}</div>`:''}${imgs.length?`<div class="pdf-imgs">${imgs.map(img=>`<img src="${_src(img._previewUrl)}" class="pdf-img" alt="">`).join('')}</div>`:''}</div>`;
       }
     }else{
@@ -1458,8 +1457,8 @@ function render(){
 
 function renderLogsTab(){
   const all=getFilteredLogs();
-  const pinned=all.filter(t=>pinnedTradeIds.has(t.id));
-  const unpinned=all.filter(t=>!pinnedTradeIds.has(t.id));
+  const pinned=all.filter(t=>t.pinned);
+  const unpinned=all.filter(t=>!t.pinned);
   const pSec=document.getElementById('pinnedLogsSection'),pGrid=document.getElementById('pinnedLogsGrid');
   if(pinned.length){pSec.style.display='';pGrid.innerHTML='';pinned.forEach((t,i)=>{pGrid.appendChild(buildLogCard(t,i,true));});}
   else{pSec.style.display='none';}
@@ -1538,12 +1537,13 @@ function buildCustomCard(n,i,isPinned){
 // ─── Pin: Logs ─────────────────────────────────────────────────────────────
 async function toggleLogPin(tradeId){
   const id=tradeId||currentTradeId;if(!id)return;
-  if(pinnedTradeIds.has(id))pinnedTradeIds.delete(id);else pinnedTradeIds.add(id);
+  const trade=allTrades.find(t=>t.id===id);if(!trade)return;
+  trade.pinned=!trade.pinned;
   // Update modal pin button if open
   const btn=document.getElementById('modalPinBtn');
-  if(btn){btn.classList.toggle('pinned',pinnedTradeIds.has(currentTradeId||''));}
+  if(btn){btn.classList.toggle('pinned',trade.pinned);}
   render();
-  try{await updateJournalSettings(jid,{pinned_trade_ids:[...pinnedTradeIds]});}
+  try{const{error}=await db.from('trades').update({pinned:trade.pinned}).eq('id',id);if(error)throw error;}
   catch(e){showToast('Pin save failed.','fa-solid fa-triangle-exclamation','r');}
 }
 
@@ -1704,7 +1704,7 @@ async function openModal(id){
   document.getElementById('saveStatus').className='autosave-status';
   // Pin button state
   const pinBtn=document.getElementById('modalPinBtn');
-  if(pinBtn)pinBtn.classList.toggle('pinned',pinnedTradeIds.has(id));
+  if(pinBtn)pinBtn.classList.toggle('pinned',t.pinned);
   document.getElementById('overlay').classList.add('open');
 }
 function _refreshModalMeta(t){

@@ -1,3 +1,6 @@
+# ── Documentation & Reference (local analysis, not for git) ─
+_docs/
+
 # ── Claude & Editor ──────────────────────────────────────
 .claude/
 
