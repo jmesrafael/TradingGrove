@@ -273,6 +273,9 @@ TZ.setTheme = function(mode) {
   localStorage.setItem('tl_theme', mode);
   TZ.applyTheme(mode);
 
+  // Dispatch custom event for favicon update
+  document.dispatchEvent(new CustomEvent('themeChanged', { detail: { themeId: mode } }));
+
   // Sync to DB if supabase.js saveThemeToProfile is available
   if (typeof saveThemeToProfile === 'function') {
     const currentFont = localStorage.getItem('tl_font') || 'default';
