@@ -5,6 +5,9 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="icon" type="image/svg+xml" href="favicon.svg">
 <script src="favicon.js"></script>
 <title>Analytics</title>
+<style>
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="theme.js"></script>
 <script src="supabase.js"></script>
@@ -141,6 +144,12 @@ body{visibility:hidden;background:var(--bg);color:var(--text);font-family:var(--
 </style>
 </head>
 <body>
+<!-- Loading indicator -->
+<div id="anaLoadingOverlay" style="display:flex;align-items:center;justify-content:center;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:9999;visibility:visible;opacity:1;transition:opacity 0.3s ease,visibility 0.3s ease;flex-direction:column;gap:16px">
+  <div style="font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:24px;font-weight:700;color:var(--text)">Trading<span style="color:var(--accent)">Grove</span></div>
+  <i class="fa-solid fa-spinner" style="animation:spin 1s linear infinite;font-size:32px;color:var(--accent)"></i>
+</div>
+
 <div class="pw">
 <div id="skelView">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
@@ -158,9 +167,7 @@ body{visibility:hidden;background:var(--bg);color:var(--text);font-family:var(--
 
 <script>
 // ── Session ───────────────────────────────────────────────────────────────────
-const jid = sessionStorage.getItem('tz_current_journal') || (()=>{
-  try { return parent?.sessionStorage?.getItem('tz_current_journal'); } catch(e) { return null; }
-})();
+const jid = sessionStorage.getItem('tz_current_journal')||localStorage.getItem('tz_current_journal')||(()=>{try{return parent?.sessionStorage?.getItem('tz_current_journal')||parent?.localStorage?.getItem('tz_current_journal');}catch(e){return null;}})();
 
 const G='#19c37d', R='#f05165', Y='#f5c518';
 
@@ -733,13 +740,18 @@ function renderInsightsHtml(trades,stats){
   </div>`;
 }
 
+function _anaHideLoading(){
+  const overlay=document.getElementById('anaLoadingOverlay');
+  if(overlay){overlay.classList?.add('hidden');overlay.style.opacity='0';overlay.style.visibility='hidden';setTimeout(()=>{overlay.style.display='none';},300);}
+}
+
 // ── Main IIFE ─────────────────────────────────────────────────────────────────
 (async()=>{
   if(!jid){
     document.getElementById('skelView').style.display='none';
     document.getElementById('root').style.display='';
     document.getElementById('root').innerHTML='<div class="empty"><i class="fa-solid fa-chart-line"></i>No journal selected.</div>';
-    document.body.style.visibility='visible';return;
+    document.body.style.visibility='visible';_anaHideLoading();return;
   }
 
   const raw=await getTrades(jid);
@@ -750,6 +762,7 @@ function renderInsightsHtml(trades,stats){
   document.getElementById('skelView').style.display='none';
   document.getElementById('root').style.display='';
   document.body.style.visibility='visible';
+  _anaHideLoading();
 
   const{data:{user:authUser}}=await db.auth.getUser();
   let isPro=false;

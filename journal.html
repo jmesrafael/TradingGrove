@@ -1507,9 +1507,9 @@ let _bnbLastCsvText = '';
 
 function _preloadTabs(){
   [{id:'presessionFrame',src:'/presession/presession.html'},
-   {id:'calFrame',src:'calendar.html'},
-   {id:'notesFrame',src:'notes.html'},
-   {id:'analyticsFrame',src:'analytics.html'}]
+   {id:'calFrame',src:'/calendar.html'},
+   {id:'notesFrame',src:'/notes.html'},
+   {id:'analyticsFrame',src:'/analytics.html'}]
     .forEach(({id,src})=>{const f=document.getElementById(id);if(f&&!f.src)f.src=src+'?preload=1';});
 }
 
@@ -1556,9 +1556,9 @@ function switchTab(name){
   _syncMobMenu(name);
   const fm={
     presession:{id:'presessionFrame',src:'/presession/presession.html'},
-    calendar:{id:'calFrame',src:'calendar.html'},
-    notes:{id:'notesFrame',src:'notes.html'},
-    analytics:{id:'analyticsFrame',src:'analytics.html'}
+    calendar:{id:'calFrame',src:'/calendar.html'},
+    notes:{id:'notesFrame',src:'/notes.html'},
+    analytics:{id:'analyticsFrame',src:'/analytics.html'}
   };
   if(fm[name]){const{id,src}=fm[name];const f=document.getElementById(id);if(f){if(!f.src||f.src==='about:blank'){showTabLoader(name);f.classList.remove('ready');f.src=src+'?t='+Date.now();}else if(!f.classList.contains('ready'))showTabLoader(name);}}
   if(name==='settings')populateSettings();

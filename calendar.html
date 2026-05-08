@@ -137,8 +137,8 @@ body{visibility:hidden;background:var(--bg);color:var(--text);font-family:var(--
 <!-- Loading indicator -->
 <div id="calLoadingOverlay" class="loading-overlay">
   <div class="loading-spinner">
+    <div style="font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:24px;font-weight:700;margin-bottom:16px;color:var(--text)">Trading<span style="color:var(--accent)">Grove</span></div>
     <i class="fa-solid fa-spinner" style="animation:spin 1s linear infinite;font-size:32px;color:var(--accent)"></i>
-    <div style="margin-top:12px;font-size:13px;color:var(--muted)">Loading calendar...</div>
   </div>
 </div>
 
@@ -258,7 +258,7 @@ function applyCalendarDelta(payload){
   renderMonth();
 }
 
-const jid = sessionStorage.getItem('tz_current_journal');
+const jid = sessionStorage.getItem('tz_current_journal')||localStorage.getItem('tz_current_journal')||(()=>{try{return parent?.sessionStorage?.getItem('tz_current_journal')||parent?.localStorage?.getItem('tz_current_journal');}catch(e){return null;}})();
 let allTrades=[], curYear=new Date().getFullYear(), curMonth=new Date().getMonth(), userIsPro=false;
 let _prevOpen=true;
 const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
