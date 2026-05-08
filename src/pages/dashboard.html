@@ -1,15 +1,15 @@
-<!-- dashboard.html -->
+﻿<!-- dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TradingGrove | Dashboard</title>
-<link rel="icon" type="image/svg+xml" href="favicon.svg">
-<script src="favicon.js"></script>
+<link rel="icon" type="image/svg+xml" href="/src/assets/favicon.svg">
+<script src="/favicon.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="theme.js"></script>
-<script src="supabase.js"></script>
+<script src="/src/js/lib/theme.js"></script>
+<script src="/src/js/lib/supabase-client.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdnjs.cloudflare.com">
@@ -27,7 +27,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body,'Inter',
 .bg-orb.orb2{width:500px;height:500px;bottom:-80px;right:-80px;background:radial-gradient(circle,var(--accent,#00ff88),transparent 70%);animation-duration:25s;animation-delay:-8s}
 .bg-orb.orb3{width:300px;height:300px;top:50%;left:55%;background:radial-gradient(circle,var(--accent2,#00ff88),transparent 70%);opacity:0.025;animation-duration:30s;animation-delay:-13s}
 .bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,#000 40%,transparent 100%)}
-.bg-logo{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:url(/assets/brandlogo.webp);background-size:clamp(200px,60vmin,600px);background-position:center 50%;background-repeat:no-repeat;background-attachment:fixed;opacity:0.04}
+.bg-logo{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:url(/src/assets/images/brandlogo.webp);background-size:clamp(200px,60vmin,600px);background-position:center 50%;background-repeat:no-repeat;background-attachment:fixed;opacity:0.04}
 @keyframes orbDrift{0%{transform:translate(0,0) scale(1)}33%{transform:translate(60px,-40px) scale(1.08)}66%{transform:translate(-30px,50px) scale(.95)}100%{transform:translate(40px,20px) scale(1.04)}}
 
 header,main,.overlay{position:relative;z-index:1}
@@ -342,7 +342,7 @@ main{padding:32px;max-width:1140px;margin:0 auto}
 <div id="pageLoader"></div>
 
 <header>
-  <div class="logo" onclick="location.href='/dashboard'"><img src="assets/light.png" alt="TradingGrove" id="headerLogo" style="height:28px;width:auto;margin-right:4px;padding-bottom:3px;vertical-align:middle">Trading<span>Grove</span></div>
+  <div class="logo" onclick="location.href='/dashboard'"><img src="/src/assets/images/light.png" alt="TradingGrove" id="headerLogo" style="height:28px;width:auto;margin-right:4px;padding-bottom:3px;vertical-align:middle">Trading<span>Grove</span></div>
   <div class="hright">
     <!-- Plan badge -->
     <span class="plan-badge badge-free" id="planBadge" onclick="location.href='/subscription'" title="View subscription">Free</span>
@@ -652,7 +652,7 @@ function initDrag(){
 }
 
 // ── Theme picker & logo swap ─────────────────────────────────────────────────
-function applyLogoTheme(themeId){const logo=document.getElementById('headerLogo');if(!logo)return;logo.src=themeId==='light'?'assets/dark.png':'assets/light.png';}
+function applyLogoTheme(themeId){const logo=document.getElementById('headerLogo');if(!logo)return;logo.src=themeId==='light'?'/src/assets/images/dark.png':'/src/assets/images/light.png';}
 function _buildThemeDropdown(){const dd=document.getElementById('themeDropdown');if(!dd||!window.TZ)return;const cur=localStorage.getItem('tl_theme')||'dark';dd.innerHTML='';TZ.themeList.forEach(th=>{const locked=th.pro&&!isPro,active=th.id===cur;const row=document.createElement('div');row.className='theme-row'+(active?' active':'')+(locked?' locked':'');const swatchHtml=th.swatches.map(c=>`<span class="tr-swatch" style="background:${c}"></span>`).join('');const proBadgeClass={'blue-electric':'electric','golden':'golden','void':'void'}[th.id]||'generic';const proHtml=(th.pro&&!isPro)?`<span class="tr-pro ${proBadgeClass}">PRO</span>`:'';row.innerHTML=`<div class="tr-swatches">${swatchHtml}</div><div class="tr-info"><div class="tr-name">${th.label}</div><div class="tr-desc">${th.desc}</div></div><div class="tr-right">${active?'<i class="fa-solid fa-check tr-check"></i>':''}${proHtml}</div>`;if(!locked){row.addEventListener('click',()=>{_applyThemeSelection(th.id);closeThemeDropdown();});}else{row.addEventListener('click',()=>{document.getElementById('themeProHint').classList.add('show');showToast(`${th.label} is a Pro theme.`,'fa-solid fa-crown','red');});}dd.appendChild(row);});}
 function _updateThemeTrigger(themeId){const cur=themeId||localStorage.getItem('tl_theme')||'dark';const meta=TZ.themeList?.find(t=>t.id===cur)||TZ.themeList?.[1]||{label:'Dark',desc:'',swatches:['#111','#1a1a1a','#aaa']};const swEl=document.getElementById('triggerSwatches'),nameEl=document.getElementById('triggerName'),descEl=document.getElementById('triggerDesc');if(swEl)swEl.innerHTML=meta.swatches.map(c=>`<span class="theme-trigger-swatch" style="background:${c}"></span>`).join('');if(nameEl)nameEl.textContent=meta.label;if(descEl)descEl.textContent=meta.desc;const mini=document.getElementById('menuThemeSwatches');if(mini)mini.innerHTML=meta.swatches.map(c=>`<span class="tsm" style="background:${c}"></span>`).join('');}
 async function _applyThemeSelection(id){if(window.TZ)TZ.setTheme(id);else localStorage.setItem('tl_theme',id);_updateThemeTrigger(id);_buildThemeDropdown();applyLogoTheme(id);try{await updateProfile(currentUser.id,{color_theme:id});}catch(e){}}

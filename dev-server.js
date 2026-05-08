@@ -1,4 +1,4 @@
-// run this for local 
+// run this for local
 // node dev-server.js
 
 const http = require('http');
@@ -9,13 +9,57 @@ const url = require('url');
 const PORT = 5500;
 const rootDir = __dirname;
 
+// Load Vercel rewrites so local dev mirrors production routing.
+// vercel.json contains entries like { source: "/dashboard", destination: "/src/pages/dashboard.html" }.
+let rewrites = [];
+try {
+  const vercelCfg = JSON.parse(fs.readFileSync(path.join(rootDir, 'vercel.json'), 'utf8'));
+  rewrites = Array.isArray(vercelCfg.rewrites) ? vercelCfg.rewrites : [];
+} catch (e) {
+  console.warn('Could not load vercel.json rewrites:', e.message);
+}
+
+function applyRewrite(pathname) {
+  const match = rewrites.find(r => r.source === pathname);
+  return match ? match.destination : null;
+}
+
+const mimeTypes = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'application/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.webp': 'image/webp',
+  '.ico': 'image/x-icon',
+  '.txt': 'text/plain; charset=utf-8',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf'
+};
+
+function serveFile(filePath, res) {
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      res.writeHead(500);
+      res.end('Server Error');
+      return;
+    }
+    const ext = path.extname(filePath);
+    res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'text/plain' });
+    res.end(data);
+  });
+}
+
 const server = http.createServer((req, res) => {
-  // Strip query parameters from URL
   const parsedUrl = url.parse(req.url);
   const pathname = parsedUrl.pathname;
-  let filePath = path.join(rootDir, pathname === '/' ? 'index.html' : pathname);
 
-  // Set CORS headers for local development
+  // CORS for local API testing
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -26,50 +70,36 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Try to serve the requested file
-  fs.stat(filePath, (err, stats) => {
+  // 1) Vercel rewrite match (clean URLs like /dashboard → /src/pages/dashboard.html)
+  const rewritten = applyRewrite(pathname);
+  if (rewritten) {
+    return serveFile(path.join(rootDir, rewritten), res);
+  }
+
+  // 2) Direct file serve (for assets like /src/assets/...)
+  const directPath = path.join(rootDir, pathname);
+  fs.stat(directPath, (err, stats) => {
     if (!err && stats.isFile()) {
-      // File exists, serve it
-      return fs.readFile(filePath, (err, data) => {
-        if (err) {
-          res.writeHead(500);
-          res.end('Server Error');
-          return;
-        }
-
-        const ext = path.extname(filePath);
-        const mimeTypes = {
-          '.html': 'text/html; charset=utf-8',
-          '.js': 'application/javascript; charset=utf-8',
-          '.css': 'text/css; charset=utf-8',
-          '.json': 'application/json',
-          '.svg': 'image/svg+xml',
-          '.png': 'image/png',
-          '.jpg': 'image/jpeg',
-          '.jpeg': 'image/jpeg',
-          '.gif': 'image/gif',
-          '.ico': 'image/x-icon',
-          '.txt': 'text/plain; charset=utf-8',
-          '.woff': 'font/woff',
-          '.woff2': 'font/woff2',
-          '.ttf': 'font/ttf'
-        };
-
-        res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'text/plain' });
-        res.end(data);
-      });
+      return serveFile(directPath, res);
     }
 
-    // File doesn't exist, try adding .html extension
-    const htmlPath = filePath + '.html';
-    fs.readFile(htmlPath, (err, data) => {
-      if (!err) {
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-        res.end(data);
-      } else {
+    // 3) Try with .html extension at root
+    const htmlPath = directPath + '.html';
+    fs.stat(htmlPath, (err2, stats2) => {
+      if (!err2 && stats2.isFile()) {
+        return serveFile(htmlPath, res);
+      }
+
+      // 4) Try src/pages/{path}.html as fallback
+      const pagesPath = path.join(rootDir, 'src', 'pages', pathname.replace(/^\//, '') + '.html');
+      fs.stat(pagesPath, (err3, stats3) => {
+        if (!err3 && stats3.isFile()) {
+          return serveFile(pagesPath, res);
+        }
+
         res.writeHead(404);
         res.end('404 Not Found - File not found: ' + req.url);
-      }
+      });
     });
   });
 });
@@ -77,10 +107,10 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, () => {
   console.log('\n');
   console.log('╔════════════════════════════════════════════════════════╗');
-  console.log('║        TradingGrove Dev Server Running                    ║');
+  console.log('║        TradingGrove Dev Server Running                 ║');
   console.log('╠════════════════════════════════════════════════════════╣');
-  console.log(`║  🚀 URL: http://localhost:${PORT}                             ║`);
-  console.log('║  ✅ Smart routing enabled (/auth → auth.html)          ║');
+  console.log(`║  🚀 URL: http://localhost:${PORT}                          ║`);
+  console.log(`║  ✅ Vercel rewrites loaded: ${rewrites.length} routes              ║`);
   console.log('║  ✅ CORS enabled for local API testing                 ║');
   console.log('║  📝 Press Ctrl+C to stop the server                    ║');
   console.log('╚════════════════════════════════════════════════════════╝');
