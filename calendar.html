@@ -20,6 +20,10 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 @keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-overlay{display:flex;align-items:center;justify-content:center;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:9999;visibility:visible;opacity:1;transition:opacity 0.3s ease,visibility 0.3s ease}
+.loading-overlay.hidden{visibility:hidden;opacity:0;pointer-events:none}
+.loading-spinner{display:flex;flex-direction:column;align-items:center;gap:16px}
 body{visibility:hidden;background:var(--bg);color:var(--text);font-family:var(--font-body,'Inter',sans-serif);padding:16px;min-height:100vh}
 .pw{max-width:820px;margin:0 auto}
 .cal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
@@ -130,6 +134,14 @@ body{visibility:hidden;background:var(--bg);color:var(--text);font-family:var(--
 </style>
 </head>
 <body>
+<!-- Loading indicator -->
+<div id="calLoadingOverlay" class="loading-overlay">
+  <div class="loading-spinner">
+    <i class="fa-solid fa-spinner" style="animation:spin 1s linear infinite;font-size:32px;color:var(--accent)"></i>
+    <div style="margin-top:12px;font-size:13px;color:var(--muted)">Loading calendar...</div>
+  </div>
+</div>
+
 <div class="pw">
   <div class="cal-hdr">
     <h2><i class="fa-solid fa-calendar-days" style="color:var(--accent2)"></i>Trade Calendar</h2>
@@ -270,29 +282,56 @@ function isLocked(dateStr){if(userIsPro)return false;const d=new Date(dateStr+'T
 function isMonthLocked(y,m){if(userIsPro)return false;const lastDay=new Date(y,m+1,0);const cut=new Date();cut.setDate(cut.getDate()-90);return lastDay<cut;}
 
 (async()=>{
-  buildDowHeader('skelDow');buildDowHeader('calDow');buildSkelGrid();
-  if(!jid)return;
-  try{userIsPro=parent&&parent._userIsPro||false;}catch(e){}
-  if(!userIsPro){const res=await db.auth.getUser();if(res.data&&res.data.user){const p=await getProfile(res.data.user.id);userIsPro=getSubscriptionStatus(p).isPro;}}
-  if(!userIsPro)document.getElementById('freeBanner').style.display='flex';
-  const raw=await getTrades(jid);
-  allTrades=raw.map(dbToTrade);
-  document.getElementById('skelWrap').style.display='none';
-  document.getElementById('calWrap').style.display='block';
-  renderMonth();updateNavButtons();
-  // Backup live-sync path — covers cross-tab / cross-window scenarios where
-  // the postMessage from logs can't reach this frame. Apply inline deltas
-  // instead of re-fetching the whole trade list on every event.
   try{
-    subscribeTrades(jid,(payload)=>applyCalendarDelta(payload));
-  }catch(e){console.warn('[calendar] subscribeTrades failed:',e);}
-  if(!userIsPro){
-    document.getElementById('calAdSlot').style.display='block';
-    document.getElementById('calUpgradeNudge').style.display='flex';
-    try{(adsbygoogle=window.adsbygoogle||[]).push({});}catch(e){}
+    buildDowHeader('skelDow');buildDowHeader('calDow');buildSkelGrid();
+    if(!jid){_calHideLoading();return;}
+    try{userIsPro=parent&&parent._userIsPro||false;}catch(e){}
+    try{
+      if(!userIsPro){const res=await db.auth.getUser();if(res.data&&res.data.user){const p=await getProfile(res.data.user.id);userIsPro=getSubscriptionStatus(p).isPro;}}
+    }catch(e){
+      console.warn('[calendar] Failed to fetch subscription status:',e);
+    }
+    if(!userIsPro)document.getElementById('freeBanner').style.display='flex';
+    try{
+      const raw=await getTrades(jid);
+      allTrades=raw.map(dbToTrade);
+    }catch(e){
+      console.error('[calendar] Failed to fetch trades:',e);
+      document.getElementById('skelWrap').style.display='none';
+      document.body.style.visibility='visible';
+      _calHideLoading();
+      alert('Failed to load calendar data. Please refresh the page.');
+      return;
+    }
+    document.getElementById('skelWrap').style.display='none';
+    document.getElementById('calWrap').style.display='block';
+    renderMonth();updateNavButtons();
+    // Backup live-sync path — covers cross-tab / cross-window scenarios where
+    // the postMessage from logs can't reach this frame. Apply inline deltas
+    // instead of re-fetching the whole trade list on every event.
+    try{
+      subscribeTrades(jid,(payload)=>applyCalendarDelta(payload));
+    }catch(e){console.warn('[calendar] subscribeTrades failed:',e);}
+    if(!userIsPro){
+      document.getElementById('calAdSlot').style.display='block';
+      document.getElementById('calUpgradeNudge').style.display='flex';
+      try{(adsbygoogle=window.adsbygoogle||[]).push({});}catch(e){}
+    }
+    document.body.style.visibility='visible';
+    _calHideLoading();
+  }catch(e){
+    console.error('[calendar] Initialization failed:',e);
+    document.getElementById('skelWrap').style.display='none';
+    document.body.style.visibility='visible';
+    _calHideLoading();
+    alert('Failed to load calendar. Please refresh the page.');
   }
-  document.body.style.visibility='visible';
 })();
+
+function _calHideLoading(){
+  const overlay=document.getElementById('calLoadingOverlay');
+  if(overlay){overlay.classList.add('hidden');setTimeout(()=>{overlay.style.display='none';},300);}
+}
 
 function renderMonth(){
   document.getElementById('monthLbl').textContent=MONTHS[curMonth]+' '+curYear;

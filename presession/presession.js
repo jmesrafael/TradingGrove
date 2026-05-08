@@ -72,38 +72,70 @@ function moodsFor(set) {
 
 // ─── Init ───────────────────────────────────────────────────────────────────
 (async () => {
-  if (!jid) {
-    document.body.style.visibility = 'visible';
-    showToast('No journal selected.', 'fa-solid fa-triangle-exclamation', 'r');
-    return;
-  }
-  try { userIsPro = parent?._userIsPro || false; } catch(e) {}
-
-  const { data: { user } } = await db.auth.getUser();
-  currentUser = user;
-  if (user) { const p = await getProfile(user.id); if (p) userIsPro = p.plan === 'pro'; }
-
-  await loadSets();
-  document.body.style.visibility = 'visible';
-
-  // Subscribe to set additions/removals at the journal level.
-  journalSub = subscribePresessionJournal(jid, async () => {
-    const prev = activeSetId;
-    sets = await getPresessionSets(jid);
-    if (prev && !sets.find(s => s.id === prev)) {
-      // Active set was deleted elsewhere → fall back to first set
-      const next = sets[0]?.id || null;
-      if (next) await switchToSet(next);
-      else {
-        activeSetId = null;
-        renderSetTabs();
-        renderEmptyState();
-      }
-    } else {
-      renderSetTabs();
+  try {
+    if (!jid) {
+      document.body.style.visibility = 'visible';
+      _psHideLoading();
+      showToast('No journal selected.', 'fa-solid fa-triangle-exclamation', 'r');
+      return;
     }
-  });
+    try { userIsPro = parent?._userIsPro || false; } catch(e) {}
+
+    try {
+      const { data: { user } } = await db.auth.getUser();
+      currentUser = user;
+      if (user) { const p = await getProfile(user.id); if (p) userIsPro = p.plan === 'pro'; }
+    } catch(e) {
+      console.error('[presession] Failed to fetch user:', e);
+      showToast('Failed to load user. Please refresh.', 'fa-solid fa-circle-exclamation', 'r');
+      _psHideLoading();
+      return;
+    }
+
+    try {
+      await loadSets();
+    } catch(e) {
+      console.error('[presession] Failed to load sets:', e);
+      showToast('Failed to load checklists. Please refresh.', 'fa-solid fa-circle-exclamation', 'r');
+      _psHideLoading();
+      return;
+    }
+
+    document.body.style.visibility = 'visible';
+    _psHideLoading();
+
+    // Subscribe to set additions/removals at the journal level.
+    try {
+      journalSub = subscribePresessionJournal(jid, async () => {
+        const prev = activeSetId;
+        sets = await getPresessionSets(jid);
+        if (prev && !sets.find(s => s.id === prev)) {
+          // Active set was deleted elsewhere → fall back to first set
+          const next = sets[0]?.id || null;
+          if (next) await switchToSet(next);
+          else {
+            activeSetId = null;
+            renderSetTabs();
+            renderEmptyState();
+          }
+        } else {
+          renderSetTabs();
+        }
+      });
+    } catch(e) {
+      console.warn('[presession] Failed to subscribe to realtime updates:', e);
+    }
+  } catch(e) {
+    console.error('[presession] Initialization failed:', e);
+    showToast('Failed to initialize. Please refresh.', 'fa-solid fa-circle-exclamation', 'r');
+    _psHideLoading();
+  }
 })();
+
+function _psHideLoading(){
+  const overlay=document.getElementById('psLoadingOverlay');
+  if(overlay){overlay.classList.add('hidden');setTimeout(()=>{overlay.style.display='none';},300);}
+}
 
 window.addEventListener('beforeunload', () => {
   try { setSubs && db.removeChannel(setSubs); } catch(e) {}

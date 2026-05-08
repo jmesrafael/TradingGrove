@@ -17,9 +17,23 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
 <link rel="stylesheet" href="/logs/logs.css">
+<style>
+.loading-overlay{display:flex;align-items:center;justify-content:center;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:9999;visibility:visible;opacity:1;transition:opacity 0.3s ease,visibility 0.3s ease}
+.loading-overlay.hidden{visibility:hidden;opacity:0;pointer-events:none}
+.loading-spinner{display:flex;flex-direction:column;align-items:center;gap:16px}
+.error-toast{position:fixed;top:20px;right:20px;background:rgba(255,95,109,0.1);border:1px solid rgba(255,95,109,0.3);border-radius:var(--radius-md);padding:14px 18px;color:#ff5f6d;font-size:13px;max-width:300px;z-index:10000;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+</style>
 </head>
 <body>
 <div class="pw">
+
+<!-- Loading indicator -->
+<div id="logsLoadingOverlay" class="loading-overlay">
+  <div class="loading-spinner">
+    <i class="fa-solid fa-spinner" style="animation:spin 1s linear infinite;font-size:32px;color:var(--accent)"></i>
+    <div style="margin-top:12px;font-size:13px;color:var(--muted)">Loading trades...</div>
+  </div>
+</div>
 
 <!-- Analytics bar -->
 <div class="abar" id="aBar">

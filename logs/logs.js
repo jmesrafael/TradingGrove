@@ -284,58 +284,90 @@ function nowTimeLocal(){const d=new Date();return String(d.getHours()).padStart(
 function fmt12(timeStr){if(!timeStr)return'';const[h,m]=timeStr.split(':').map(Number);const ampm=h>=12?'PM':'AM';const h12=h%12||12;return h12+':'+(String(m).padStart(2,'0'))+ampm;}
 
 (async()=>{
-  const{data:{user}}=await db.auth.getUser();
-  currentUser=user;
-  if(!currentUser||!jid){showToast('Session expired.','fa-solid fa-circle-exclamation','red');return;}
-  try{userIsPro=parent?._userIsPro||false;}catch(e){}
-  const _p=await getProfile(currentUser.id);if(_p){currentProfile=_p;userIsPro=_p.plan==='pro';}
-  settings=await getJournalSettings(jid);
-  const[raw,imgCounts]=await Promise.all([getTrades(jid),getImageCountsForJournal(currentUser.id)]);
-  trades=raw.map(t=>{const dt=dbToTrade(t);return{...dt,images:Array(imgCounts[dt.id]||0).fill({})};});
-  // First wipe any cache entries poisoned by the old captureActiveInputs bug,
-  // then merge what's left. Without this, a stale "+$100.00" string in cache
-  // would re-overwrite the trade's correct value and turn the cell gray again.
-  sweepMalformedCache();
-  // Recovery from immediate refresh: if the user typed something within the
-  // 400ms autosave window and reloaded before the network update fired, the
-  // server doesn't have it but localStorage does. Merge those values back into
-  // trades[] AND re-schedule the save so the server eventually catches up.
-  mergeLocalCacheIntoTrades();
-  document.getElementById('skelTable').style.display='none';
-  document.getElementById('tableWrap').style.display='block';
-  applyAnalyticsState();
-  updateAnalytics();
-  render();
-  document.body.style.visibility='visible';
-  if(!userIsPro){document.getElementById('logsUpgradeNudge').style.display='flex';}
-  // Realtime: apply inline deltas instead of refetching the entire trade list
-  // on every event. If the user is mid-edit we drop the delta and mark the
-  // view stale; the next idle tick reconciles via a single full refresh.
-  subscribeTrades(jid,(payload)=>{
-    if(_pending.size>0||_newDraftIds.size>0||_isUserEditingTable()){
-      _staleFromRealtime=true;
+  try{
+    const{data:{user}}=await db.auth.getUser();
+    currentUser=user;
+    if(!currentUser||!jid){showToast('Session expired.','fa-solid fa-circle-exclamation','red');_hideLoading();return;}
+    try{userIsPro=parent?._userIsPro||false;}catch(e){}
+    try{
+      const _p=await getProfile(currentUser.id);if(_p){currentProfile=_p;userIsPro=_p.plan==='pro';}
+    }catch(e){
+      console.warn('[logs] Failed to fetch profile:',e);
+    }
+    try{
+      settings=await getJournalSettings(jid);
+    }catch(e){
+      console.warn('[logs] Failed to fetch journal settings:',e);
+      settings=null;
+    }
+    try{
+      const[raw,imgCounts]=await Promise.all([getTrades(jid),getImageCountsForJournal(currentUser.id)]);
+      trades=raw.map(t=>{const dt=dbToTrade(t);return{...dt,images:Array(imgCounts[dt.id]||0).fill({})};});
+    }catch(e){
+      console.error('[logs] Failed to fetch trades:',e);
+      showToast('Failed to load trades. Please try refreshing.','fa-solid fa-circle-exclamation','red');
+      _hideLoading();
       return;
     }
-    if(!payload||!payload.eventType){
-      // No payload (defensive) → fall back to full refresh.
-      refreshTrades();
-      return;
+    // First wipe any cache entries poisoned by the old captureActiveInputs bug,
+    // then merge what's left. Without this, a stale "+$100.00" string in cache
+    // would re-overwrite the trade's correct value and turn the cell gray again.
+    sweepMalformedCache();
+    // Recovery from immediate refresh: if the user typed something within the
+    // 400ms autosave window and reloaded before the network update fired, the
+    // server doesn't have it but localStorage does. Merge those values back into
+    // trades[] AND re-schedule the save so the server eventually catches up.
+    mergeLocalCacheIntoTrades();
+    document.getElementById('skelTable').style.display='none';
+    document.getElementById('tableWrap').style.display='block';
+    applyAnalyticsState();
+    updateAnalytics();
+    render();
+    document.body.style.visibility='visible';
+    _hideLoading();
+    if(!userIsPro){document.getElementById('logsUpgradeNudge').style.display='flex';}
+    // Realtime: apply inline deltas instead of refetching the entire trade list
+    // on every event. If the user is mid-edit we drop the delta and mark the
+    // view stale; the next idle tick reconciles via a single full refresh.
+    try{
+      subscribeTrades(jid,(payload)=>{
+        if(_pending.size>0||_newDraftIds.size>0||_isUserEditingTable()){
+          _staleFromRealtime=true;
+          return;
+        }
+        if(!payload||!payload.eventType){
+          // No payload (defensive) → fall back to full refresh.
+          refreshTrades();
+          return;
+        }
+        // Skip if this delta describes a row that's locally pending — our own
+        // optimistic update is the source of truth until the save settles.
+        const id=payload.new?.id||payload.old?.id;
+        if(id&&_pending.has(id))return;
+        trades=applyTradeDelta(trades,payload,(existing,incoming)=>({
+          ...existing,...incoming,
+          // Preserve image-count placeholders attached at load time; image
+          // additions/removals come through their own realtime path.
+          images:existing.images,
+        }));
+        updateAnalytics();render();
+      });
+    }catch(e){
+      console.warn('[logs] Failed to subscribe to realtime updates:',e);
     }
-    // Skip if this delta describes a row that's locally pending — our own
-    // optimistic update is the source of truth until the save settles.
-    const id=payload.new?.id||payload.old?.id;
-    if(id&&_pending.has(id))return;
-    trades=applyTradeDelta(trades,payload,(existing,incoming)=>({
-      ...existing,...incoming,
-      // Preserve image-count placeholders attached at load time; image
-      // additions/removals come through their own realtime path.
-      images:existing.images,
-    }));
-    updateAnalytics();render();
-  });
-  try{parent.postMessage({type:'tz_analytics_state',on:analyticsOn},'*');}catch(e){}
-  checkPresessionNudge();
+    try{parent.postMessage({type:'tz_analytics_state',on:analyticsOn},'*');}catch(e){}
+    checkPresessionNudge();
+  }catch(e){
+    console.error('[logs] Initialization failed:',e);
+    showToast('Failed to load. Please refresh the page.','fa-solid fa-circle-exclamation','red');
+    _hideLoading();
+  }
 })();
+
+function _hideLoading(){
+  const overlay=document.getElementById('logsLoadingOverlay');
+  if(overlay){overlay.classList.add('hidden');setTimeout(()=>{overlay.style.display='none';},300);}
+}
 
 async function reloadSettings(){settings=await getJournalSettings(jid);render();}
 function _isUserEditingTable(){

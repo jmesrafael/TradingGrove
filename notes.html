@@ -26,6 +26,9 @@
 @keyframes calcSlideIn{0%{opacity:0;transform:scale(.94) translateY(8px)}100%{opacity:1;transform:scale(1) translateY(0)}}
 @keyframes calcSlideOut{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.94)}}
 @keyframes spin{to{transform:rotate(360deg)}}
+.loading-overlay{display:flex;align-items:center;justify-content:center;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:9999;visibility:visible;opacity:1;transition:opacity 0.3s ease,visibility 0.3s ease}
+.loading-overlay.hidden{visibility:hidden;opacity:0;pointer-events:none}
+.loading-spinner{display:flex;flex-direction:column;align-items:center;gap:16px}
 
 body{visibility:hidden;background:var(--bg);color:var(--text);font-family:var(--font-body,'Inter',sans-serif);min-height:100vh;padding:0}
 .app{display:flex;flex-direction:column;min-height:100vh}
@@ -419,6 +422,14 @@ body{visibility:hidden;background:var(--bg);color:var(--text);font-family:var(--
 </style>
 </head>
 <body>
+<!-- Loading indicator -->
+<div id="notesLoadingOverlay" class="loading-overlay">
+  <div class="loading-spinner">
+    <i class="fa-solid fa-spinner" style="animation:spin 1s linear infinite;font-size:32px;color:var(--accent)"></i>
+    <div style="margin-top:12px;font-size:13px;color:var(--muted)">Loading notes...</div>
+  </div>
+</div>
+
 <div class="app">
 
   <!-- Topbar -->
@@ -823,68 +834,110 @@ function validateImg(file){if(!ALLOWED_IMG.includes(file.type)){showToast('Only 
 
 // ─── init ──────────────────────────────────────────────────────────────────
 (async()=>{
-  if(!jid){
-    document.getElementById('skelGrid').style.display='none';
-    document.getElementById('content-logs').innerHTML='<div class="empty-state"><div class="ei"><i class="fa-solid fa-note-sticky"></i></div><h3>No journal selected</h3><p>Open a journal first.</p></div>';
-    document.body.style.visibility='visible'; return;
-  }
-  try{userIsPro=parent?._userIsPro||false;}catch(e){}
-  const {data:{user}}=await db.auth.getUser();
-  currentUser=user;
-  if(user){const p=await getProfile(user.id);if(p){userIsPro=getSubscriptionStatus(p).isPro;}}
-  if(!userIsPro){document.getElementById('notesAdSlot').classList.add('visible');try{(adsbygoogle=window.adsbygoogle||[]).push({});}catch(e){}}
-
-  settings=await getJournalSettings(jid);
-
-  const [raw, cnRaw]=await Promise.all([getTrades(jid), getCustomNotesFn(jid)]);
-  allTrades=await Promise.all(raw.map(dbToTrade).map(loadTradeWithImages));
-  customNotes=await Promise.all((cnRaw||[]).map(loadCustomNoteImageUrls));
-
-  document.getElementById('skelGrid').style.display='none';
-  render();
-  document.body.style.visibility='visible';
-
-  // Realtime: apply inline deltas instead of refetching every trade and
-  // every trade image on every event. INSERT fetches images for the one
-  // new trade; UPDATE preserves the existing images array (image changes
-  // arrive on their own table's realtime path); DELETE drops the entry.
-  subscribeTrades(jid,async(payload)=>{
-    if(!payload||!payload.eventType){
-      // Defensive fallback — no payload means "something changed", do a
-      // full refetch.
-      const r=await getTrades(jid);
-      allTrades=await Promise.all(r.map(dbToTrade).map(loadTradeWithImages));
-      render();
+  try{
+    if(!jid){
+      document.getElementById('skelGrid').style.display='none';
+      document.getElementById('content-logs').innerHTML='<div class="empty-state"><div class="ei"><i class="fa-solid fa-note-sticky"></i></div><h3>No journal selected</h3><p>Open a journal first.</p></div>';
+      document.body.style.visibility='visible';
+      _notesHideLoading();
       return;
     }
-    if(payload.eventType==='INSERT'){
-      const inserted=dbToTrade(payload.new);
-      const withImgs=await loadTradeWithImages(inserted);
-      // Idempotent: replace if it somehow already exists
-      const idx=allTrades.findIndex(t=>t.id===withImgs.id);
-      if(idx>=0)allTrades=allTrades.map((t,i)=>i===idx?withImgs:t);
-      else allTrades=[withImgs,...allTrades];
-    }else if(payload.eventType==='UPDATE'){
-      allTrades=applyTradeDelta(allTrades,payload,(existing,incoming)=>({
-        ...existing,...incoming,
-        // Trade-image changes have their own realtime channel; preserve the
-        // already-resolved image URLs here so we don't re-sign every visible
-        // thumb on every notes/pnl/r-factor edit.
-        images:existing.images,
-        // Pin state changes might arrive before full record update; ensure
-        // incoming.pinned (from UPDATE event) is used, or keep existing
-        pinned:incoming.pinned!==undefined?incoming.pinned:existing.pinned,
-      }));
-    }else if(payload.eventType==='DELETE'){
-      const id=payload.old?.id;
-      if(id)allTrades=allTrades.filter(t=>t.id!==id);
+    try{userIsPro=parent?._userIsPro||false;}catch(e){}
+    try{
+      const {data:{user}}=await db.auth.getUser();
+      currentUser=user;
+      if(user){const p=await getProfile(user.id);if(p){userIsPro=getSubscriptionStatus(p).isPro;}}
+    }catch(e){
+      console.error('[notes] Failed to fetch user:',e);
+      document.getElementById('skelGrid').style.display='none';
+      document.getElementById('content-logs').innerHTML='<div class="empty-state"><div class="ei"><i class="fa-solid fa-triangle-exclamation"></i></div><h3>Failed to load</h3><p>Please refresh the page.</p></div>';
+      document.body.style.visibility='visible';
+      _notesHideLoading();
+      return;
     }
+    if(!userIsPro){document.getElementById('notesAdSlot').classList.add('visible');try{(adsbygoogle=window.adsbygoogle||[]).push({});}catch(e){}}
+
+    try{
+      settings=await getJournalSettings(jid);
+    }catch(e){
+      console.warn('[notes] Failed to fetch journal settings:',e);
+    }
+
+    try{
+      const [raw, cnRaw]=await Promise.all([getTrades(jid), getCustomNotesFn(jid)]);
+      allTrades=await Promise.all(raw.map(dbToTrade).map(loadTradeWithImages));
+      customNotes=await Promise.all((cnRaw||[]).map(loadCustomNoteImageUrls));
+    }catch(e){
+      console.error('[notes] Failed to fetch trades/notes:',e);
+      document.getElementById('skelGrid').style.display='none';
+      document.getElementById('content-logs').innerHTML='<div class="empty-state"><div class="ei"><i class="fa-solid fa-triangle-exclamation"></i></div><h3>Failed to load notes</h3><p>Please refresh the page.</p></div>';
+      document.body.style.visibility='visible';
+      _notesHideLoading();
+      return;
+    }
+
+    document.getElementById('skelGrid').style.display='none';
     render();
-    if(currentTradeId&&document.getElementById('overlay').classList.contains('open')){
-      const u=allTrades.find(t=>t.id===currentTradeId);if(u)_refreshModalMeta(u);
+    document.body.style.visibility='visible';
+    _notesHideLoading();
+
+    // Realtime: apply inline deltas instead of refetching every trade and
+    // every trade image on every event. INSERT fetches images for the one
+    // new trade; UPDATE preserves the existing images array (image changes
+    // arrive on their own table's realtime path); DELETE drops the entry.
+    try{
+      subscribeTrades(jid,async(payload)=>{
+        if(!payload||!payload.eventType){
+          // Defensive fallback — no payload means "something changed", do a
+          // full refetch.
+          const r=await getTrades(jid);
+          allTrades=await Promise.all(r.map(dbToTrade).map(loadTradeWithImages));
+          render();
+          return;
+        }
+        if(payload.eventType==='INSERT'){
+          const inserted=dbToTrade(payload.new);
+          const withImgs=await loadTradeWithImages(inserted);
+          // Idempotent: replace if it somehow already exists
+          const idx=allTrades.findIndex(t=>t.id===withImgs.id);
+          if(idx>=0)allTrades=allTrades.map((t,i)=>i===idx?withImgs:t);
+          else allTrades=[withImgs,...allTrades];
+        }else if(payload.eventType==='UPDATE'){
+          allTrades=applyTradeDelta(allTrades,payload,(existing,incoming)=>({
+            ...existing,...incoming,
+            // Trade-image changes have their own realtime channel; preserve the
+            // already-resolved image URLs here so we don't re-sign every visible
+            // thumb on every notes/pnl/r-factor edit.
+            images:existing.images,
+            // Pin state changes might arrive before full record update; ensure
+            // incoming.pinned (from UPDATE event) is used, or keep existing
+            pinned:incoming.pinned!==undefined?incoming.pinned:existing.pinned,
+          }));
+        }else if(payload.eventType==='DELETE'){
+          const id=payload.old?.id;
+          if(id)allTrades=allTrades.filter(t=>t.id!==id);
+        }
+        render();
+        if(currentTradeId&&document.getElementById('overlay').classList.contains('open')){
+          const u=allTrades.find(t=>t.id===currentTradeId);if(u)_refreshModalMeta(u);
+        }
+      });
+    }catch(e){
+      console.warn('[notes] Failed to subscribe to realtime updates:',e);
     }
-  });
+  }catch(e){
+    console.error('[notes] Initialization failed:',e);
+    document.getElementById('skelGrid').style.display='none';
+    document.getElementById('content-logs').innerHTML='<div class="empty-state"><div class="ei"><i class="fa-solid fa-triangle-exclamation"></i></div><h3>Error loading notes</h3><p>Please refresh the page.</p></div>';
+    document.body.style.visibility='visible';
+    _notesHideLoading();
+  }
 })();
+
+function _notesHideLoading(){
+  const overlay=document.getElementById('notesLoadingOverlay');
+  if(overlay){overlay.classList.add('hidden');setTimeout(()=>{overlay.style.display='none';},300);}
+}
 
 async function loadTradeWithImages(t){
   const rawImgs=await getTradeImages(t.id);
