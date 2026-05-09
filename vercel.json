@@ -3,6 +3,9 @@
   "outputDirectory": "public",
   "cleanUrls": true,
   "trailingSlash": false,
+  "rewrites": [
+    { "source": "/calculator", "destination": "/calculators/position-calculator.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)\\.html",
