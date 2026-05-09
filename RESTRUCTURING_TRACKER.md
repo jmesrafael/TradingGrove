@@ -190,7 +190,7 @@ TradingGrove/
 ---
 
 ### Phase 3: Styles Extraction & Polish
-**Status:** 🟡 IN PROGRESS (CSS extraction ✅ done · docs pending)  
+**Status:** 🟡 IN PROGRESS (CSS ✅ · Docs ✅ · .gitignore ✅ · manual browser test pending)  
 **Estimated Time:** 1-2 hours  
 **Goal:** Extract CSS, add documentation
 
@@ -222,18 +222,17 @@ TradingGrove/
   - [x] Replace all inline `<style>` with `<link rel="stylesheet" href="/src/styles/pages/...">`
   - [x] Verified all CSS loads (HTTP 200) and HTML references are correct
 
-- [ ] **Create documentation**
-  - [ ] Create `/docs/ARCHITECTURE.md` (explain folder structure, file organization)
-  - [ ] Create `/docs/DEVELOPMENT.md` (setup, dev server, local testing)
-  - [ ] Create `/docs/PROJECT_OVERVIEW.md` (copy from TRADZONA_OVERVIEW.txt)
-  - [ ] Update `/README.md` with new structure and getting started
+- [x] **Create documentation**
+  - [x] Create `/docs/ARCHITECTURE.md` (folder layout, script loading order, routing table, iframe embeds, Supabase globals)
+  - [x] Create `/docs/DEVELOPMENT.md` (dev server setup, adding pages, deploying, common issues)
+  - [x] Create `/docs/PROJECT_OVERVIEW.md` (mission, features, tech stack, business model — adapted from TRADINGGROVE_OVERVIEW.txt)
+  - [x] Update `/README.md` (structure diagram, local setup, tech stack, pricing)
 
-- [ ] **Improve .gitignore**
-  - [ ] Add node_modules/ (if adding package.json)
-  - [ ] Add .env and .env.local
-  - [ ] Add supabase/.temp/
-  - [ ] Add logs/
-  - [ ] Add dist/ and build/ (if adding bundler later)
+- [x] **Improve .gitignore** — already complete; all required entries were present:
+  - [x] `node_modules/` ✅
+  - [x] `.env`, `.env.local`, `.env.*.local` ✅
+  - [x] `supabase/.temp/` ✅
+  - [x] `dist/`, `build/`, `.output/`, `.cache/` ✅
 
 - [ ] **Test Phase 3** *(route-level tests done; visual/UI tests pending)*
   - [x] Run dev-server and verify all CSS loads (HTTP 200 confirmed for analytics, dashboard, journal)
@@ -283,7 +282,7 @@ TradingGrove/
 ```
 Phase 1: ██████████ 100% (committed `64ba9b2`)
 Phase 2: ██████████ 100% (committed `64ba9b2` + dev-server fix `e3ebdc4`)
-Phase 3: ███████░░░  ~70% (CSS extraction committed `76aab8a`; docs + .gitignore + manual browser test pending)
+Phase 3: █████████░  ~90% (CSS ✅ · docs ✅ · .gitignore ✅ · manual browser smoke test pending)
 Phase 4: ░░░░░░░░░░   0% [Optional]
 ```
 
