@@ -125,7 +125,7 @@ TradingGrove/
 ---
 
 ### Phase 2: Scripts Consolidation
-**Status:** 🟡 IN PROGRESS (lib moves done · per-page extraction starting)  
+**Status:** ✅ COMPLETE (all extractions done · dev-server fixed · ready for testing)  
 **Estimated Time:** 1-2 hours  
 **Goal:** Extract and organize JavaScript
 
