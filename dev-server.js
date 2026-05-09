@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 
-const PORT = 5500;
+const PREFERRED_PORT = 5500;
 const rootDir = __dirname;
 
 // Load Vercel rewrites so local dev mirrors production routing.
@@ -131,27 +131,33 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log('\n');
-  console.log('╔════════════════════════════════════════════════════════╗');
-  console.log('║        TradingGrove Dev Server Running                 ║');
-  console.log('╠════════════════════════════════════════════════════════╣');
-  console.log(`║  🚀 URL: http://localhost:${PORT}                          ║`);
-  console.log(`║  ✅ Vercel rewrites loaded: ${rewrites.length} routes              ║`);
-  console.log('║  ✅ CORS enabled for local API testing                 ║');
-  console.log('║  📝 Press Ctrl+C to stop the server                    ║');
-  console.log('╚════════════════════════════════════════════════════════╝');
-  console.log('\n');
-});
+function findFreePort(port, cb) {
+  const probe = http.createServer();
+  probe.listen(port, () => { probe.close(() => cb(port)); });
+  probe.on('error', () => findFreePort(port + 1, cb));
+}
 
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`\n❌ Port ${PORT} is already in use!`);
-    console.error('Options:');
-    console.error(`  1. Close the application using port ${PORT}`);
-    console.error(`  2. Or modify PORT in dev-server.js to use a different port`);
-  } else {
-    console.error('Server error:', err);
+findFreePort(PREFERRED_PORT, (port) => {
+  if (port !== PREFERRED_PORT) {
+    console.log(`\n⚠️  Port ${PREFERRED_PORT} is in use — using port ${port} instead.`);
   }
-  process.exit(1);
+
+  server.listen(port, () => {
+    const serverUrl = `http://localhost:${port}`;
+    console.log('\n');
+    console.log('╔════════════════════════════════════════════════════════╗');
+    console.log('║        TradingGrove Dev Server Running                 ║');
+    console.log('╠════════════════════════════════════════════════════════╣');
+    console.log(`║  🚀 URL: ${serverUrl.padEnd(46)}║`);
+    console.log(`║  ✅ Vercel rewrites loaded: ${String(rewrites.length).padEnd(28)}║`);
+    console.log('║  ✅ CORS enabled for local API testing                 ║');
+    console.log('║  📝 Press Ctrl+C to stop the server                    ║');
+    console.log('╚════════════════════════════════════════════════════════╝');
+    console.log('\n');
+  });
+
+  server.on('error', (err) => {
+    console.error('Server error:', err);
+    process.exit(1);
+  });
 });
