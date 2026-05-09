@@ -23,6 +23,7 @@
     { "source": "/profile",          "destination": "/src/pages/profile.html" },
     { "source": "/payment-method",   "destination": "/src/pages/payment-method.html" }
   ],
+  
   "headers": [
     {
       "source": "/(.*)\\.html",
