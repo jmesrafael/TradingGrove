@@ -83,24 +83,51 @@ const server = http.createServer((req, res) => {
       return serveFile(directPath, res);
     }
 
-    // 3) Try with .html extension at root
-    const htmlPath = directPath + '.html';
-    fs.stat(htmlPath, (err2, stats2) => {
-      if (!err2 && stats2.isFile()) {
-        return serveFile(htmlPath, res);
-      }
-
-      // 4) Try src/pages/{path}.html as fallback
-      const pagesPath = path.join(rootDir, 'src', 'pages', pathname.replace(/^\//, '') + '.html');
-      fs.stat(pagesPath, (err3, stats3) => {
-        if (!err3 && stats3.isFile()) {
-          return serveFile(pagesPath, res);
+    // 3) Try with .html extension at root (only if pathname doesn't already end with .html)
+    if (!pathname.endsWith('.html')) {
+      const htmlPath = directPath + '.html';
+      fs.stat(htmlPath, (err2, stats2) => {
+        if (!err2 && stats2.isFile()) {
+          return serveFile(htmlPath, res);
         }
-
-        res.writeHead(404);
-        res.end('404 Not Found - File not found: ' + req.url);
+        tryPagesPath();
       });
-    });
+    } else {
+      tryPagesPath();
+    }
+
+    function tryPagesPath() {
+      // 4) Try src/pages/{path} or src/pages/{path without .html}.html as fallback
+      let pagesPath = path.join(rootDir, 'src', 'pages', pathname.replace(/^\//, ''));
+
+      // If pathname ends with .html, try it as-is first, then without extension
+      if (pathname.endsWith('.html')) {
+        fs.stat(pagesPath, (err3, stats3) => {
+          if (!err3 && stats3.isFile()) {
+            return serveFile(pagesPath, res);
+          }
+          // Try without .html extension
+          pagesPath = pagesPath.slice(0, -5); // remove .html
+          fs.stat(pagesPath, (err4, stats4) => {
+            if (!err4 && stats4.isFile()) {
+              return serveFile(pagesPath, res);
+            }
+            res.writeHead(404);
+            res.end('404 Not Found - File not found: ' + req.url);
+          });
+        });
+      } else {
+        // pathname doesn't end with .html, add it
+        pagesPath = pagesPath + '.html';
+        fs.stat(pagesPath, (err3, stats3) => {
+          if (!err3 && stats3.isFile()) {
+            return serveFile(pagesPath, res);
+          }
+          res.writeHead(404);
+          res.end('404 Not Found - File not found: ' + req.url);
+        });
+      }
+    }
   });
 });
 
