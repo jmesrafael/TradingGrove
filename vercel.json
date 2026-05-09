@@ -1,31 +1,8 @@
 {
-  "buildCommand": "echo 'Static site ready'",
-  "outputDirectory": "src",
+  "buildCommand": "node build.js",
+  "outputDirectory": "public",
   "cleanUrls": true,
   "trailingSlash": false,
-  "rewrites": [
-    { "source": "/",                "destination": "/pages/index.html" },
-    { "source": "/auth",            "destination": "/pages/auth.html" },
-    { "source": "/dashboard",       "destination": "/pages/dashboard.html" },
-    { "source": "/journal",         "destination": "/pages/journal.html" },
-    { "source": "/logs",            "destination": "/pages/logs.html" },
-    { "source": "/presession",      "destination": "/pages/presession.html" },
-    { "source": "/analytics",       "destination": "/pages/analytics.html" },
-    { "source": "/calendar",        "destination": "/pages/calendar.html" },
-    { "source": "/notes",           "destination": "/pages/notes.html" },
-    { "source": "/calculator",      "destination": "/pages/calculators/position-calculator.html" },
-    { "source": "/subscription",    "destination": "/pages/subscription.html" },
-    { "source": "/confirm",         "destination": "/pages/confirm.html" },
-    { "source": "/reset-password",  "destination": "/pages/reset-password.html" },
-    { "source": "/pricing",         "destination": "/pages/pricing.html" },
-    { "source": "/help",            "destination": "/pages/help.html" },
-    { "source": "/terms",           "destination": "/pages/terms.html" },
-    { "source": "/privacy",         "destination": "/pages/privacy.html" },
-    { "source": "/refund",          "destination": "/pages/refund.html" },
-    { "source": "/profile",          "destination": "/pages/profile.html" },
-    { "source": "/payment-method",   "destination": "/pages/payment-method.html" }
-  ],
-  
   "headers": [
     {
       "source": "/(.*)\\.html",
