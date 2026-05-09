@@ -1,0 +1,14 @@
+{
+  "name": "tradinggrove",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Professional trading journal and risk management platform for crypto and forex traders.",
+  "scripts": {
+    "dev": "node dev-server.js",
+    "deploy:functions": "supabase functions deploy",
+    "deploy:db": "supabase db push"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
