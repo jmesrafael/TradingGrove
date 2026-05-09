@@ -30,7 +30,7 @@
 <div id="pageLoader"></div>
 
 <header>
-  <div class="logo" onclick="location.href='/dashboard'"><img src="/assets/images/light.png" alt="TradingGrove" id="headerLogo" style="height:28px;width:auto;margin-right:4px;padding-bottom:3px;vertical-align:middle">Trading<span>Grove</span></div>
+  <div class="logo" onclick="location.href='/dashboard'"><img src="" alt="TradingGrove" id="headerLogo" style="height:28px;width:auto;margin-right:4px;padding-bottom:3px;vertical-align:middle">Trading<span>Grove</span></div>
   <div class="hright">
     <!-- Plan badge -->
     <span class="plan-badge badge-free" id="planBadge" onclick="location.href='/subscription'" title="View subscription">Free</span>
@@ -299,6 +299,36 @@
 </div>
 
 <div id="toast"><i id="toastIcon" class="fa-solid fa-circle-check"></i><span id="toastMsg"></span></div>
+
+<script>
+  function updateHeaderLogo() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark' ||
+                   localStorage.getItem('theme') === 'dark' ||
+                   !localStorage.getItem('theme');
+    const logoPath = isDark ? '@src/assets/images/dark.png' : '@src/assets/images/light.png';
+    document.getElementById('headerLogo').src = logoPath;
+  }
+
+  // Update on page load
+  window.addEventListener('DOMContentLoaded', updateHeaderLogo);
+
+  // Update when theme changes
+  window.addEventListener('themechange', updateHeaderLogo);
+  document.addEventListener('themechange', updateHeaderLogo);
+
+  // Also watch for data-theme attribute changes
+  const observer = new MutationObserver(() => {
+    updateHeaderLogo();
+  });
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  // Call once immediately in case DOM is already loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updateHeaderLogo);
+  } else {
+    updateHeaderLogo();
+  }
+</script>
 
 <script src="/js/modules/dashboard.js"></script>
 </body>
