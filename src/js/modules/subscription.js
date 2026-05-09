@@ -28,37 +28,9 @@ function toggleFaq(btn) {
   if (!open) item.classList.add('open');
 }
 
-// ── Upgrade ───────────────────────────────────────────────
-async function upgradeToPro() {
-  const btn = document.getElementById('proPlanBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Redirecting to checkout…</span>';
-
-  try {
-    const { data: { session } } = await db.auth.getSession();
-    if (!session) { location.href = '/auth'; return; }
-
-    const lookupKey = selectedPlan === 'annual' ? 'tradinggrove_pro_annual' : 'tradinggrove_pro_monthly';
-
-    const res = await fetch(SUPABASE_URL + '/functions/v1/create-checkout', {
-      method:  'POST',
-      headers: { 'Authorization': 'Bearer ' + session.access_token, 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ lookup_key: lookupKey }),
-    });
-    const data = await res.json();
-
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      throw new Error(data.error || 'Could not create checkout session.');
-    }
-  } catch (err) {
-    showToast('Checkout error: ' + err.message, 'fa-solid fa-circle-exclamation', 'r');
-    const btn2 = document.getElementById('proPlanBtn');
-    btn2.disabled = false;
-    btn2.innerHTML = '<i class="fa-solid fa-rocket"></i><span id="proBtnText">' +
-      (selectedPlan === 'annual' ? 'Upgrade to Pro — $10/mo billed $120/yr' : 'Upgrade to Pro — $15/mo') + '</span>';
-  }
+// ── Upgrade — redirects to payment method selection ───────
+function redirectToPayment() {
+  location.href = '/payment-method?plan=' + selectedPlan;
 }
 
 // ── Manage billing portal ─────────────────────────────────
@@ -67,6 +39,12 @@ async function openBillingPortal() {
   btn.disabled = true;
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading…';
   try {
+    // PayPal subscribers manage their subscription directly on paypal.com
+    if (currentProfile?.paypal_subscription_id && !currentProfile?.stripe_customer_id) {
+      window.open('https://www.paypal.com/myaccount/autopay/', '_blank');
+      return;
+    }
+
     const { data: { session } } = await db.auth.getSession();
     if (!session) throw new Error('Not authenticated');
 
@@ -84,8 +62,7 @@ async function openBillingPortal() {
 
     if (!res.ok) {
       const errData = await res.json();
-      const errMsg = errData.error || `HTTP ${res.status}`;
-      throw new Error(errMsg);
+      throw new Error(errData.error || `HTTP ${res.status}`);
     }
 
     const data = await res.json();
@@ -98,11 +75,9 @@ async function openBillingPortal() {
       return;
     }
 
-    if (!data.url) {
-      throw new Error(data.error || 'No billing portal URL returned');
-    }
-
+    if (!data.url) throw new Error(data.error || 'No billing portal URL returned');
     window.location.href = data.url;
+
   } catch (err) {
     console.error('Billing portal error:', err);
     showToast('Error: ' + err.message, 'fa-solid fa-circle-exclamation', 'r');
@@ -318,7 +293,7 @@ function showToast(msg, icon, type) {
 // Inline onclick handlers in subscription.html call these by global name.
 window.setPlan = setPlan;
 window.toggleFaq = toggleFaq;
-window.upgradeToPro = upgradeToPro;
+window.redirectToPayment = redirectToPayment;
 window.openBillingPortal = openBillingPortal;
 window.closeRewardModal = closeRewardModal;
 window._testRewardModal = _testRewardModal;
