@@ -8,7 +8,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body,'Inter',
 .bg-orb.orb2{width:500px;height:500px;bottom:-80px;right:-80px;background:radial-gradient(circle,var(--accent,#00ff88),transparent 70%);animation-duration:25s;animation-delay:-8s}
 .bg-orb.orb3{width:300px;height:300px;top:50%;left:55%;background:radial-gradient(circle,var(--accent2,#00ff88),transparent 70%);opacity:0.025;animation-duration:30s;animation-delay:-13s}
 .bg-grid{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse 80% 80% at 50% 50%,#000 40%,transparent 100%)}
-.bg-logo{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:url(/src/assets/images/brandlogo.webp);background-size:clamp(200px,60vmin,600px);background-position:center 50%;background-repeat:no-repeat;background-attachment:fixed;opacity:0.04}
+.bg-logo{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:url(/assets/images/brandlogo.webp);background-size:clamp(200px,60vmin,600px);background-position:center 50%;background-repeat:no-repeat;background-attachment:fixed;opacity:0.04}
 @keyframes orbDrift{0%{transform:translate(0,0) scale(1)}33%{transform:translate(60px,-40px) scale(1.08)}66%{transform:translate(-30px,50px) scale(.95)}100%{transform:translate(40px,20px) scale(1.04)}}
 
 header,main,.overlay{position:relative;z-index:1}

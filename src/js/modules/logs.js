@@ -1549,7 +1549,7 @@ async function _drawBrandWatermark(ctx,W,H,scale){
         console.warn('Brand logo failed to load');
         resolve();
       };
-      img.src='/src/assets/images/brandlogo.webp';
+      img.src='/assets/images/brandlogo.webp';
     }catch(e){
       console.error('Watermark drawing failed:',e);
       resolve();

@@ -300,36 +300,6 @@
 
 <div id="toast"><i id="toastIcon" class="fa-solid fa-circle-check"></i><span id="toastMsg"></span></div>
 
-<script>
-  function updateHeaderLogo() {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark' ||
-                   localStorage.getItem('theme') === 'dark' ||
-                   !localStorage.getItem('theme');
-    const logoPath = isDark ? '@src/assets/images/dark.png' : '@src/assets/images/light.png';
-    document.getElementById('headerLogo').src = logoPath;
-  }
-
-  // Update on page load
-  window.addEventListener('DOMContentLoaded', updateHeaderLogo);
-
-  // Update when theme changes
-  window.addEventListener('themechange', updateHeaderLogo);
-  document.addEventListener('themechange', updateHeaderLogo);
-
-  // Also watch for data-theme attribute changes
-  const observer = new MutationObserver(() => {
-    updateHeaderLogo();
-  });
-  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-
-  // Call once immediately in case DOM is already loaded
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', updateHeaderLogo);
-  } else {
-    updateHeaderLogo();
-  }
-</script>
-
 <script src="/js/modules/dashboard.js"></script>
 </body>
 </html>
