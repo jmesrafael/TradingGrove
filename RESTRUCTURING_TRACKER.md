@@ -1,7 +1,7 @@
 # 🏗️ TradingGrove Restructuring Tracker
 
 **Project:** TradingGrove Trading Journal Platform  
-**Status:** 🟡 IN PROGRESS (Phase 1 Complete · Phase 2 Partial — lib moves done, page extractions ongoing)  
+**Status:** 🟡 IN PROGRESS (Phase 1 ✅ Complete · Phase 2 ✅ Extraction done, awaiting browser test + commit)  
 **Last Updated:** 2026-05-09  
 **Estimated Duration:** 4-6 hours total (3 phases)
 
@@ -144,23 +144,23 @@ TradingGrove/
   
   | Page | Module Path | Status |
   |------|-------------|--------|
-  | `auth.html` | `/src/js/modules/auth.js` | ⬜ pending |
-  | `confirm.html` | `/src/js/modules/confirm.js` | ⬜ pending |
-  | `reset-password.html` | `/src/js/modules/reset-password.js` | ⬜ pending |
-  | `subscription.html` | `/src/js/modules/subscription.js` | ⬜ pending |
-  | `pricing.html` | `/src/js/modules/pricing.js` | ⬜ pending |
-  | `help.html` | `/src/js/modules/help.js` | ⬜ pending |
-  | `profile.html` | `/src/js/modules/profile.js` | ⬜ pending |
-  | `notes.html` | `/src/js/modules/notes.js` | ⬜ pending |
-  | `calendar.html` | `/src/js/modules/calendar.js` | ⬜ pending |
-  | `analytics.html` | `/src/js/modules/analytics.js` | ⬜ pending |
-  | `journal.html` | `/src/js/modules/journal.js` | ⬜ pending |
-  | `dashboard.html` | `/src/js/modules/dashboard.js` | ⬜ pending |
-  | `index.html` | `/src/js/modules/landing.js` | ⬜ pending |
-  | `position-calculator.html` | `/src/js/modules/position-calculator.js` | ⬜ pending |
-  | `pages/calculators/calculator.html` (fragment) | `/src/js/modules/calculator.js` | ⬜ pending |
-  | `pages/calculators/crypto-calculator.html` (fragment) | `/src/js/modules/crypto-calculator.js` | ⬜ pending |
-  | `pages/calculators/forex-calculator.html` (fragment) | `/src/js/modules/forex-calculator.js` | ⬜ pending |
+  | `auth.html` | `/src/js/modules/auth.js` | ✅ extracted (untested in browser) |
+  | `confirm.html` | `/src/js/modules/confirm.js` | ✅ extracted (untested in browser) |
+  | `reset-password.html` | `/src/js/modules/reset-password.js` | ✅ extracted (untested in browser) |
+  | `subscription.html` | `/src/js/modules/subscription.js` | ✅ extracted (untested in browser) |
+  | `pricing.html` | `/src/js/modules/pricing.js` | ✅ extracted (untested in browser) |
+  | `help.html` | `/src/js/modules/help.js` | ✅ extracted (untested in browser) |
+  | `profile.html` | `/src/js/modules/profile.js` | ✅ extracted (untested in browser) |
+  | `notes.html` | `/src/js/modules/notes.js` | ✅ extracted (untested in browser) |
+  | `calendar.html` | `/src/js/modules/calendar.js` | ✅ extracted (untested in browser) |
+  | `analytics.html` | `/src/js/modules/analytics.js` | ✅ extracted (untested in browser) |
+  | `journal.html` | `/src/js/modules/journal.js` | ✅ extracted (untested in browser) |
+  | `dashboard.html` | `/src/js/modules/dashboard.js` | ✅ extracted (untested in browser) |
+  | `index.html` | `/src/js/modules/landing.js` | ✅ extracted (untested in browser) |
+  | `position-calculator.html` | `/src/js/modules/position-calculator.js` | ✅ extracted (untested in browser) |
+  | `pages/calculators/calculator.html` (fragment) | n/a — pure HTML fragment, logic lives in position-calculator.js | ✅ no extraction needed |
+  | `pages/calculators/crypto-calculator.html` (fragment) | n/a — pure HTML fragment, logic lives in position-calculator.js | ✅ no extraction needed |
+  | `pages/calculators/forex-calculator.html` (fragment) | n/a — pure HTML fragment, logic lives in position-calculator.js | ✅ no extraction needed |
 
   Order rationale: smallest/simplest pages first (auth, confirm, reset-password) → static-content pages → dashboards. Riskiest (dashboard, journal) last.
 
@@ -275,7 +275,7 @@ TradingGrove/
 ### Overall Progress
 ```
 Phase 1: ██████████ 100% (committed)
-Phase 2: ███░░░░░░░ ~30% (lib moves + dev-server done; 0/17 pages extracted)
+Phase 2: █████████░ ~95% (all per-page extractions done; awaiting browser test + commit)
 Phase 3: ░░░░░░░░░░ 0%
 Phase 4: ░░░░░░░░░░ 0% [Optional]
 ```

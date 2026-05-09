@@ -1,0 +1,712 @@
+﻿// analytics.js - analytics page
+// Loaded by /src/pages/analytics.html. Depends on globals from supabase-client.js.
+// ── Session ───────────────────────────────────────────────────────────────────
+const jid = sessionStorage.getItem('tz_current_journal')||localStorage.getItem('tz_current_journal')||(()=>{try{return parent?.sessionStorage?.getItem('tz_current_journal')||parent?.localStorage?.getItem('tz_current_journal');}catch(e){return null;}})();
+
+const G='#19c37d', R='#f05165', Y='#f5c518';
+
+// ── Smart reload ──────────────────────────────────────────────────────────────
+let _anaQueuedReload=false,_anaReloadTimer=null,_anaTabActive=false;
+function _anaMaybeReload(){
+  if(!_anaQueuedReload||!_anaTabActive||document.visibilityState==='hidden')return;
+  clearTimeout(_anaReloadTimer);_anaReloadTimer=setTimeout(()=>location.reload(),300);
+}
+window.addEventListener('message',e=>{
+  if(e.data?.type==='tz_trades_changed'){_anaQueuedReload=true;_anaMaybeReload();}
+  if(e.data?.type==='tz_tab_changed'){_anaTabActive=(e.data.tab==='analytics');if(_anaTabActive)_anaMaybeReload();}
+});
+document.addEventListener('visibilitychange',_anaMaybeReload);
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function fP(v){const n=parseFloat(v);if(isNaN(n))return'—';return(n>=0?'+':'-')+'$'+Math.abs(n).toFixed(2);}
+function fPct(v){return parseFloat(v).toFixed(1)+'%';}
+function grc(n){return n>0?G:n<0?R:'var(--muted)';}
+function wrColor(wr){return wr>=50?G:wr>=35?Y:R;}
+function fH(h){if(h===0)return'12 AM';if(h===12)return'12 PM';return h<12?h+' AM':(h-12)+' PM';}
+function fHs(h){if(h===0)return'12AM';if(h===12)return'12PM';return h<12?h+'AM':(h-12)+'PM';}
+function secHdr(icon,title,tip,right=''){
+  const t=tip?`<span class="sec-tip" data-tip="${tip}">?</span>`:'';
+  return `<div class="sec-hdr"><div class="sec-hdr-l"><span class="sec-ico"><i class="fa-solid ${icon}"></i></span><span class="sec-ttl">${title}</span>${t}</div>${right}</div>`;
+}
+
+function wrBarHtml(wr){
+  const color=wr>=50?G:wr>=35?Y:R;
+  const w=Math.min(Math.max(wr,0),100);
+  return`<div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:4px;background:var(--border2,#253127);border-radius:3px"><div style="height:4px;width:${w.toFixed(0)}%;background:${color};border-radius:3px"></div></div><span style="font-family:var(--font-mono,'Space Mono',monospace);font-size:11px;color:${color};min-width:34px">${w.toFixed(0)}%</span></div>`;
+}
+
+function computeStats(trades){
+  const vld=trades.filter(t=>t.pnl!==''&&!isNaN(parseFloat(t.pnl))).map(t=>({...t,pnl:parseFloat(t.pnl)}));
+  const wins=vld.filter(t=>t.pnl>0),losses=vld.filter(t=>t.pnl<0),be=vld.filter(t=>t.pnl===0);
+  const total=vld.reduce((s,t)=>s+t.pnl,0);
+  const wr=vld.length?(wins.length/vld.length)*100:0;
+  const totalW=wins.reduce((s,t)=>s+t.pnl,0);
+  const totalL=Math.abs(losses.reduce((s,t)=>s+t.pnl,0));
+  const pf=totalL>0?totalW/totalL:wins.length>0?999:0;
+  const avgWin=wins.length?totalW/wins.length:0;
+  const avgLoss=losses.length?totalL/losses.length:0;
+  const sorted=[...vld].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+  let peak=0,eq=0,maxDd=0;
+  sorted.forEach(t=>{eq+=t.pnl;if(eq>peak)peak=eq;const dd=peak-eq;if(dd>maxDd)maxDd=dd;});
+  let cW=0,cL=0,mxW=0,mxL=0;
+  sorted.forEach(t=>{
+    if(t.pnl>0){cW++;cL=0;mxW=Math.max(mxW,cW);}
+    else if(t.pnl<0){cL++;cW=0;mxL=Math.max(mxL,cL);}
+    else{cW=0;cL=0;}
+  });
+  const best=vld.length?Math.max(...vld.map(t=>t.pnl)):0;
+  const worst=vld.length?Math.min(...vld.map(t=>t.pnl)):0;
+  const rvs=vld.filter(t=>t.r!==undefined&&t.r!==''&&!isNaN(parseFloat(t.r)));
+  const avgR=rvs.length?rvs.reduce((s,t)=>s+parseFloat(t.r),0)/rvs.length:0;
+  const daily={};
+  sorted.forEach(t=>{daily[t.date]=(daily[t.date]||0)+t.pnl;});
+  const dpnls=Object.values(daily);
+  const mean=dpnls.length?dpnls.reduce((a,b)=>a+b,0)/dpnls.length:0;
+  const variance=dpnls.reduce((s,n)=>s+Math.pow(n-mean,2),0)/(dpnls.length||1);
+  const std=Math.sqrt(variance);
+  const consistency=std===0?1:Math.max(0,1-(std/Math.abs(mean||1)));
+  return{vld,wins,losses,be,total,wr,pf,avgWin,avgLoss,maxDd,mxW,mxL,best,worst,avgR,sorted,consistency,daily};
+}
+
+function filterByRange(trades,range){
+  if(range==='all')return trades;
+  const now=new Date(),cutoff=new Date(now);
+  if(range==='7d')cutoff.setDate(cutoff.getDate()-7);
+  else if(range==='30d')cutoff.setDate(cutoff.getDate()-30);
+  else if(range==='90d')cutoff.setDate(cutoff.getDate()-90);
+  return trades.filter(t=>new Date((t.date||'')+'T12:00:00')>=cutoff);
+}
+
+// ── Chart plugins ─────────────────────────────────────────────────────────────
+Chart.register({
+  id:'crosshairLine',
+  afterDraw(chart){
+    if(!chart.options.showCrosshair)return;
+    const active=chart.tooltip?._active;if(!active?.length)return;
+    const{ctx,chartArea:{top,bottom}}=chart;const x=active[0].element.x;
+    ctx.save();ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x,bottom);
+    ctx.lineWidth=1;ctx.strokeStyle='rgba(255,255,255,.13)';ctx.setLineDash([4,4]);ctx.stroke();ctx.restore();
+  }
+});
+Chart.register({
+  id:'doughnutCenterText',
+  afterDatasetsDraw(chart){
+    if(!chart._centerText)return;
+    const{ctx,chartArea}=chart;
+    const meta=chart.getDatasetMeta(0);
+    const{x:cx,y:cy}=meta.data[0]||{x:chartArea.left+chartArea.width/2,y:chartArea.top+chartArea.height/2};
+    const textColor=getComputedStyle(document.documentElement).getPropertyValue('--text').trim()||'#dff0e4';
+    const mutedColor=getComputedStyle(document.documentElement).getPropertyValue('--muted').trim()||'#6b8f72';
+    const bodyFont=getComputedStyle(document.documentElement).getPropertyValue('--font-body').trim()||'Space Grotesk, sans-serif';
+    ctx.save();
+    ctx.font=`bold 22px ${bodyFont}`;ctx.fillStyle=chart._centerColor||textColor;
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(chart._centerText,cx,cy-6);
+    ctx.font=`10px ${bodyFont}`;ctx.fillStyle=mutedColor;ctx.fillText('Win Rate',cx,cy+11);
+    ctx.restore();
+  }
+});
+
+// ── Chart instance tracking ───────────────────────────────────────────────────
+let _charts=[];
+function _mkChart(el,cfg){if(!el)return null;const c=new Chart(el,cfg);_charts.push(c);return c;}
+function _destroyCharts(){_charts.forEach(c=>c.destroy());_charts=[];window._eqChart=null;}
+
+function _chartDefaults(){
+  const rs=getComputedStyle(document.documentElement);
+  Chart.defaults.color=rs.getPropertyValue('--muted').trim()||'#6b8f72';
+  Chart.defaults.borderColor=rs.getPropertyValue('--border').trim()||'#1e2e1f';
+  Chart.defaults.font.family="'Space Grotesk', sans-serif";
+}
+
+function _panelColor(){return getComputedStyle(document.documentElement).getPropertyValue('--panel').trim()||'#141f15';}
+function _tc(){return getComputedStyle(document.documentElement).getPropertyValue('--muted').trim()||'#6b8f72';}
+function _textColor(){return getComputedStyle(document.documentElement).getPropertyValue('--text').trim()||'#dff0e4';}
+function _gc(){return getComputedStyle(document.documentElement).getPropertyValue('--border').trim()||'#1e2e1f';}
+
+// ── Equity chart factory ──────────────────────────────────────────────────────
+function _makeEquityChart(canvasId,sorted){
+  let acc=0;
+  const labels=sorted.map(t=>t.date);
+  const data=sorted.map(t=>{acc+=t.pnl;return+acc.toFixed(2);});
+  const c=_mkChart(document.getElementById(canvasId),{
+    type:'line',
+    data:{labels,datasets:[{data,borderColor:G,backgroundColor:G+'14',fill:true,tension:.38,borderWidth:2,pointRadius:0,pointHoverRadius:6,pointBackgroundColor:G}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,showCrosshair:true,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{backgroundColor:_panelColor(),borderColor:'rgba(255,255,255,.1)',borderWidth:1,titleColor:_tc(),bodyColor:_textColor(),padding:12,displayColors:false,
+          callbacks:{title:ctx=>ctx[0]?.label||'',label:ctx=>{const v=ctx.raw;return(v>=0?'▲ ':'▼ ')+fP(v);}}}
+      },
+      scales:{
+        x:{ticks:{maxTicksLimit:8,font:{size:10}}},
+        y:{ticks:{callback:v=>(v>=0?'+':'-')+'$'+Math.abs(v).toFixed(0),font:{size:10}}}
+      }
+    }
+  });
+  return c;
+}
+
+// ── KPI Strip ─────────────────────────────────────────────────────────────────
+function renderKpiStrip(stats,container){
+  const{total,wr,pf,maxDd,mxW,mxL,vld,wins,losses}=stats;
+  const cards=[
+    {label:'Net P&L',value:fP(total),color:grc(total),sub:`${vld.length} trade${vld.length!==1?'s':''}`,tip:'Total profit/loss for the selected period'},
+    {label:'Win Rate',value:fPct(wr),color:wrColor(wr),sub:`${wins.length}W · ${losses.length}L`,tip:'Percentage of profitable trades'},
+    {label:'Profit Factor',value:pf===999?'∞':pf.toFixed(2),color:pf>=1.5?G:pf>=1?Y:R,sub:'gross W ÷ gross L',tip:'Ratio of gross profit to gross loss. >1.5 is strong.'},
+    {label:'Max Drawdown',value:maxDd>0?'-$'+maxDd.toFixed(0):'—',color:maxDd>0?R:'var(--muted)',sub:'peak-to-trough',tip:'Largest peak-to-trough equity decline'},
+    {label:'Streaks',value:`${mxW}W · ${mxL}L`,color:'var(--text)',sub:'best win / loss run',tip:'Longest consecutive winning and losing streaks'},
+  ];
+  container.innerHTML=cards.map(k=>`
+    <div class="kpi-card">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value" style="color:${k.color}">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+      <div class="kpi-tip">${k.tip}</div>
+    </div>`).join('');
+}
+
+// ── Insight Bar ───────────────────────────────────────────────────────────────
+function renderInsightBar(stats,container,isPro){
+  const{wr,pf,vld}=stats;
+  if(!vld.length){container.innerHTML='';return;}
+  if(vld.length<5){container.innerHTML='';return;}
+  let msg='',color='var(--muted)';
+  if(wr<40){msg=`Win rate ${wr.toFixed(0)}% is below threshold — review entry criteria.`;color=R;}
+  else if(pf<1){msg=`Profit factor ${pf.toFixed(2)} — losses exceed gains. Widen RR or cut losers faster.`;color=R;}
+  else if(wr>58&&pf>1.8){msg=`Strong performance — ${wr.toFixed(0)}% WR with ${pf.toFixed(2)} PF. Focus on sizing up.`;color=G;}
+  else{msg=`${wr.toFixed(0)}% WR · ${pf.toFixed(2)} PF — stable.${isPro?' See Insights tab for full analysis.':''}`;}
+  const btn=isPro?`<button class="insight-view-btn" onclick="window._switchTab('insights')">View Insights →</button>`:'';
+  container.innerHTML=`<div class="insight-bar" style="border-left:3px solid ${color}"><span style="font-size:15px">💡</span><span style="color:var(--muted)">${msg}</span>${btn}</div>`;
+}
+
+// ── Overview Tab ──────────────────────────────────────────────────────────────
+// Layout changes vs original:
+//  • Equity Curve: pulled OUT of g-eq into its own full-width card
+//  • Win/Loss + Timeframe: wrapped in g2 g2-keep-pair (side-by-side on tablet, stack on small phone)
+//  • Strategy PNL: own full-width card
+//  • Rolling WR & Avg Win/Loss: already full-width
+function renderOverviewHtml(trades,stats){
+  const{wins,losses,be,wr,avgWin,avgLoss,best,worst}=stats;
+
+  const tm={};
+  trades.forEach(t=>{
+    const tfs=Array.isArray(t.timeframe)?t.timeframe:(t.timeframe?[t.timeframe]:[]);
+    tfs.forEach(tf=>{if(!tm[tf])tm[tf]={w:0,tot:0,pnl:0};tm[tf].tot++;const p=parseFloat(t.pnl)||0;if(p>0)tm[tf].w++;tm[tf].pnl+=p;});
+  });
+  const tfRows=Object.keys(tm).map(tf=>{
+    const d=tm[tf],wrp=d.tot?d.w/d.tot*100:0;
+    return`<tr><td><strong>${tf}</strong></td><td>${d.tot}</td><td style="min-width:130px">${wrBarHtml(wrp)}</td><td style="font-family:var(--font-mono,'Space Mono',monospace);font-size:12px;color:${grc(d.pnl)}">${fP(d.pnl)}</td></tr>`;
+  }).join('')||`<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:18px">No timeframe data yet.</td></tr>`;
+
+  return`<div style="display:flex;flex-direction:column;gap:16px">
+
+    <!-- Equity Curve: always full-width -->
+    <div class="card">
+      ${secHdr('fa-chart-area','Equity Curve','Cumulative P&amp;L plotted over time — each point is the running total after that trade. A rising line means you are growing; a falling line means drawdown.')}
+      <div style="height:260px;position:relative"><canvas id="eq"></canvas></div>
+    </div>
+
+    <!-- Win/Loss + Timeframe: side-by-side on tablet, stacks on small phone -->
+    <div class="g2 g2-keep-pair">
+      <div class="card">
+        ${secHdr('fa-trophy','Win / Loss','Count of winning, losing, and break-even trades. The number in the centre is your overall win rate — aim for above 50% or compensate with a high reward-to-risk ratio.')}
+        <div style="height:200px;position:relative"><canvas id="wl"></canvas></div>
+        <div class="mini-stats">
+          <div><div class="ms-lbl">Avg Win</div><div class="ms-val c-g">+$${avgWin.toFixed(2)}</div></div>
+          <div><div class="ms-lbl">Avg Loss</div><div class="ms-val c-r">-$${avgLoss.toFixed(2)}</div></div>
+          <div><div class="ms-lbl">Best</div><div class="ms-val c-g">+$${best.toFixed(2)}</div></div>
+          <div><div class="ms-lbl">Worst</div><div class="ms-val c-r">-$${Math.abs(worst).toFixed(2)}</div></div>
+        </div>
+      </div>
+      <div class="card">
+        ${secHdr('fa-table','Timeframe Breakdown','Win rate and net P&amp;L split by chart timeframe (M5, H1, D1, etc.) — tells you which timeframe suits your edge best.')}
+        <table class="bt"><thead><tr><th>Timeframe</th><th>Trades</th><th>Win Rate</th><th>PNL</th></tr></thead><tbody>${tfRows}</tbody></table>
+      </div>
+    </div>
+
+    <!-- Strategy PNL: always full-width -->
+    <div class="card">
+      ${secHdr('fa-chess','Strategy PNL','Net profit or loss grouped by strategy tag. Green bars are profitable strategies; red bars are losing ones. Focus on growing the green ones.')}
+      <div style="height:200px;position:relative"><canvas id="st"></canvas></div>
+    </div>
+
+    <!-- Rolling Win Rate: always full-width -->
+    <div class="card">
+      ${secHdr('fa-chart-line','Rolling Win Rate (20 trades)','Your win rate recalculated after every trade using the last 20 trades. Rising line = good form. Falling = a losing streak forming. Dashed line = 50% breakeven.')}
+      <p style="font-size:12px;color:var(--muted);margin:-6px 0 14px;line-height:1.5">Are you getting better over time, or is your edge slipping?</p>
+      <div style="height:200px;position:relative"><canvas id="rwr"></canvas></div>
+    </div>
+
+    <!-- Avg Win vs Avg Loss: always full-width -->
+    <div class="card">
+      ${secHdr('fa-scale-balanced','Avg Win vs Avg Loss','Compares the average size of your winning trades to your losing trades. If your avg win is bigger than your avg loss, you can be profitable even with a win rate below 50%.')}
+      <div id="awl"></div>
+    </div>
+
+  </div>`;
+}
+
+function initOverviewCharts(trades,stats){
+  const{wins,losses,be,wr,sorted,vld}=stats;
+
+  _makeEquityChart('eq',sorted);
+
+  const wl=_mkChart(document.getElementById('wl'),{
+    type:'doughnut',
+    data:{labels:['Wins','Losses','BE'],datasets:[{data:[wins.length,losses.length,be.length],backgroundColor:[G+'dd',R+'bb','#6b8f7244'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'bottom',labels:{padding:14,boxWidth:8,font:{size:11}}}}}
+  });
+  if(wl){wl._centerText=fPct(wr);wl._centerColor=wrColor(wr);}
+
+  const sm={};
+  trades.forEach(t=>{
+    const ss=Array.isArray(t.strategy)?t.strategy:(t.strategy?[t.strategy]:[]);
+    ss.forEach(s=>{if(!sm[s])sm[s]=0;sm[s]+=(parseFloat(t.pnl)||0);});
+  });
+  const sl=Object.keys(sm);
+  if(sl.length){
+    const sp=sl.map(s=>+sm[s].toFixed(2));
+    const stBw=sl.length<=3?36:sl.length<=6?26:sl.length<=10?18:sl.length<=16?12:undefined;
+    _mkChart(document.getElementById('st'),{
+      type:'bar',
+      data:{labels:sl,datasets:[{data:sp,backgroundColor:sp.map(v=>v>=0?G+'cc':R+'aa'),borderRadius:5,...(stBw?{barThickness:stBw}:{maxBarThickness:12})}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:sl.length>8?9:11}}},y:{ticks:{callback:v=>'$'+v.toFixed(0)}}}}
+    });
+  }
+
+  const RWR_WIN=20;
+  const rwrData=sorted.map((_,i)=>{
+    const slice=sorted.slice(Math.max(0,i-RWR_WIN+1),i+1);
+    return+(slice.filter(t=>t.pnl>0).length/slice.length*100).toFixed(1);
+  });
+  if(rwrData.length){
+    _mkChart(document.getElementById('rwr'),{
+      type:'line',
+      data:{
+        labels:sorted.map(t=>t.date),
+        datasets:[
+          {data:rwrData,borderColor:G,backgroundColor:G+'14',fill:true,tension:.4,borderWidth:2,pointRadius:0,pointHoverRadius:5,pointBackgroundColor:G},
+          {data:Array(rwrData.length).fill(50),borderColor:'rgba(255,255,255,.18)',borderWidth:1,borderDash:[5,4],pointRadius:0,fill:false,tension:0}
+        ]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{
+          legend:{display:false},
+          tooltip:{
+            backgroundColor:_panelColor(),borderColor:'rgba(255,255,255,.1)',borderWidth:1,
+            titleColor:_tc(),bodyColor:_textColor(),padding:12,displayColors:false,
+            filter:item=>item.datasetIndex===0,
+            callbacks:{title:ctx=>ctx[0]?.label||'',label:ctx=>`Win Rate  ${ctx.raw}%`}
+          }
+        },
+        scales:{
+          x:{ticks:{maxTicksLimit:8,font:{size:10}}},
+          y:{min:0,max:100,ticks:{callback:v=>v+'%',font:{size:10}}}
+        }
+      }
+    });
+  }
+
+  const awlEl=document.getElementById('awl');
+  if(awlEl){
+    const{avgWin,avgLoss}=stats;
+    const ratio=avgLoss>0?(avgWin/avgLoss).toFixed(2):'∞';
+    const ratioNum=parseFloat(ratio);
+    const ratioColor=ratioNum>=1?G:R;
+    const maxVal=Math.max(avgWin,avgLoss,1);
+    const wPct=(avgWin/maxVal*100).toFixed(0);
+    const lPct=(avgLoss/maxVal*100).toFixed(0);
+    const sub=ratio==='∞'?'No losses recorded yet':`For every $1 you risk, you make $${ratio} when right`;
+    awlEl.innerHTML=`
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Reward-to-Risk Ratio</div>
+        <div style="font-family:var(--font-mono,'Space Mono',monospace);font-size:32px;font-weight:700;color:${ratioColor};line-height:1">${ratio}<span style="font-size:16px;opacity:.6">:1</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px">${sub}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+            <span style="color:var(--muted);font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:.5px">Avg Win</span>
+            <span style="font-family:var(--font-mono,'Space Mono',monospace);color:${G};font-weight:700">+$${avgWin.toFixed(2)}</span>
+          </div>
+          <div style="height:8px;background:var(--border2,#253127);border-radius:4px">
+            <div style="height:8px;width:${wPct}%;background:${G};border-radius:4px"></div>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+            <span style="color:var(--muted);font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:.5px">Avg Loss</span>
+            <span style="font-family:var(--font-mono,'Space Mono',monospace);color:${R};font-weight:700">-$${avgLoss.toFixed(2)}</span>
+          </div>
+          <div style="height:8px;background:var(--border2,#253127);border-radius:4px">
+            <div style="height:8px;width:${lPct}%;background:${R};border-radius:4px"></div>
+          </div>
+        </div>
+      </div>`;
+  }
+}
+
+// ── Timing Tab ────────────────────────────────────────────────────────────────
+// All three sections are now independent full-width cards (no g2 wrapper).
+// On desktop they were already mostly stacked; the Day-of-Week chart was
+// side-by-side with Hour Breakdown. Both now go full width on tablet/mobile.
+function renderTimingHtml(trades){
+  const hm={};
+  trades.filter(t=>t.time&&t.time.includes(':')).forEach(t=>{
+    const h=parseInt(t.time.split(':')[0],10);
+    if(!hm[h])hm[h]={tot:0,wins:0,pnl:0};
+    hm[h].tot++;const p=parseFloat(t.pnl)||0;if(p>0)hm[h].wins++;hm[h].pnl+=p;
+  });
+  const timeRows=Object.keys(hm).map(Number).sort((a,b)=>a-b).map(h=>{
+    const d=hm[h],wrp=d.tot?d.wins/d.tot*100:0,avg=d.tot?d.pnl/d.tot:0;
+    return`<tr><td><strong>${fH(h)}</strong></td><td>${d.tot}</td><td style="min-width:130px">${wrBarHtml(wrp)}</td><td style="font-family:var(--font-mono,'Space Mono',monospace);font-size:12px;color:${grc(avg)}">${fP(avg)}</td></tr>`;
+  }).join('')||`<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:18px">No time data yet.</td></tr>`;
+
+  return`<div style="display:flex;flex-direction:column;gap:16px">
+
+    <!-- Trade Volume by Hour: full-width -->
+    <div class="card">
+      ${secHdr('fa-fire-flame-curved','Trade Volume by Hour','Number of trades taken at each hour of the day. Taller bars = your busiest windows. Use this to spot when you overtrade or when you are most active.')}
+      <div style="height:220px;position:relative"><canvas id="hh"></canvas></div>
+    </div>
+
+    <!-- Day of Week: full-width -->
+    <div class="card">
+      ${secHdr('fa-calendar-week','Day of Week','Number of trades placed on each day of the week — reveals your most active trading days.')}
+      <div style="height:220px;position:relative"><canvas id="dow"></canvas></div>
+    </div>
+
+    <!-- Hour Breakdown table: full-width -->
+    <div class="card">
+      ${secHdr('fa-table','Hour Breakdown','Win rate and average P&amp;L per hour. Sorted by time — scan the Avg PNL column to find your golden hours and dead zones.')}
+      <div class="scroll-tbl"><table class="bt"><thead><tr><th>Hour</th><th>Trades</th><th>Win Rate</th><th>Avg PNL</th></tr></thead><tbody>${timeRows}</tbody></table></div>
+    </div>
+
+  </div>`;
+}
+
+function initTimingCharts(trades){
+  const gc=_gc();
+  const hm={};
+  trades.filter(t=>t.time&&t.time.includes(':')).forEach(t=>{
+    const h=parseInt(t.time.split(':')[0],10);
+    if(!hm[h])hm[h]={tot:0,wins:0,pnl:0};
+    hm[h].tot++;const p=parseFloat(t.pnl)||0;if(p>0)hm[h].wins++;hm[h].pnl+=p;
+  });
+  const hl=Array.from({length:24},(_,i)=>fHs(i));
+  const hc=Array.from({length:24},(_,i)=>(hm[i]||{tot:0}).tot);
+  const hp=Array.from({length:24},(_,i)=>(hm[i]||{pnl:0}).pnl);
+  _mkChart(document.getElementById('hh'),{
+    type:'bar',
+    data:{labels:hl,datasets:[{data:hc,backgroundColor:hp.map(v=>v>0?G+'bb':v<0?R+'bb':gc),borderRadius:3,barThickness:18}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{
+        backgroundColor:_panelColor(),borderColor:'rgba(255,255,255,.1)',borderWidth:1,
+        titleColor:_tc(),bodyColor:_textColor(),padding:12,displayColors:false,
+        callbacks:{
+          title:ctx=>{const h=ctx[0].dataIndex;return`${fH(h)} – ${fH(h<23?h+1:0)}`;},
+          label:ctx=>{const h=ctx.dataIndex;const n=hc[h];if(!n)return'No trades';return[`${n} trade${n!==1?'s':''}`,`PNL  ${fP(hp[h])}`];}
+        }
+      }},
+      scales:{x:{grid:{display:false},ticks:{font:{size:9}}},y:{ticks:{stepSize:1,font:{size:10}}}}}
+  });
+
+  const DOW=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const dc=[0,0,0,0,0,0,0],dp=[0,0,0,0,0,0,0];
+  trades.forEach(t=>{
+    if(!t.date)return;
+    const d=new Date(t.date+'T12:00:00'),idx=d.getDay()===0?6:d.getDay()-1;
+    dc[idx]++;dp[idx]+=(parseFloat(t.pnl)||0);
+  });
+  _mkChart(document.getElementById('dow'),{
+    type:'bar',
+    data:{labels:DOW,datasets:[{data:dc,backgroundColor:dp.map(v=>v>0?G+'bb':v<0?R+'bb':gc),borderRadius:5,barThickness:36}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{
+        backgroundColor:_panelColor(),borderColor:'rgba(255,255,255,.1)',borderWidth:1,
+        titleColor:_tc(),bodyColor:_textColor(),padding:12,displayColors:false,
+        callbacks:{
+          title:ctx=>DOW[ctx[0].dataIndex],
+          label:ctx=>{const i=ctx.dataIndex;const n=dc[i];if(!n)return'No trades';return[`${n} trade${n!==1?'s':''}`,`PNL  ${fP(dp[i])}`];}
+        }
+      }},
+      scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{ticks:{stepSize:1,font:{size:10}}}}}
+  });
+}
+
+// ── Assets & Behavior Tab ─────────────────────────────────────────────────────
+// All four sections are now individual full-width cards (no g2 wrappers).
+function renderAssetsHtml(trades,mc){
+  const mm={};
+  trades.forEach(t=>{
+    const ms=Array.isArray(t.mood)?t.mood:(t.mood?[t.mood]:[]);
+    ms.forEach(m=>{if(!mm[m])mm[m]={tot:0,wins:0,pnl:0};mm[m].tot++;const p=parseFloat(t.pnl)||0;if(p>0)mm[m].wins++;mm[m].pnl+=p;});
+  });
+  const moodRows=Object.keys(mm).map(m=>{
+    const d=mm[m],wrp=d.tot?d.wins/d.tot*100:0,avg=d.tot?d.pnl/d.tot:0;
+    return`<tr><td><strong>${m}</strong></td><td>${d.tot}</td><td style="min-width:130px">${wrBarHtml(wrp)}</td><td style="font-family:var(--font-mono,'Space Mono',monospace);font-size:12px;color:${grc(avg)}">${fP(avg)}</td></tr>`;
+  }).join('')||`<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:18px">No mood data yet.</td></tr>`;
+
+  const cm={};
+  trades.forEach(t=>{const k=t.confidence;if(!k||k<1)return;if(!cm[k])cm[k]={tot:0,wins:0,pnl:0};cm[k].tot++;const p=parseFloat(t.pnl)||0;if(p>0)cm[k].wins++;cm[k].pnl+=p;});
+  const confRows=Object.keys(cm).map(Number).sort((a,b)=>b-a).map(stars=>{
+    const d=cm[stars],wrp=d.tot?d.wins/d.tot*100:0,avg=d.tot?d.pnl/d.tot:0;
+    return`<tr><td><span style="color:#f5c518;letter-spacing:1px">${'★'.repeat(stars)}<span style="opacity:.2">${'★'.repeat(5-stars)}</span></span></td><td>${d.tot}</td><td style="min-width:130px">${wrBarHtml(wrp)}</td><td style="font-family:var(--font-mono,'Space Mono',monospace);font-size:12px;color:${grc(avg)}">${fP(avg)}</td></tr>`;
+  }).join('')||`<tr><td colspan="4" style="color:var(--muted);text-align:center;padding:18px">No confidence data yet.</td></tr>`;
+
+  const pairMap={};
+  trades.forEach(t=>{if(!t.pair)return;if(!pairMap[t.pair])pairMap[t.pair]={pnl:0,cnt:0};pairMap[t.pair].pnl+=parseFloat(t.pnl)||0;pairMap[t.pair].cnt++;});
+  const pairList=Object.entries(pairMap).map(([p,d])=>({p,pnl:+d.pnl.toFixed(2),cnt:d.cnt})).sort((a,b)=>b.pnl-a.pnl);
+  const maxAbs=pairList.length?Math.max(...pairList.map(x=>Math.abs(x.pnl)),1):1;
+  const pairHtml=pairList.slice(0,8).map(x=>{
+    const color=x.pnl>=0?G:R,w=(Math.abs(x.pnl)/maxAbs*100).toFixed(0);
+    return`<div class="pair-row"><div class="pair-meta"><span style="font-weight:600">${x.p}</span><span><span style="font-family:var(--font-mono,'Space Mono',monospace);color:${color};font-size:12px">${fP(x.pnl)}</span><span style="color:var(--muted);margin-left:6px;font-size:11px">${x.cnt} Trade${x.cnt!==1?'s':''}</span></span></div><div class="pair-track"><div class="pair-fill" style="width:${w}%;background:${color}"></div></div></div>`;
+  }).join('')||`<span style="color:var(--muted);font-size:13px">No pair data yet.</span>`;
+
+  return`<div style="display:flex;flex-direction:column;gap:16px">
+
+    <!-- Top Pairs: full-width -->
+    <div class="card">
+      ${secHdr('fa-ranking-star','Top Pairs by PNL','Cumulative net profit or loss per instrument, sorted best to worst. Bar width shows relative size. Tells you which markets you trade well and which drain your account.')}
+      ${pairHtml}
+    </div>
+
+    <!-- Long vs Short: full-width -->
+    <div class="card">
+      ${secHdr('fa-arrow-right-arrow-left','Long vs Short','Split between buy-side (Long) and sell-side (Short) positions. A heavy skew in one direction could mean you have a directional bias — useful to know if the market is trending against you.')}
+      <div style="height:200px;position:relative"><canvas id="ls"></canvas></div>
+    </div>
+
+    <!-- Mood vs Performance: full-width -->
+    <div class="card">
+      ${secHdr('fa-face-smile','Mood vs Performance','Win rate and average P&amp;L per mood tag. If Anxious or Tired moods have lower win rates, that is a signal to step back when you feel that way.')}
+      <table class="bt"><thead><tr><th>Mood</th><th>Trades</th><th>Win Rate</th><th>Avg PNL</th></tr></thead><tbody>${moodRows}</tbody></table>
+    </div>
+
+    <!-- Confidence vs Performance: full-width -->
+    <div class="card">
+      ${secHdr('fa-star','Confidence vs Performance','Win rate and average P&amp;L grouped by the star rating you gave each trade before entry. Ideally your 5-star trades outperform your 1-star trades — if not, your pre-trade confidence is not well-calibrated.')}
+      <table class="bt"><thead><tr><th>Confidence</th><th>Trades</th><th>Win Rate</th><th>Avg PNL</th></tr></thead><tbody>${confRows}</tbody></table>
+    </div>
+
+  </div>`;
+}
+
+function initAssetsCharts(trades){
+  const longs=trades.filter(t=>t.position==='Long').length;
+  const shorts=trades.filter(t=>t.position==='Short').length;
+  _mkChart(document.getElementById('ls'),{
+    type:'doughnut',
+    data:{labels:['Long','Short'],datasets:[{data:[longs,shorts],backgroundColor:[G+'cc',R+'aa'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{padding:14,boxWidth:8,font:{size:11}}}}}
+  });
+}
+
+// ── Insights Tab ──────────────────────────────────────────────────────────────
+function renderInsightsHtml(trades,stats){
+  const{vld,wins,losses,wr,pf,maxDd,consistency}=stats;
+  if(vld.length<5)return`<div style="color:var(--muted);text-align:center;padding:40px;font-size:14px">Need at least 5 trades for insights.</div>`;
+
+  const totalEquity=Math.abs(vld.reduce((s,t)=>s+t.pnl,0))||1;
+  const ddPct=Math.min(maxDd/totalEquity,1);
+  const score=Math.round((wr/50)*25+(Math.min(pf,3)/3)*25+(1-ddPct)*25+consistency*25);
+  const level=score>70?'Low Risk':score>50?'Medium Risk':'High Risk';
+  const scoreColor=score>70?G:score>50?Y:R;
+  const circ=2*Math.PI*40;
+  const dash=circ*(1-score/100);
+
+  const dayCount=Object.keys(stats.daily||{}).length||1;
+  const avgPerDay=vld.length/dayCount;
+  const recs=[];
+  if(avgPerDay>6)recs.push({p:'high',icon:'fa-hourglass-end',a:'Reduce trade frequency',r:`You average ${avgPerDay.toFixed(1)} trades/day — overtrading erodes edge.`});
+  if(wr<45)recs.push({p:'high',icon:'fa-bullseye',a:'Tighten entry criteria',r:`Win rate ${wr.toFixed(1)}% — prioritise quality over quantity.`});
+  if(pf<1.5)recs.push({p:'medium',icon:'fa-arrow-trend-up',a:'Widen RR targets',r:`Profit factor ${pf.toFixed(2)} — losses are too large relative to wins.`});
+  const net=Math.abs(wins.reduce((s,t)=>s+t.pnl,0)-Math.abs(losses.reduce((s,t)=>s+t.pnl,0)));
+  if(maxDd>net*0.4&&net>0)recs.push({p:'medium',icon:'fa-shield',a:'Add daily loss limit',r:`Max drawdown $${maxDd.toFixed(0)} is excessive vs net P&L.`});
+  if(wr>58&&pf>1.8)recs.push({p:'positive',icon:'fa-check-circle',a:'Strategy is working',r:`Strong metrics — focus on position sizing to compound gains.`});
+  if(recs.length===0)recs.push({p:'neutral',icon:'fa-chart-line',a:'Continue monitoring',r:'No critical issues. Keep logging and reviewing.'});
+  recs.sort((a,b)=>({high:0,medium:1,positive:2,neutral:3}[a.p]||3)-({high:0,medium:1,positive:2,neutral:3}[b.p]||3));
+
+  const bg={high:'rgba(240,81,101,.07)',medium:'rgba(245,197,24,.07)',positive:'rgba(25,195,125,.07)',neutral:'rgba(107,143,114,.07)'};
+  const bd={high:'rgba(240,81,101,.25)',medium:'rgba(245,197,24,.25)',positive:'rgba(25,195,125,.25)',neutral:'rgba(107,143,114,.2)'};
+
+  const recsHtml=recs.map(r=>`
+    <div style="background:${bg[r.p]};border:1px solid ${bd[r.p]};border-radius:8px;padding:12px 16px;display:flex;gap:12px;align-items:flex-start;margin-bottom:10px">
+      <div style="font-size:16px;color:var(--muted);flex-shrink:0;margin-top:2px"><i class="fa-solid ${r.icon}"></i></div>
+      <div><div style="font-weight:600;font-size:13px;margin-bottom:3px;color:var(--text)">${r.a}</div><div style="font-size:12px;color:var(--muted);line-height:1.5">${r.r}</div></div>
+    </div>`).join('');
+
+  const miniRows=[
+    ['Win Rate',fPct(wr),grc(wr-50)],
+    ['Profit Factor',pf===999?'∞':pf.toFixed(2),grc(pf-1)],
+    ['Max Drawdown','-$'+maxDd.toFixed(0),R],
+    ['Consistency',fPct(consistency*100),grc(consistency-.5)],
+  ].map(([l,v,c])=>`<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:7px"><span style="color:var(--muted)">${l}</span><span style="font-family:var(--font-mono,'Space Mono',monospace);color:${c};font-weight:600">${v}</span></div>`).join('');
+
+  return`<div style="display:grid;grid-template-columns:260px 1fr;gap:16px">
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px"><span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:700">Risk Score</span><span class="sec-tip" data-tip="Composite score from 0–100 based on four pillars: win rate, profit factor, max drawdown, and daily consistency. Above 70 = Low Risk. 50–70 = Medium. Below 50 = High Risk. Higher is safer.">?</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+        <div style="position:relative;width:110px;height:110px">
+          <svg width="110" height="110" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="40" fill="none" stroke="#253127" stroke-width="8"/>
+            <circle cx="50" cy="50" r="40" fill="none" stroke="${scoreColor}" stroke-width="8"
+              stroke-dasharray="${circ.toFixed(2)}" stroke-dashoffset="${dash.toFixed(2)}"
+              stroke-linecap="round" transform="rotate(-90 50 50)" style="transition:stroke-dashoffset .8s ease"/>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <span style="font-family:var(--font-mono,'Space Mono',monospace);font-size:22px;font-weight:700;color:${scoreColor}">${score}</span>
+            <span style="font-size:9px;color:var(--muted);letter-spacing:.5px">/ 100</span>
+          </div>
+        </div>
+        <div style="font-weight:700;font-size:14px;color:${scoreColor}">${level}</div>
+        <div style="width:100%;border-top:1px solid var(--border);padding-top:12px">${miniRows}</div>
+      </div>
+    </div>
+    <div>
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px"><span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:700">Recommendations</span><span class="sec-tip" data-tip="Personalized action items generated from your actual trading patterns — issues like overtrading, poor stop discipline, or loss streaks are detected automatically.">?</span></div>
+      ${recsHtml}
+    </div>
+  </div>`;
+}
+
+function _anaHideLoading(){
+  const overlay=document.getElementById('anaLoadingOverlay');
+  if(overlay){overlay.classList?.add('hidden');overlay.style.opacity='0';overlay.style.visibility='hidden';setTimeout(()=>{overlay.style.display='none';},300);}
+}
+
+// ── Main IIFE ─────────────────────────────────────────────────────────────────
+(async()=>{
+  if(!jid){
+    document.getElementById('skelView').style.display='none';
+    document.getElementById('root').style.display='';
+    document.getElementById('root').innerHTML='<div class="empty"><i class="fa-solid fa-chart-line"></i>No journal selected.</div>';
+    document.body.style.visibility='visible';_anaHideLoading();return;
+  }
+
+  const raw=await getTrades(jid);
+  const allTrades=raw.map(dbToTrade);
+  const settings=await getJournalSettings(jid);
+  const mc=settings?.mood_colors||{};
+
+  document.getElementById('skelView').style.display='none';
+  document.getElementById('root').style.display='';
+  document.body.style.visibility='visible';
+  _anaHideLoading();
+
+  const{data:{user:authUser}}=await db.auth.getUser();
+  let isPro=false;
+  if(authUser){
+    try{isPro=parent?._userIsPro||false;if(!isPro){const p=await getProfile(authUser.id);isPro=getSubscriptionStatus(p).isPro;}}
+    catch(e){const p=await getProfile(authUser.id);isPro=getSubscriptionStatus(p).isPro;}
+  }
+
+  _chartDefaults();
+
+  if(!allTrades.length){
+    document.getElementById('root').innerHTML='<div class="empty"><i class="fa-solid fa-chart-line"></i>No trades yet.<br>Add trades in the Logs tab to see analytics.</div>';
+    return;
+  }
+
+  let activeRange='all';
+  let activeTab='overview';
+
+  const root=document.getElementById('root');
+  root.innerHTML=`
+    <div class="page-hdr">
+      <div>
+        <div class="page-label">Trading Journal</div>
+        <h1 class="page-title">Analytics</h1>
+      </div>
+      <div class="range-group">
+        <button class="range-btn" data-range="7d" onclick="window._setRange('7d')">7D</button>
+        <button class="range-btn" data-range="30d" onclick="window._setRange('30d')">30D</button>
+        <button class="range-btn" data-range="90d" onclick="window._setRange('90d')">90D</button>
+        <button class="range-btn active" data-range="all" onclick="window._setRange('all')">All</button>
+      </div>
+    </div>
+    <div class="kpi-strip" id="kpiStrip"></div>
+    <div id="insightBarWrap"></div>
+    ${isPro?`
+      <div class="tab-bar">
+        <button class="tz-tab active" data-tab="overview" onclick="window._switchTab('overview')">Overview</button>
+        <button class="tz-tab" data-tab="timing" onclick="window._switchTab('timing')">Timing</button>
+        <button class="tz-tab" data-tab="assets" onclick="window._switchTab('assets')">Assets &amp; Behavior</button>
+        <button class="tz-tab" data-tab="insights" onclick="window._switchTab('insights')">Insights</button>
+      </div>
+      <div id="tabContent"></div>
+    `:`
+      <div class="card" style="margin-bottom:16px" id="freeEqCard">
+        <div class="sec-hdr"><div class="sec-hdr-l"><span class="sec-ico"><i class="fa-solid fa-chart-area"></i></span><span class="sec-ttl">Equity Curve</span><span class="sec-tip" data-tip="Cumulative P&amp;L plotted over time — each point is the running total after that trade. A rising line means you are growing; a falling line means drawdown.">?</span></div></div>
+        <div style="height:260px;position:relative"><canvas id="eq-free"></canvas></div>
+      </div>
+      <div class="ad-slot" style="margin-bottom:16px" id="adSlot1">
+        <div class="ad-slot-label">Advertisement</div>
+        <div class="ad-slot-inner"><ins class="adsbygoogle" style="display:block;width:100%;min-height:70px" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="horizontal" data-full-width-responsive="true"></ins></div>
+      </div>
+      <div class="card" style="border-color:rgba(25,195,125,.2);background:linear-gradient(135deg,rgba(25,195,125,.03),var(--panel))">
+        <div style="text-align:center;padding:20px 16px">
+          <i class="fa-solid fa-lock" style="font-size:28px;color:var(--muted);opacity:.4;display:block;margin-bottom:12px"></i>
+          <h3 style="font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:15px;font-weight:600;margin-bottom:8px;text-transform:none;letter-spacing:0;color:var(--text)">Advanced Analytics — Pro</h3>
+          <p style="font-size:13px;color:var(--muted);line-height:1.6;max-width:420px;margin:0 auto 16px">Unlock Strategy PNL, Mood heatmaps, Hour analysis, Day-of-week breakdown, Long vs Short, and more.</p>
+          <a href="/subscription" style="display:inline-flex;align-items:center;gap:7px;background:#19c37d;color:#0b0f0c;border:none;border-radius:var(--radius-md,8px);padding:10px 20px;font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:13px;font-weight:700;text-decoration:none;transition:opacity .2s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+            <i class="fa-solid fa-chevron-up"></i> Upgrade to Pro — $5/mo
+          </a>
+        </div>
+      </div>
+    `}
+  `;
+
+  if(!isPro){
+    const adSlot=document.getElementById('adSlot1');
+    if(adSlot)adSlot.style.display='block';
+    try{(adsbygoogle=window.adsbygoogle||[]).push({});}catch(e){}
+  }
+
+  function getFiltered(){return filterByRange(allTrades,activeRange);}
+
+  function renderTab(trades,stats){
+    _destroyCharts();
+    const el=document.getElementById('tabContent');
+    if(!el)return;
+    if(activeTab==='overview'){el.innerHTML=renderOverviewHtml(trades,stats);initOverviewCharts(trades,stats);}
+    else if(activeTab==='timing'){el.innerHTML=renderTimingHtml(trades);initTimingCharts(trades);}
+    else if(activeTab==='assets'){el.innerHTML=renderAssetsHtml(trades,mc);initAssetsCharts(trades);}
+    else if(activeTab==='insights'){el.innerHTML=renderInsightsHtml(trades,stats);}
+  }
+
+  function fullRender(){
+    const trades=getFiltered();
+    const stats=computeStats(trades);
+    renderKpiStrip(stats,document.getElementById('kpiStrip'));
+    renderInsightBar(stats,document.getElementById('insightBarWrap'),isPro);
+    if(isPro){
+      renderTab(trades,stats);
+    }else{
+      _destroyCharts();
+      window._eqChart=_makeEquityChart('eq-free',stats.sorted);
+    }
+  }
+
+  window._setRange=function(range){
+    activeRange=range;
+    document.querySelectorAll('.range-btn').forEach(b=>b.classList.toggle('active',b.dataset.range===range));
+    fullRender();
+  };
+
+  window._switchTab=function(tab){
+    activeTab=tab;
+    document.querySelectorAll('.tz-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
+    const trades=getFiltered();
+    renderTab(trades,computeStats(trades));
+  };
+
+  fullRender();
+})();
+
+// Inline handlers in HTML call these by global name.
+// No inline handlers detected.
