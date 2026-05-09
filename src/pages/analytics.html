@@ -1,13 +1,11 @@
-﻿<!-- analytics.html -->
+<!-- analytics.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="icon" type="image/svg+xml" href="/src/assets/favicon.svg">
 <script src="/favicon.js"></script>
 <title>Analytics</title>
-<style>
-@keyframes spin{to{transform:rotate(360deg)}}
-</style>
+<link rel="stylesheet" href="/src/styles/pages/analytics.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="/src/js/lib/theme.js"></script>
 <script src="/src/js/lib/supabase-client.js"></script>
@@ -16,132 +14,7 @@
 <link rel="preconnect" href="https://cdnjs.cloudflare.com">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-@keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
-:root{--panel2:#192219;--border2:#253127}
-body{visibility:hidden;background:var(--bg);color:var(--text);font-family:var(--font-body,'Space Grotesk',sans-serif);padding:0}
-.pw{max-width:1100px;margin:0 auto;padding:28px 20px 60px}
 
-/* Skeleton */
-.skel-card{height:80px;border-radius:10px;background:linear-gradient(90deg,var(--panel) 25%,rgba(255,255,255,.04) 50%,var(--panel) 75%);background-size:600px 100%;animation:shimmer 1.4s infinite;border:1px solid var(--border)}
-.skel-chart{height:200px;border-radius:10px;background:linear-gradient(90deg,var(--panel) 25%,rgba(255,255,255,.04) 50%,var(--panel) 75%);background-size:600px 100%;animation:shimmer 1.4s infinite;border:1px solid var(--border)}
-.skel-hdr{height:36px;border-radius:8px;background:linear-gradient(90deg,var(--panel) 25%,rgba(255,255,255,.04) 50%,var(--panel) 75%);background-size:600px 100%;animation:shimmer 1.4s infinite}
-
-/* Page header */
-.page-hdr{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px}
-.page-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
-.page-title{font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:22px;font-weight:700;letter-spacing:-.3px}
-
-/* Range buttons */
-.range-group{display:flex;gap:4px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:4px}
-.range-btn{background:none;border:1px solid transparent;border-radius:4px;padding:3px 10px;color:var(--muted);font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:.4px}
-.range-btn.active{background:rgba(25,195,125,.12);border-color:rgba(25,195,125,.4);color:#19c37d}
-.range-btn:hover:not(.active){color:var(--text)}
-
-/* KPI strip */
-.kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px}
-.kpi-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px 18px;display:flex;flex-direction:column;gap:6px;position:relative;transition:border-color .2s;cursor:default}
-.kpi-card:hover{border-color:var(--border2,#253127)}
-.kpi-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:600}
-.kpi-value{font-family:var(--font-mono,'Space Mono',monospace);font-size:24px;font-weight:700;line-height:1}
-.kpi-sub{font-size:11px;color:var(--muted)}
-.kpi-tip{position:absolute;bottom:calc(100% + 8px);left:0;background:#0e1a0f;border:1px solid var(--border2,#253127);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--text);z-index:1000;box-shadow:0 4px 16px rgba(0,0,0,.5);line-height:1.5;max-width:220px;white-space:normal;pointer-events:none;opacity:0;transition:opacity .15s}
-.kpi-card:hover .kpi-tip{opacity:1}
-
-/* Insight bar */
-.insight-bar{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:11px 16px;margin-bottom:20px;font-size:13px}
-.insight-view-btn{margin-left:auto;background:none;border:none;color:#19c37d;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-heading,'Space Grotesk',sans-serif);letter-spacing:.3px;flex-shrink:0;padding:0}
-
-/* Tabs */
-.tab-bar{display:flex;gap:6px;margin-bottom:20px}
-.tz-tab{background:none;border:1px solid transparent;border-radius:6px;padding:6px 16px;color:var(--muted);font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;letter-spacing:.2px}
-.tz-tab.active{background:var(--panel2,#192219);border-color:var(--border2,#253127);color:var(--text)}
-.tz-tab:hover:not(.active){color:var(--text)}
-
-/* Cards */
-.card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:20px}
-
-/* Section header */
-.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.sec-hdr-l{display:flex;align-items:center;gap:7px}
-.sec-ico{color:#19c37d;font-size:13px}
-.sec-ttl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
-.sec-tip{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;border:1px solid var(--muted);font-size:9px;color:var(--muted);cursor:help;position:relative;flex-shrink:0;margin-left:4px;font-weight:600;line-height:1}
-.sec-tip::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#0e1a0f;border:1px solid var(--border2,#253127);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--text);white-space:normal;width:max-content;max-width:240px;z-index:1000;box-shadow:0 4px 16px rgba(0,0,0,.5);line-height:1.5;text-transform:none;letter-spacing:normal;font-weight:400;pointer-events:none;opacity:0;transition:opacity .15s}
-.sec-tip:hover::after{opacity:1}
-
-/* Grids */
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.g-eq{display:grid;grid-template-columns:1fr 280px;gap:16px}
-
-/* Tables */
-.bt{width:100%;border-collapse:collapse}
-.bt th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;padding:0 12px 10px;text-align:left;border-bottom:1px solid var(--border)}
-.bt td{padding:10px 12px;font-size:13px}
-.bt tr:not(:last-child) td{border-bottom:1px solid var(--border)}
-.scroll-tbl{overflow-y:auto;max-height:260px}
-
-/* Mini stats */
-.mini-stats{border-top:1px solid var(--border);margin-top:12px;padding-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.ms-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px;text-align:center}
-.ms-val{font-family:var(--font-mono,'Space Mono',monospace);font-size:13px;font-weight:700;text-align:center}
-
-/* Pair bars */
-.pair-row{margin-bottom:10px}
-.pair-meta{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
-.pair-track{height:4px;background:var(--border2,#253127);border-radius:3px}
-.pair-fill{height:4px;border-radius:3px;transition:width .4s}
-
-/* Ad slot */
-.ad-slot{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
-.ad-slot-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:6px 12px 0;opacity:.6}
-.ad-slot-inner{min-height:90px;display:flex;align-items:center;justify-content:center}
-
-/* Empty */
-.empty{color:var(--muted);font-size:14px;text-align:center;padding:60px 0;line-height:1.9}
-.empty i{font-size:36px;display:block;margin-bottom:12px;opacity:.3}
-
-/* Rec cards */
-.rec-card{border-radius:8px;padding:12px 16px;display:flex;gap:12px;align-items:flex-start;margin-bottom:10px}
-
-/* Hardcoded status */
-.c-g{color:#19c37d!important}
-.c-r{color:#f05165!important}
-
-/* ─── Tablet & mobile responsive (≤1023px = non-desktop) ──────────────────── */
-/* Overview: equity curve becomes full-width (g-eq → 1 col),
-   Win/Loss + Timeframe stay side-by-side via g2-keep-pair.
-   Strategy PNL, Rolling WR, Avg Win/Loss already full-width (not in a grid).
-   Timing & Assets: all g2 grids collapse to 1 col (full width). */
-@media(max-width:1023px){
-  /* Overview — break the equity+WL two-column layout into stacked full-width */
-  .g-eq{grid-template-columns:1fr}
-
-  /* Timing & Assets — all two-column grids go full width */
-  .g2{grid-template-columns:1fr}
-
-  /* But keep Win/Loss + Timeframe Breakdown side-by-side on tablet */
-  .g2-keep-pair{grid-template-columns:1fr 1fr}
-}
-
-/* Smaller tablets / large phones */
-@media(max-width:720px){
-  .kpi-strip{grid-template-columns:repeat(2,1fr)}
-  .tab-bar{flex-wrap:wrap;gap:4px}
-  .tz-tab{font-size:11px;padding:5px 12px}
-}
-
-/* Small phones: even the Win/Loss + Timeframe pair stacks */
-@media(max-width:540px){
-  .g2-keep-pair{grid-template-columns:1fr}
-}
-
-@media(max-width:420px){
-  .kpi-strip{grid-template-columns:1fr 1fr}
-  .kpi-value{font-size:20px}
-}
-</style>
 </head>
 <body>
 <!-- Loading indicator -->

@@ -189,31 +189,37 @@ TradingGrove/
 ---
 
 ### Phase 3: Styles Extraction & Polish
-**Status:** 🔴 NOT STARTED  
+**Status:** 🟡 IN PROGRESS (CSS extraction ✅ done · docs pending)  
 **Estimated Time:** 1-2 hours  
 **Goal:** Extract CSS, add documentation
 
 #### Checklist
 
-- [ ] **Extract CSS from index.html** (main styles)
-  - [ ] Extract all `<style>` content from index.html
-  - [ ] Create `/src/styles/global.css` with base styles
-  - [ ] Create `/src/styles/navigation.css` with nav/header styles
-  - [ ] Create `/src/styles/hero.css` with hero section styles
-  - [ ] Create `/src/styles/components.css` with reusable component styles
-  - [ ] Create `/src/styles/responsive.css` with media queries
-  - [ ] Create `/src/styles/theme.css` with theme variables
+- [x] **Extract CSS from all HTML pages** → `/src/styles/pages/{page}.css`
+  - [x] analytics.css (8 KB)
+  - [x] auth.css (10 KB)
+  - [x] calendar.css (9 KB)
+  - [x] confirm.css (4 KB)
+  - [x] dashboard.css (32 KB)
+  - [x] help.css (7 KB)
+  - [x] index.css (46 KB)
+  - [x] journal.css (48 KB)
+  - [x] notes.css (39 KB)
+  - [x] position-calculator.css (19 KB)
+  - [x] pricing.css (12 KB)
+  - [x] privacy.css (11 KB)
+  - [x] profile.css (20 KB)
+  - [x] refund.css (9 KB)
+  - [x] reset-password.css (5 KB)
+  - [x] subscription.css (21 KB)
+  - [x] terms.css (9 KB)
+  - [x] presession.css (already extracted in Phase 1)
 
-- [ ] **Extract CSS from other pages** (page-specific styles)
-  - [ ] Extract calculator styles → `/src/styles/pages/calculator.css`
-  - [ ] Extract dashboard styles → `/src/styles/pages/dashboard.css`
-  - [ ] Extract journal styles → `/src/styles/pages/journal.css`
-  - [ ] Extract presession styles → `/src/styles/pages/presession.css`
-  - [ ] Extract other page styles
+  Note: per-page extraction approach (not pre-split into global/components/etc.) — refactoring into shared CSS modules is deferred until duplication patterns become clear.
 
-- [ ] **Update HTML files to link new stylesheets**
-  - [ ] Replace all inline `<style>` with `<link rel="stylesheet" href="/src/styles/...">`
-  - [ ] Update all pages to include global.css first
+- [x] **Update HTML files to link new stylesheets**
+  - [x] Replace all inline `<style>` with `<link rel="stylesheet" href="/src/styles/pages/...">`
+  - [x] Verified all CSS loads (HTTP 200) and HTML references are correct
 
 - [ ] **Create documentation**
   - [ ] Create `/docs/ARCHITECTURE.md` (explain folder structure, file organization)
