@@ -1,11 +1,9 @@
 ﻿// analytics.js - analytics page
 // Loaded by /src/pages/analytics.html. Depends on globals from supabase-client.js.
-// ── Session ───────────────────────────────────────────────────────────────────
 const jid = sessionStorage.getItem('tz_current_journal')||localStorage.getItem('tz_current_journal')||(()=>{try{return parent?.sessionStorage?.getItem('tz_current_journal')||parent?.localStorage?.getItem('tz_current_journal');}catch(e){return null;}})();
 
 const G='#19c37d', R='#f05165', Y='#f5c518';
 
-// ── Smart reload ──────────────────────────────────────────────────────────────
 let _anaQueuedReload=false,_anaReloadTimer=null,_anaTabActive=false;
 function _anaMaybeReload(){
   if(!_anaQueuedReload||!_anaTabActive||document.visibilityState==='hidden')return;
@@ -17,8 +15,7 @@ window.addEventListener('message',e=>{
 });
 document.addEventListener('visibilitychange',_anaMaybeReload);
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function fP(v){const n=parseFloat(v);if(isNaN(n))return'—';return(n>=0?'+':'-')+'$'+Math.abs(n).toFixed(2);}
+function fP(v){const n=parseFloat(v);if(isNaN(n))return'0.00';return(n>=0?'+':'-')+'$'+Math.abs(n).toFixed(2);}
 function fPct(v){return parseFloat(v).toFixed(1)+'%';}
 function grc(n){return n>0?G:n<0?R:'var(--muted)';}
 function wrColor(wr){return wr>=50?G:wr>=35?Y:R;}
@@ -77,7 +74,6 @@ function filterByRange(trades,range){
   return trades.filter(t=>new Date((t.date||'')+'T12:00:00')>=cutoff);
 }
 
-// ── Chart plugins ─────────────────────────────────────────────────────────────
 Chart.register({
   id:'crosshairLine',
   afterDraw(chart){
@@ -106,7 +102,6 @@ Chart.register({
   }
 });
 
-// ── Chart instance tracking ───────────────────────────────────────────────────
 let _charts=[];
 function _mkChart(el,cfg){if(!el)return null;const c=new Chart(el,cfg);_charts.push(c);return c;}
 function _destroyCharts(){_charts.forEach(c=>c.destroy());_charts=[];window._eqChart=null;}
@@ -123,7 +118,6 @@ function _tc(){return getComputedStyle(document.documentElement).getPropertyValu
 function _textColor(){return getComputedStyle(document.documentElement).getPropertyValue('--text').trim()||'#dff0e4';}
 function _gc(){return getComputedStyle(document.documentElement).getPropertyValue('--border').trim()||'#1e2e1f';}
 
-// ── Equity chart factory ──────────────────────────────────────────────────────
 function _makeEquityChart(canvasId,sorted){
   let acc=0;
   const labels=sorted.map(t=>t.date);
@@ -148,14 +142,13 @@ function _makeEquityChart(canvasId,sorted){
   return c;
 }
 
-// ── KPI Strip ─────────────────────────────────────────────────────────────────
 function renderKpiStrip(stats,container){
   const{total,wr,pf,maxDd,mxW,mxL,vld,wins,losses}=stats;
   const cards=[
     {label:'Net P&L',value:fP(total),color:grc(total),sub:`${vld.length} trade${vld.length!==1?'s':''}`,tip:'Total profit/loss for the selected period'},
     {label:'Win Rate',value:fPct(wr),color:wrColor(wr),sub:`${wins.length}W · ${losses.length}L`,tip:'Percentage of profitable trades'},
     {label:'Profit Factor',value:pf===999?'∞':pf.toFixed(2),color:pf>=1.5?G:pf>=1?Y:R,sub:'gross W ÷ gross L',tip:'Ratio of gross profit to gross loss. >1.5 is strong.'},
-    {label:'Max Drawdown',value:maxDd>0?'-$'+maxDd.toFixed(0):'—',color:maxDd>0?R:'var(--muted)',sub:'peak-to-trough',tip:'Largest peak-to-trough equity decline'},
+    {label:'Max Drawdown',value:maxDd>0?'-$'+maxDd.toFixed(0):'-',color:maxDd>0?R:'var(--muted)',sub:'peak-to-trough',tip:'Largest peak-to-trough equity decline'},
     {label:'Streaks',value:`${mxW}W · ${mxL}L`,color:'var(--text)',sub:'best win / loss run',tip:'Longest consecutive winning and losing streaks'},
   ];
   container.innerHTML=cards.map(k=>`
@@ -167,21 +160,19 @@ function renderKpiStrip(stats,container){
     </div>`).join('');
 }
 
-// ── Insight Bar ───────────────────────────────────────────────────────────────
 function renderInsightBar(stats,container,isPro){
   const{wr,pf,vld}=stats;
   if(!vld.length){container.innerHTML='';return;}
   if(vld.length<5){container.innerHTML='';return;}
   let msg='',color='var(--muted)';
-  if(wr<40){msg=`Win rate ${wr.toFixed(0)}% is below threshold — review entry criteria.`;color=R;}
-  else if(pf<1){msg=`Profit factor ${pf.toFixed(2)} — losses exceed gains. Widen RR or cut losers faster.`;color=R;}
-  else if(wr>58&&pf>1.8){msg=`Strong performance — ${wr.toFixed(0)}% WR with ${pf.toFixed(2)} PF. Focus on sizing up.`;color=G;}
-  else{msg=`${wr.toFixed(0)}% WR · ${pf.toFixed(2)} PF — stable.${isPro?' See Insights tab for full analysis.':''}`;}
+  if(wr<40){msg=`Win rate ${wr.toFixed(0)}% is below threshold. Review entry criteria.`;color=R;}
+  else if(pf<1){msg=`Profit factor ${pf.toFixed(2)}. Losses exceed gains. Widen RR or cut losers faster.`;color=R;}
+  else if(wr>58&&pf>1.8){msg=`Strong performance.${wr.toFixed(0)}% WR with ${pf.toFixed(2)} PF. Focus on sizing up.`;color=G;}
+  else{msg=`${wr.toFixed(0)}% WR · ${pf.toFixed(2)} PF.stable.${isPro?' See Insights tab for full analysis.':''}`;}
   const btn=isPro?`<button class="insight-view-btn" onclick="window._switchTab('insights')">View Insights →</button>`:'';
   container.innerHTML=`<div class="insight-bar" style="border-left:3px solid ${color}"><span style="font-size:15px">💡</span><span style="color:var(--muted)">${msg}</span>${btn}</div>`;
 }
 
-// ── Overview Tab ──────────────────────────────────────────────────────────────
 // Layout changes vs original:
 //  • Equity Curve: pulled OUT of g-eq into its own full-width card
 //  • Win/Loss + Timeframe: wrapped in g2 g2-keep-pair (side-by-side on tablet, stack on small phone)
@@ -204,14 +195,14 @@ function renderOverviewHtml(trades,stats){
 
     <!-- Equity Curve: always full-width -->
     <div class="card">
-      ${secHdr('fa-chart-area','Equity Curve','Cumulative P&amp;L plotted over time — each point is the running total after that trade. A rising line means you are growing; a falling line means drawdown.')}
+      ${secHdr('fa-chart-area','Equity Curve','Cumulative P&amp;L plotted over time.each point is the running total after that trade. A rising line means you are growing; a falling line means drawdown.')}
       <div style="height:260px;position:relative"><canvas id="eq"></canvas></div>
     </div>
 
     <!-- Win/Loss + Timeframe: side-by-side on tablet, stacks on small phone -->
     <div class="g2 g2-keep-pair">
       <div class="card">
-        ${secHdr('fa-trophy','Win / Loss','Count of winning, losing, and break-even trades. The number in the centre is your overall win rate — aim for above 50% or compensate with a high reward-to-risk ratio.')}
+        ${secHdr('fa-trophy','Win / Loss','Count of winning, losing, and break-even trades. The number in the centre is your overall win rate.aim for above 50% or compensate with a high reward-to-risk ratio.')}
         <div style="height:200px;position:relative"><canvas id="wl"></canvas></div>
         <div class="mini-stats">
           <div><div class="ms-lbl">Avg Win</div><div class="ms-val c-g">+$${avgWin.toFixed(2)}</div></div>
@@ -221,7 +212,7 @@ function renderOverviewHtml(trades,stats){
         </div>
       </div>
       <div class="card">
-        ${secHdr('fa-table','Timeframe Breakdown','Win rate and net P&amp;L split by chart timeframe (M5, H1, D1, etc.) — tells you which timeframe suits your edge best.')}
+        ${secHdr('fa-table','Timeframe Breakdown','Win rate and net P&amp;L split by chart timeframe (M5, H1, D1, etc.).tells you which timeframe suits your edge best.')}
         <table class="bt"><thead><tr><th>Timeframe</th><th>Trades</th><th>Win Rate</th><th>PNL</th></tr></thead><tbody>${tfRows}</tbody></table>
       </div>
     </div>
@@ -350,7 +341,6 @@ function initOverviewCharts(trades,stats){
   }
 }
 
-// ── Timing Tab ────────────────────────────────────────────────────────────────
 // All three sections are now independent full-width cards (no g2 wrapper).
 // On desktop they were already mostly stacked; the Day-of-Week chart was
 // side-by-side with Hour Breakdown. Both now go full width on tablet/mobile.
@@ -376,13 +366,13 @@ function renderTimingHtml(trades){
 
     <!-- Day of Week: full-width -->
     <div class="card">
-      ${secHdr('fa-calendar-week','Day of Week','Number of trades placed on each day of the week — reveals your most active trading days.')}
+      ${secHdr('fa-calendar-week','Day of Week','Number of trades placed on each day of the week.reveals your most active trading days.')}
       <div style="height:220px;position:relative"><canvas id="dow"></canvas></div>
     </div>
 
     <!-- Hour Breakdown table: full-width -->
     <div class="card">
-      ${secHdr('fa-table','Hour Breakdown','Win rate and average P&amp;L per hour. Sorted by time — scan the Avg PNL column to find your golden hours and dead zones.')}
+      ${secHdr('fa-table','Hour Breakdown','Win rate and average P&amp;L per hour. Sorted by time.scan the Avg PNL column to find your golden hours and dead zones.')}
       <div class="scroll-tbl"><table class="bt"><thead><tr><th>Hour</th><th>Trades</th><th>Win Rate</th><th>Avg PNL</th></tr></thead><tbody>${timeRows}</tbody></table></div>
     </div>
 
@@ -438,7 +428,6 @@ function initTimingCharts(trades){
   });
 }
 
-// ── Assets & Behavior Tab ─────────────────────────────────────────────────────
 // All four sections are now individual full-width cards (no g2 wrappers).
 function renderAssetsHtml(trades,mc){
   const mm={};
@@ -477,7 +466,7 @@ function renderAssetsHtml(trades,mc){
 
     <!-- Long vs Short: full-width -->
     <div class="card">
-      ${secHdr('fa-arrow-right-arrow-left','Long vs Short','Split between buy-side (Long) and sell-side (Short) positions. A heavy skew in one direction could mean you have a directional bias — useful to know if the market is trending against you.')}
+      ${secHdr('fa-arrow-right-arrow-left','Long vs Short','Split between buy-side (Long) and sell-side (Short) positions. A heavy skew in one direction could mean you have a directional bias.useful to know if the market is trending against you.')}
       <div style="height:200px;position:relative"><canvas id="ls"></canvas></div>
     </div>
 
@@ -489,7 +478,7 @@ function renderAssetsHtml(trades,mc){
 
     <!-- Confidence vs Performance: full-width -->
     <div class="card">
-      ${secHdr('fa-star','Confidence vs Performance','Win rate and average P&amp;L grouped by the star rating you gave each trade before entry. Ideally your 5-star trades outperform your 1-star trades — if not, your pre-trade confidence is not well-calibrated.')}
+      ${secHdr('fa-star','Confidence vs Performance','Win rate and average P&amp;L grouped by the star rating you gave each trade before entry. Ideally your 5-star trades outperform your 1-star trades.if not, your pre-trade confidence is not well-calibrated.')}
       <table class="bt"><thead><tr><th>Confidence</th><th>Trades</th><th>Win Rate</th><th>Avg PNL</th></tr></thead><tbody>${confRows}</tbody></table>
     </div>
 
@@ -506,71 +495,572 @@ function initAssetsCharts(trades){
   });
 }
 
-// ── Insights Tab ──────────────────────────────────────────────────────────────
-function renderInsightsHtml(trades,stats){
-  const{vld,wins,losses,wr,pf,maxDd,consistency}=stats;
-  if(vld.length<5)return`<div style="color:var(--muted);text-align:center;padding:40px;font-size:14px">Need at least 5 trades for insights.</div>`;
+function renderInsightsHtml(trades, stats) {
+  const { vld, wins, losses, be, wr, pf, maxDd, consistency, sorted, avgWin, avgLoss, best, worst, mxW, mxL, total, avgR } = stats;
 
-  const totalEquity=Math.abs(vld.reduce((s,t)=>s+t.pnl,0))||1;
-  const ddPct=Math.min(maxDd/totalEquity,1);
-  const score=Math.round((wr/50)*25+(Math.min(pf,3)/3)*25+(1-ddPct)*25+consistency*25);
-  const level=score>70?'Low Risk':score>50?'Medium Risk':'High Risk';
-  const scoreColor=score>70?G:score>50?Y:R;
-  const circ=2*Math.PI*40;
-  const dash=circ*(1-score/100);
+  if (vld.length < 5) {
+    return `<div style="color:var(--muted);text-align:center;padding:60px 0;font-size:14px;line-height:2">
+      <i class="fa-solid fa-brain" style="font-size:36px;display:block;margin-bottom:16px;opacity:.2"></i>
+      Need at least 5 closed trades to generate insights.<br>
+      <span style="font-size:12px">Keep logging. Your edge reveals itself through data.</span>
+    </div>`;
+  }
 
-  const dayCount=Object.keys(stats.daily||{}).length||1;
-  const avgPerDay=vld.length/dayCount;
-  const recs=[];
-  if(avgPerDay>6)recs.push({p:'high',icon:'fa-hourglass-end',a:'Reduce trade frequency',r:`You average ${avgPerDay.toFixed(1)} trades/day — overtrading erodes edge.`});
-  if(wr<45)recs.push({p:'high',icon:'fa-bullseye',a:'Tighten entry criteria',r:`Win rate ${wr.toFixed(1)}% — prioritise quality over quantity.`});
-  if(pf<1.5)recs.push({p:'medium',icon:'fa-arrow-trend-up',a:'Widen RR targets',r:`Profit factor ${pf.toFixed(2)} — losses are too large relative to wins.`});
-  const net=Math.abs(wins.reduce((s,t)=>s+t.pnl,0)-Math.abs(losses.reduce((s,t)=>s+t.pnl,0)));
-  if(maxDd>net*0.4&&net>0)recs.push({p:'medium',icon:'fa-shield',a:'Add daily loss limit',r:`Max drawdown $${maxDd.toFixed(0)} is excessive vs net P&L.`});
-  if(wr>58&&pf>1.8)recs.push({p:'positive',icon:'fa-check-circle',a:'Strategy is working',r:`Strong metrics — focus on position sizing to compound gains.`});
-  if(recs.length===0)recs.push({p:'neutral',icon:'fa-chart-line',a:'Continue monitoring',r:'No critical issues. Keep logging and reviewing.'});
-  recs.sort((a,b)=>({high:0,medium:1,positive:2,neutral:3}[a.p]||3)-({high:0,medium:1,positive:2,neutral:3}[b.p]||3));
+  const totalEquity = Math.abs(vld.reduce((s, t) => s + t.pnl, 0)) || 1;
+  const ddPct = Math.min(maxDd / totalEquity, 1);
+  const score = Math.round((wr / 50) * 25 + (Math.min(pf, 3) / 3) * 25 + (1 - ddPct) * 25 + consistency * 25);
+  const level = score > 70 ? 'Low Risk' : score > 50 ? 'Medium Risk' : 'High Risk';
+  const scoreColor = score > 70 ? G : score > 50 ? Y : R;
+  const circ = 2 * Math.PI * 40;
+  const dash = circ * (1 - score / 100);
 
-  const bg={high:'rgba(240,81,101,.07)',medium:'rgba(245,197,24,.07)',positive:'rgba(25,195,125,.07)',neutral:'rgba(107,143,114,.07)'};
-  const bd={high:'rgba(240,81,101,.25)',medium:'rgba(245,197,24,.25)',positive:'rgba(25,195,125,.25)',neutral:'rgba(107,143,114,.2)'};
+  // Day of week analysis
+  const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const dowData = Array.from({ length: 7 }, () => ({ tot: 0, wins: 0, pnl: 0 }));
+  vld.forEach(t => {
+    if (!t.date) return;
+    const d = new Date(t.date + 'T12:00:00'), idx = d.getDay() === 0 ? 6 : d.getDay() - 1;
+    dowData[idx].tot++;
+    if (t.pnl > 0) dowData[idx].wins++;
+    dowData[idx].pnl += t.pnl;
+  });
+  const dowWithData = dowData.map((d, i) => ({ ...d, day: DOW[i], wr: d.tot ? d.wins / d.tot * 100 : 0 })).filter(d => d.tot > 0);
+  const bestDay = dowWithData.length ? [...dowWithData].sort((a, b) => b.pnl - a.pnl)[0] : null;
+  const worstDay = dowWithData.length ? [...dowWithData].sort((a, b) => a.pnl - b.pnl)[0] : null;
 
-  const recsHtml=recs.map(r=>`
-    <div style="background:${bg[r.p]};border:1px solid ${bd[r.p]};border-radius:8px;padding:12px 16px;display:flex;gap:12px;align-items:flex-start;margin-bottom:10px">
-      <div style="font-size:16px;color:var(--muted);flex-shrink:0;margin-top:2px"><i class="fa-solid ${r.icon}"></i></div>
-      <div><div style="font-weight:600;font-size:13px;margin-bottom:3px;color:var(--text)">${r.a}</div><div style="font-size:12px;color:var(--muted);line-height:1.5">${r.r}</div></div>
+  // Hour analysis
+  const hourData = {};
+  vld.filter(t => t.time && t.time.includes(':')).forEach(t => {
+    const h = parseInt(t.time.split(':')[0], 10);
+    if (!hourData[h]) hourData[h] = { tot: 0, wins: 0, pnl: 0 };
+    hourData[h].tot++;
+    if (t.pnl > 0) hourData[h].wins++;
+    hourData[h].pnl += t.pnl;
+  });
+  const hourArr = Object.entries(hourData).map(([h, d]) => ({ h: +h, ...d, wr: d.tot ? d.wins / d.tot * 100 : 0 }));
+  const bestHour = hourArr.length ? [...hourArr].sort((a, b) => b.pnl - a.pnl)[0] : null;
+  const worstHour = hourArr.length ? [...hourArr].sort((a, b) => a.pnl - b.pnl)[0] : null;
+
+  // Strategy analysis
+  const stratMap = {};
+  vld.forEach(t => {
+    const ss = Array.isArray(t.strategy) ? t.strategy : (t.strategy ? [t.strategy] : []);
+    ss.forEach(s => {
+      if (!stratMap[s]) stratMap[s] = { tot: 0, wins: 0, pnl: 0 };
+      stratMap[s].tot++;
+      if (t.pnl > 0) stratMap[s].wins++;
+      stratMap[s].pnl += t.pnl;
+    });
+  });
+  const stratArr = Object.entries(stratMap).map(([s, d]) => ({ s, ...d, wr: d.tot ? d.wins / d.tot * 100 : 0 }));
+  const bestStrat = stratArr.length ? [...stratArr].sort((a, b) => b.pnl - a.pnl)[0] : null;
+  const worstStrat = stratArr.length ? [...stratArr].sort((a, b) => a.pnl - b.pnl)[0] : null;
+
+  // Pair analysis
+  const pairMap = {};
+  vld.forEach(t => {
+    if (!t.pair) return;
+    if (!pairMap[t.pair]) pairMap[t.pair] = { tot: 0, wins: 0, pnl: 0 };
+    pairMap[t.pair].tot++;
+    if (t.pnl > 0) pairMap[t.pair].wins++;
+    pairMap[t.pair].pnl += t.pnl;
+  });
+  const pairArr = Object.entries(pairMap).map(([p, d]) => ({ p, ...d, wr: d.tot ? d.wins / d.tot * 100 : 0 }));
+  const bestPair = pairArr.length ? [...pairArr].sort((a, b) => b.pnl - a.pnl)[0] : null;
+  const worstPair = pairArr.length ? [...pairArr].sort((a, b) => a.pnl - b.pnl)[0] : null;
+
+  // Mood analysis
+  const moodMap = {};
+  vld.forEach(t => {
+    const ms = Array.isArray(t.mood) ? t.mood : (t.mood ? [t.mood] : []);
+    ms.forEach(m => {
+      if (!moodMap[m]) moodMap[m] = { tot: 0, wins: 0, pnl: 0 };
+      moodMap[m].tot++;
+      if (t.pnl > 0) moodMap[m].wins++;
+      moodMap[m].pnl += t.pnl;
+    });
+  });
+  const moodArr = Object.entries(moodMap).map(([m, d]) => ({ m, ...d, wr: d.tot ? d.wins / d.tot * 100 : 0, avg: d.tot ? d.pnl / d.tot : 0 }));
+  const bestMood = moodArr.length ? [...moodArr].sort((a, b) => b.avg - a.avg)[0] : null;
+  const worstMood = moodArr.length ? [...moodArr].sort((a, b) => a.avg - b.avg)[0] : null;
+
+  // Confidence analysis
+  const confMap = {};
+  vld.forEach(t => {
+    const k = t.confidence;
+    if (!k || k < 1) return;
+    if (!confMap[k]) confMap[k] = { tot: 0, wins: 0, pnl: 0 };
+    confMap[k].tot++;
+    if (t.pnl > 0) confMap[k].wins++;
+    confMap[k].pnl += t.pnl;
+  });
+  const confArr = Object.keys(confMap).map(Number).sort((a, b) => b - a).map(stars => ({ stars, ...confMap[stars], wr: confMap[stars].tot ? confMap[stars].wins / confMap[stars].tot * 100 : 0, avg: confMap[stars].tot ? confMap[stars].pnl / confMap[stars].tot : 0 }));
+  const confCalibrated = confArr.length >= 2 && confArr[0].avg > confArr[confArr.length - 1].avg;
+
+  // Long vs Short analysis
+  const longs = vld.filter(t => t.position === 'Long');
+  const shorts = vld.filter(t => t.position === 'Short');
+  const longPnl = longs.reduce((s, t) => s + t.pnl, 0);
+  const shortPnl = shorts.reduce((s, t) => s + t.pnl, 0);
+  const longWr = longs.length ? longs.filter(t => t.pnl > 0).length / longs.length * 100 : 0;
+  const shortWr = shorts.length ? shorts.filter(t => t.pnl > 0).length / shorts.length * 100 : 0;
+  const hasBias = longs.length > 0 && shorts.length > 0 && Math.abs(longs.length - shorts.length) / vld.length > 0.3;
+  const biasSide = longs.length > shorts.length ? 'Long' : 'Short';
+  const biasBetter = biasSide === 'Long' ? longPnl > shortPnl : shortPnl > longPnl;
+
+  // Revenge trading detection: loss immediately followed by larger position/loss
+  let revengeSignals = 0;
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i - 1].pnl < -20 && sorted[i].pnl < sorted[i - 1].pnl * 0.8) revengeSignals++;
+  }
+  const hasRevengePattern = revengeSignals >= 2;
+
+  // Overtrading: days with 5+ trades
+  const tradesPerDay = {};
+  vld.forEach(t => { if (t.date) tradesPerDay[t.date] = (tradesPerDay[t.date] || 0) + 1; });
+  const dayCount = Object.keys(tradesPerDay).length || 1;
+  const avgPerDay = vld.length / dayCount;
+  const overtradingDays = Object.values(tradesPerDay).filter(n => n >= 5).length;
+  const overtradingDayPnl = [];
+  Object.entries(tradesPerDay).forEach(([date, cnt]) => {
+    if (cnt >= 5) {
+      const dayPnl = vld.filter(t => t.date === date).reduce((s, t) => s + t.pnl, 0);
+      overtradingDayPnl.push(dayPnl);
+    }
+  });
+  const avgOvertradingDayPnl = overtradingDayPnl.length ? overtradingDayPnl.reduce((a, b) => a + b, 0) / overtradingDayPnl.length : 0;
+
+  // Consecutive loss analysis (current streak)
+  let currentStreak = 0, currentStreakDir = null;
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    const dir = sorted[i].pnl > 0 ? 'W' : sorted[i].pnl < 0 ? 'L' : null;
+    if (!dir) break;
+    if (!currentStreakDir) currentStreakDir = dir;
+    if (dir !== currentStreakDir) break;
+    currentStreak++;
+  }
+
+  // Trade size consistency
+  const sizes = vld.map(t => Math.abs(parseFloat(t.pnl) || 0)).filter(v => v > 0);
+  const sizeMean = sizes.length ? sizes.reduce((a, b) => a + b, 0) / sizes.length : 0;
+  const sizeVariance = sizes.reduce((s, n) => s + Math.pow(n - sizeMean, 2), 0) / (sizes.length || 1);
+  const sizeStd = Math.sqrt(sizeVariance);
+  const sizeCV = sizeMean > 0 ? sizeStd / sizeMean : 0;
+  const inconsistentSizing = sizeCV > 0.8;
+
+  // Early exit detection: wins that are below avg win by >50%
+  const smallWins = wins.filter(t => t.pnl < avgWin * 0.5);
+  const earlyExitRate = wins.length ? smallWins.length / wins.length : 0;
+  const earlyExitIssue = earlyExitRate > 0.35;
+
+  // Large loss outliers: losses bigger than 2x avg loss
+  const bigLosses = losses.filter(t => Math.abs(t.pnl) > avgLoss * 2);
+  const bigLossImpact = bigLosses.reduce((s, t) => s + t.pnl, 0);
+
+  // Timeframe performance
+  const tfMap = {};
+  vld.forEach(t => {
+    const tfs = Array.isArray(t.timeframe) ? t.timeframe : (t.timeframe ? [t.timeframe] : []);
+    tfs.forEach(tf => {
+      if (!tfMap[tf]) tfMap[tf] = { tot: 0, wins: 0, pnl: 0 };
+      tfMap[tf].tot++;
+      if (t.pnl > 0) tfMap[tf].wins++;
+      tfMap[tf].pnl += t.pnl;
+    });
+  });
+  const tfArr = Object.entries(tfMap).map(([tf, d]) => ({ tf, ...d, wr: d.tot ? d.wins / d.tot * 100 : 0 }));
+  const bestTf = tfArr.length ? [...tfArr].sort((a, b) => b.pnl - a.pnl)[0] : null;
+  const worstTf = tfArr.length ? [...tfArr].sort((a, b) => a.pnl - b.pnl)[0] : null;
+
+  // Month over month trend (last 2 months)
+  const now = new Date();
+  const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const thisMonthTrades = vld.filter(t => t.date && new Date(t.date + 'T12:00:00') >= thisMonthStart);
+  const lastMonthTrades = vld.filter(t => t.date && new Date(t.date + 'T12:00:00') >= lastMonthStart && new Date(t.date + 'T12:00:00') < thisMonthStart);
+  const thisMonthPnl = thisMonthTrades.reduce((s, t) => s + t.pnl, 0);
+  const lastMonthPnl = lastMonthTrades.reduce((s, t) => s + t.pnl, 0);
+  const momImproving = lastMonthTrades.length > 0 && thisMonthPnl > lastMonthPnl;
+  const momData = lastMonthTrades.length > 0 && thisMonthTrades.length > 0;
+
+  const buildNarrative = () => {
+    const parts = [];
+    if (score > 70) {
+      parts.push(`Your trading profile is <strong style="color:${G}">performing well</strong> across all key dimensions.`);
+    } else if (score > 50) {
+      parts.push(`Your trading shows <strong style="color:${Y}">moderate consistency</strong> with clear areas to improve.`);
+    } else {
+      parts.push(`Your current metrics signal <strong style="color:${R}">elevated risk</strong>. Some structural issues need attention before scaling up.`);
+    }
+    if (wr >= 50 && pf >= 1.5) {
+      parts.push(`With a <strong>${wr.toFixed(1)}% win rate</strong> and <strong>${pf.toFixed(2)} profit factor</strong>, your edge is statistically confirmed.`);
+    } else if (wr < 50 && pf >= 1.5) {
+      parts.push(`Despite a sub-50% win rate of <strong>${wr.toFixed(1)}%</strong>, your <strong>${pf.toFixed(2)} profit factor</strong> shows your winners far outweigh your losers. This is a valid, asymmetric style.`);
+    } else if (wr >= 50 && pf < 1.2) {
+      parts.push(`Your <strong>${wr.toFixed(1)}% win rate</strong> looks good on paper, but a profit factor of <strong>${pf.toFixed(2)}</strong> shows that losses are eating into gains. Focus on cutting losers faster.`);
+    } else {
+      parts.push(`With <strong>${wr.toFixed(1)}% win rate</strong> and <strong>${pf.toFixed(2)} profit factor</strong>, both entry quality and loss management need work simultaneously.`);
+    }
+    if (bestDay && bestStrat) {
+      parts.push(`Your strongest context is <strong>${bestStrat.s}</strong> on <strong>${bestDay.day}s</strong>. This combination drives the bulk of your P&L.`);
+    } else if (bestDay) {
+      parts.push(`<strong>${bestDay.day}s</strong> are consistently your best trading day, contributing <strong style="color:${G}">${fP(bestDay.pnl)}</strong> to your total.`);
+    }
+    if (hasRevengePattern) {
+      parts.push(`A <strong style="color:${R}">revenge trading pattern</strong> was detected. Losses are often followed by larger, compounding losses.`);
+    } else if (earlyExitIssue) {
+      parts.push(`You're leaving money on the table by exiting winners too early. <strong>${(earlyExitRate * 100).toFixed(0)}%</strong> of your wins are below half your average win size.`);
+    }
+    if (momData) {
+      if (momImproving) {
+        parts.push(`Month-over-month, you are <strong style="color:${G}">trending upward</strong>. This month's P&L of <strong style="color:${G}">${fP(thisMonthPnl)}</strong> beats last month's <strong>${fP(lastMonthPnl)}</strong>.`);
+      } else {
+        parts.push(`Month-over-month, you are <strong style="color:${R}">trending downward</strong>. This month's <strong style="color:${R}">${fP(thisMonthPnl)}</strong> lags behind last month's <strong>${fP(lastMonthPnl)}</strong>.`);
+      }
+    }
+    return parts.join(' ');
+  };
+
+  const buildFindings = () => {
+    const cards = [];
+    if (bestDay) cards.push({ icon: 'fa-star', color: G, label: 'Best Day', value: bestDay.day, sub: `${fP(bestDay.pnl)} · ${bestDay.wr.toFixed(0)}% WR in ${bestDay.tot} trades` });
+    if (bestStrat) cards.push({ icon: 'fa-chess-knight', color: G, label: 'Top Strategy', value: bestStrat.s, sub: `${fP(bestStrat.pnl)} · ${bestStrat.wr.toFixed(0)}% WR in ${bestStrat.tot} trades` });
+    if (bestPair) cards.push({ icon: 'fa-coins', color: G, label: 'Best Pair', value: bestPair.p, sub: `${fP(bestPair.pnl)} · ${bestPair.wr.toFixed(0)}% WR in ${bestPair.tot} trades` });
+    if (bestMood) cards.push({ icon: 'fa-face-smile', color: G, label: 'Best Mood', value: bestMood.m, sub: `Avg ${fP(bestMood.avg)} per trade · ${bestMood.wr.toFixed(0)}% WR` });
+    if (worstDay && worstDay.pnl < 0) cards.push({ icon: 'fa-calendar-xmark', color: R, label: 'Worst Day', value: worstDay.day, sub: `${fP(worstDay.pnl)} · ${worstDay.wr.toFixed(0)}% WR in ${worstDay.tot} trades` });
+    if (worstStrat && worstStrat.pnl < 0) cards.push({ icon: 'fa-triangle-exclamation', color: R, label: 'Drag Strategy', value: worstStrat.s, sub: `${fP(worstStrat.pnl)} dragging overall PNL` });
+    if (worstPair && worstPair.pnl < 0) cards.push({ icon: 'fa-money-bill-trend-up', color: R, label: 'Worst Pair', value: worstPair.p, sub: `${fP(worstPair.pnl)} net loss on this instrument` });
+    if (worstMood && worstMood.avg < 0) cards.push({ icon: 'fa-face-sad-tear', color: R, label: 'Worst Mood', value: worstMood.m, sub: `Avg ${fP(worstMood.avg)} per trade.consider stepping back` });
+    return cards.slice(0, 8);
+  };
+
+  const buildRecs = () => {
+    const recs = [];
+
+    if (hasRevengePattern) recs.push({
+      p: 'high', icon: 'fa-fire',
+      a: 'Break the revenge trading cycle',
+      r: `Detected ${revengeSignals} instance${revengeSignals > 1 ? 's' : ''} where a losing trade was immediately followed by a larger loss. After any trade losing more than $${(avgLoss * 0.8).toFixed(0)}, enforce a mandatory 30-minute cooldown before your next entry. This single rule can recover significant P&L.`
+    });
+
+    if (maxDd > totalEquity * 0.3) recs.push({
+      p: 'high', icon: 'fa-shield-halved',
+      a: 'Your max drawdown is dangerously high',
+      r: `A $${maxDd.toFixed(0)} drawdown against $${totalEquity.toFixed(0)} net equity means you've given back ${(maxDd / totalEquity * 100).toFixed(0)}% of your gains in a single drawdown event. Implement a daily loss limit of $${(avgLoss * 3).toFixed(0)} and a maximum of ${Math.max(3, Math.round(avgPerDay))} trades per day.`
+    });
+
+    if (pf < 1 && vld.length >= 10) recs.push({
+      p: 'high', icon: 'fa-scale-unbalanced-flip',
+      a: 'Gross losses exceed gross wins',
+      r: `Profit factor of ${pf.toFixed(2)} means for every $1 you make, you lose $${(1 / pf).toFixed(2)}. Your avg win is $${avgWin.toFixed(2)} and avg loss is $${avgLoss.toFixed(2)}. You need to either tighten stops (reduce avg loss to below $${avgWin.toFixed(0)}) or widen targets (increase avg win above $${avgLoss.toFixed(0)}).`
+    });
+
+    if (wr < 40) recs.push({
+      p: 'high', icon: 'fa-bullseye',
+      a: 'Win rate is critically low',
+      r: `At ${wr.toFixed(1)}%, you are losing more than 6 of every 10 trades. With your current avg win of $${avgWin.toFixed(2)}, you need at least a ${(avgLoss / (avgWin + avgLoss) * 100).toFixed(0)}% win rate to break even. Consider paper-trading your setups for 2 weeks to diagnose entry problems without real capital at risk.`
+    });
+
+    if (bigLosses.length >= 2) recs.push({
+      p: 'high', icon: 'fa-bomb',
+      a: `${bigLosses.length} outlier losses are destroying your P&L`,
+      r: `You have ${bigLosses.length} trades where losses exceeded 2× your average loss of $${avgLoss.toFixed(2)}. These alone account for $${Math.abs(bigLossImpact).toFixed(0)} in damage. This is a stop-loss discipline problem.set hard maximum loss per trade and never move stops further away once in a trade.`
+    });
+
+    if (earlyExitIssue) recs.push({
+      p: 'medium', icon: 'fa-hand',
+      a: 'Stop cutting winners short',
+      r: `${(earlyExitRate * 100).toFixed(0)}% of your winning trades close below half your average win of $${avgWin.toFixed(2)}. This suggests you're taking profits at the first sign of pullback. Try a trailing stop or scaling out in thirds.let at least 1/3 of the position run to your full target. Could add $${(smallWins.length * avgWin * 0.5).toFixed(0)} to your P&L.`
+    });
+
+    if (inconsistentSizing) recs.push({
+      p: 'medium', icon: 'fa-ruler',
+      a: 'Inconsistent position sizing detected',
+      r: `Your trade P&L swings wildly (std deviation $${sizeStd.toFixed(0)} on a mean of $${sizeMean.toFixed(0)}). Erratic sizing means your win rate and profit factor are unreliable.one big trade skews everything. Standardise to a fixed risk-per-trade of 1% of account per position. Consistency compounds.`
+    });
+
+    if (overtradingDays >= 3) recs.push({
+      p: 'medium', icon: 'fa-hourglass-end',
+      a: 'Overtrading on high-volume days hurts you',
+      r: `On ${overtradingDays} days where you took 5+ trades, your average daily P&L was $${avgOvertradingDayPnl.toFixed(2)}${avgOvertradingDayPnl < 0 ? ' (a loss)' : ''}. Quality declines with volume. Set a hard cap of ${Math.max(3, Math.round(avgPerDay * 1.2))} trades per day. Walk away after that limit, profit or loss.`
+    });
+
+    if (worstDay && worstDay.pnl < -avgLoss * 3) recs.push({
+      p: 'medium', icon: 'fa-calendar-xmark',
+      a: `Consider avoiding <strong>${worstDay.day}s</strong> entirely`,
+      r: `<strong>${worstDay.day}</strong> is your worst performing day with ${fP(worstDay.pnl)} net and only ${worstDay.wr.toFixed(0)}% win rate across ${worstDay.tot} trades. Compare this to ${bestDay ? '<strong>' + bestDay.day + '</strong> (' + bestDay.wr.toFixed(0) + '% WR)' : 'your best day'}. Some traders eliminate their worst day completely and see immediate improvement.`
+    });
+
+    if (worstStrat && worstStrat.pnl < 0 && bestStrat && bestStrat.pnl > 0) recs.push({
+      p: 'medium', icon: 'fa-scissors',
+      a: `Kill your <strong>"${worstStrat.s}"</strong> strategy`,
+      r: `<strong>"${worstStrat.s}"</strong> has generated ${fP(worstStrat.pnl)} in losses across ${worstStrat.tot} trades (${worstStrat.wr.toFixed(0)}% WR). Meanwhile, <strong>"${bestStrat.s}"</strong> has produced ${fP(bestStrat.pnl)} with ${bestStrat.wr.toFixed(0)}% WR. Every dollar you risk on the losing strategy is a dollar not allocated to the winning one. Retire it for 30 days and track the difference.`
+    });
+
+    if (hasBias && !biasBetter) recs.push({
+      p: 'medium', icon: 'fa-arrow-right-arrow-left',
+      a: `Your <strong>${biasSide}</strong> bias is costing you`,
+      r: `${(biasSide === 'Long' ? longs.length : shorts.length)} of your ${vld.length} trades are <strong>${biasSide}</strong>, but your <strong>${biasSide}</strong> PNL of ${fP(biasSide === 'Long' ? longPnl : shortPnl)} lags behind your <strong>${biasSide === 'Long' ? 'Short' : 'Long'}</strong> PNL of ${fP(biasSide === 'Long' ? shortPnl : longPnl)}. You have a structural directional bias that's not aligned with where your actual edge lives. Force yourself to take the other side more often.`
+    });
+
+    if (worstMood && worstMood.avg < -avgLoss * 0.5 && worstMood.tot >= 3) recs.push({
+      p: 'medium', icon: 'fa-brain',
+      a: `Don't trade when feeling <strong>"${worstMood.m}"</strong>`,
+      r: `Your <strong>"${worstMood.m}"</strong> mood trades average ${fP(worstMood.avg)} per trade with ${worstMood.wr.toFixed(0)}% win rate. Significantly below your overall average. Emotional state is a legitimate edge variable. Log your mood before every session and treat <strong>"${worstMood.m}"</strong> as a no-trade signal until your data shows improvement.`
+    });
+
+    if (confArr.length >= 2 && !confCalibrated) recs.push({
+      p: 'medium', icon: 'fa-star-half-stroke',
+      a: 'Confidence rating is not predicting outcomes',
+      r: `Your high-confidence trades are NOT outperforming low-confidence ones. Which means your pre-trade analysis is unreliable. This is often caused by confirmation bias (seeing setups that aren't there). Try paper-grading each setup against your written rules before entering, separate from gut feel.`
+    });
+
+    if (worstHour && worstHour.pnl < 0 && worstHour.tot >= 3) recs.push({
+      p: 'medium', icon: 'fa-clock',
+      a: `Block out <strong>${fH(worstHour.h)}</strong> from your trading schedule`,
+      r: `The <strong>${fH(worstHour.h)}</strong> to <strong>${fH(worstHour.h < 23 ? worstHour.h + 1 : 0)}</strong> window is your worst hour: ${fP(worstHour.pnl)} net across ${worstHour.tot} trades with ${worstHour.wr.toFixed(0)}% WR. ${bestHour ? `By contrast, <strong>${fH(bestHour.h)}</strong> has delivered ${fP(bestHour.pnl)} with ${bestHour.wr.toFixed(0)}% WR. ` : ''}Consider removing this time slot from your trading plan entirely.`
+    });
+
+    if (worstTf && worstTf.pnl < 0 && bestTf && bestTf !== worstTf) recs.push({
+      p: 'medium', icon: 'fa-layer-group',
+      a: `Drop the <strong>${worstTf.tf}</strong> timeframe`,
+      r: `The <strong>${worstTf.tf}</strong> timeframe is contributing ${fP(worstTf.pnl)} in losses with only ${worstTf.wr.toFixed(0)}% win rate. Your <strong>${bestTf.tf}</strong> timeframe performs significantly better at ${bestTf.wr.toFixed(0)}% WR and ${fP(bestTf.pnl)} net. Specialise. Multi-timeframe trading only helps when each timeframe has independent edge.`
+    });
+
+    if (wr > 58 && pf > 1.8) recs.push({
+      p: 'positive', icon: 'fa-rocket',
+      a: 'Strong edge confirmed. Scale up carefully',
+      r: `<strong>${wr.toFixed(1)}%</strong> win rate with <strong>${pf.toFixed(2)}</strong> profit factor on <strong>${vld.length}</strong> trades is statistically significant. Your edge is real. Focus next on increasing position size by 10-15% and tracking whether performance holds. If metrics stay within 5% of current numbers over 20+ trades, continue scaling.`
+    });
+
+    if (mxW >= 5) recs.push({
+      p: 'positive', icon: 'fa-fire-flame-curved',
+      a: `<strong>${mxW}</strong>-trade win streak shows momentum ability`,
+      r: `Your longest win streak of <strong>${mxW}</strong> consecutive winners demonstrates you can run hot. Study those trades carefully. What was the market context, the setup, the time of day? Replicate those conditions intentionally. Streaks are usually not random; they reflect a specific market regime where your edge thrives.`
+    });
+
+    if (consistency > 0.6) recs.push({
+      p: 'positive', icon: 'fa-check-double',
+      a: 'Daily consistency score is solid',
+      r: `Your consistency score of <strong>${(consistency * 100).toFixed(0)}%</strong> means your daily P&L doesn't swing wildly. A sign of disciplined sizing and emotional control. This is the foundation required before scaling. Continue logging every trade, even the ones you're tempted to hide.`
+    });
+
+    if (bestMood && bestMood.avg > avgWin * 0.8 && bestMood.tot >= 3) recs.push({
+      p: 'positive', icon: 'fa-face-smile-beam',
+      a: `Prioritise <strong>"${bestMood.m}"</strong> trading sessions`,
+      r: `When you trade in a <strong>"${bestMood.m}"</strong> mood, your average P&L is <strong>${fP(bestMood.avg)}</strong>. Your best emotional context. Create a pre-session ritual that cultivates this state: adequate sleep, exercise, reviewing your rules. High-quality mental states are a repeatable edge.`
+    });
+
+    if (confCalibrated && confArr[0].avg > 0) recs.push({
+      p: 'positive', icon: 'fa-star',
+      a: 'Confidence rating predicts outcomes. Trust it',
+      r: `Your <strong>5-star</strong> trades outperform your <strong>1-star</strong> trades, meaning your intuition and pre-analysis are well-calibrated. This is valuable. Consider sizing up on <strong>4-5 star</strong> setups by 20-30% and sizing down on <strong>1-2 star</strong> setups. This alone could improve your profit factor without changing your strategy.`
+    });
+
+    if (recs.length === 0) recs.push({
+      p: 'neutral', icon: 'fa-chart-line',
+      a: 'Continue monitoring.no critical issues found',
+      r: 'Your metrics are within acceptable ranges. Focus on increasing sample size.a minimum of 50–100 trades is needed for statistically robust conclusions. Keep logging every trade with full context (mood, strategy, timeframe) for richer future insights.'
+    });
+
+    recs.sort((a, b) => ({ high: 0, medium: 1, positive: 2, neutral: 3 }[a.p] || 3) - ({ high: 0, medium: 1, positive: 2, neutral: 3 }[b.p] || 3));
+    return recs;
+  };
+
+  const buildFocus = () => {
+    const items = [];
+    const recs = buildRecs();
+    const top = recs.filter(r => r.p === 'high').slice(0, 2);
+    if (top.length === 0) {
+      items.push(...recs.filter(r => r.p === 'medium').slice(0, 2));
+    } else {
+      items.push(...top);
+    }
+    if (bestStrat) items.push({ p: 'focus', icon: 'fa-crosshairs', a: `Double down on "${bestStrat.s}"`, r: `Take only this strategy's setups for the next 20 trades and track independently. Isolating your best edge compounds its effect.` });
+    return items.slice(0, 3);
+  };
+
+  const radarScores = {
+    'Entry Quality': Math.min(100, Math.round(wr * 1.2)),
+    'Exit Quality': Math.min(100, Math.round(earlyExitIssue ? 40 : pf >= 1.5 ? 80 : 60)),
+    'Risk Mgmt': Math.min(100, Math.round((1 - ddPct) * 100)),
+    'Consistency': Math.min(100, Math.round(consistency * 100)),
+    'Discipline': Math.min(100, Math.round(hasRevengePattern ? 30 : overtradingDays > 3 ? 50 : inconsistentSizing ? 55 : 80)),
+    'Timing': Math.min(100, Math.round(bestHour ? bestHour.wr : wr)),
+  };
+
+  const findings = buildFindings();
+  const recs = buildRecs();
+  const focusItems = buildFocus();
+  const narrative = buildNarrative();
+
+  const priorityMeta = {
+    high:     { label: 'HIGH PRIORITY', bg: 'rgba(240,81,101,.07)',  border: 'rgba(240,81,101,.3)',  dot: R },
+    medium:   { label: 'REVIEW',        bg: 'rgba(245,197,24,.07)',  border: 'rgba(245,197,24,.3)',  dot: Y },
+    positive: { label: 'STRENGTH',      bg: 'rgba(25,195,125,.07)',  border: 'rgba(25,195,125,.3)',  dot: G },
+    neutral:  { label: 'NOTE',          bg: 'rgba(107,143,114,.07)', border: 'rgba(107,143,114,.2)', dot: 'var(--muted)' },
+    focus:    { label: 'FOCUS',         bg: 'rgba(25,195,125,.07)',  border: 'rgba(25,195,125,.3)',  dot: G },
+  };
+
+  const scoreGaugeHtml = `
+    <div style="position:relative;width:110px;height:110px;flex-shrink:0">
+      <svg width="110" height="110" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="40" fill="none" stroke="#253127" stroke-width="8"/>
+        <circle cx="50" cy="50" r="40" fill="none" stroke="${scoreColor}" stroke-width="8"
+          stroke-dasharray="${circ.toFixed(2)}" stroke-dashoffset="${dash.toFixed(2)}"
+          stroke-linecap="round" transform="rotate(-90 50 50)"
+          style="transition:stroke-dashoffset .8s ease"/>
+      </svg>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+        <span style="font-family:var(--font-mono,'Space Mono',monospace);font-size:22px;font-weight:700;color:${scoreColor}">${score}</span>
+        <span style="font-size:9px;color:var(--muted);letter-spacing:.5px">/ 100</span>
+      </div>
+    </div>`;
+
+  const radarHtml = Object.entries(radarScores).map(([label, val]) => {
+    const color = val >= 70 ? G : val >= 45 ? Y : R;
+    return `<div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px">
+        <span style="color:var(--muted)">${label}</span>
+        <span style="font-family:var(--font-mono,'Space Mono',monospace);color:${color};font-weight:600">${val}</span>
+      </div>
+      <div style="height:5px;background:var(--border2,#253127);border-radius:3px">
+        <div style="height:5px;width:${val}%;background:${color};border-radius:3px;transition:width .6s ease"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const findingsHtml = findings.map(f => `
+    <div style="background:var(--panel2,#192219);border:1px solid var(--border2,#253127);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:4px">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
+        <i class="fa-solid ${f.icon}" style="color:${f.color};font-size:12px"></i>
+        <span style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:700">${f.label}</span>
+      </div>
+      <div style="font-weight:700;font-size:14px;color:${f.color}">${f.value}</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.5">${f.sub}</div>
     </div>`).join('');
 
-  const miniRows=[
-    ['Win Rate',fPct(wr),grc(wr-50)],
-    ['Profit Factor',pf===999?'∞':pf.toFixed(2),grc(pf-1)],
-    ['Max Drawdown','-$'+maxDd.toFixed(0),R],
-    ['Consistency',fPct(consistency*100),grc(consistency-.5)],
-  ].map(([l,v,c])=>`<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:7px"><span style="color:var(--muted)">${l}</span><span style="font-family:var(--font-mono,'Space Mono',monospace);color:${c};font-weight:600">${v}</span></div>`).join('');
-
-  return`<div style="display:grid;grid-template-columns:260px 1fr;gap:16px">
-    <div class="card">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px"><span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:700">Risk Score</span><span class="sec-tip" data-tip="Composite score from 0–100 based on four pillars: win rate, profit factor, max drawdown, and daily consistency. Above 70 = Low Risk. 50–70 = Medium. Below 50 = High Risk. Higher is safer.">?</span></div>
-      <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
-        <div style="position:relative;width:110px;height:110px">
-          <svg width="110" height="110" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="40" fill="none" stroke="#253127" stroke-width="8"/>
-            <circle cx="50" cy="50" r="40" fill="none" stroke="${scoreColor}" stroke-width="8"
-              stroke-dasharray="${circ.toFixed(2)}" stroke-dashoffset="${dash.toFixed(2)}"
-              stroke-linecap="round" transform="rotate(-90 50 50)" style="transition:stroke-dashoffset .8s ease"/>
-          </svg>
-          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
-            <span style="font-family:var(--font-mono,'Space Mono',monospace);font-size:22px;font-weight:700;color:${scoreColor}">${score}</span>
-            <span style="font-size:9px;color:var(--muted);letter-spacing:.5px">/ 100</span>
-          </div>
+  const recsHtml = recs.map(r => {
+    const m = priorityMeta[r.p] || priorityMeta.neutral;
+    return `<div style="background:${m.bg};border:1px solid ${m.border};border-radius:10px;padding:14px 16px;display:flex;gap:14px;align-items:flex-start;margin-bottom:10px">
+      <div style="width:32px;height:32px;border-radius:8px;background:${m.border};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+        <i class="fa-solid ${r.icon}" style="color:${m.dot};font-size:13px"></i>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap">
+          <span style="font-weight:700;font-size:13px;color:var(--text)">${r.a}</span>
+          <span style="font-size:9px;font-weight:700;letter-spacing:.8px;color:${m.dot};background:${m.border};padding:2px 7px;border-radius:4px">${m.label}</span>
         </div>
-        <div style="font-weight:700;font-size:14px;color:${scoreColor}">${level}</div>
-        <div style="width:100%;border-top:1px solid var(--border);padding-top:12px">${miniRows}</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.65">${r.r}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const focusHtml = focusItems.map((f, i) => `
+    <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;${i < focusItems.length - 1 ? 'border-bottom:1px solid var(--border)' : ''}">
+      <div style="width:24px;height:24px;border-radius:50%;background:rgba(25,195,125,.15);border:1px solid rgba(25,195,125,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--font-mono,'Space Mono',monospace);font-size:11px;font-weight:700;color:${G}">${i + 1}</div>
+      <div>
+        <div style="font-weight:600;font-size:13px;color:var(--text);margin-bottom:3px">${f.a}</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5">${f.r}</div>
+      </div>
+    </div>`).join('');
+
+  const miniMetrics = [
+    ['Win Rate',     fPct(wr),                          grc(wr - 50)],
+    ['Profit Factor',pf === 999 ? '∞' : pf.toFixed(2), grc(pf - 1)],
+    ['Max Drawdown', '-$' + maxDd.toFixed(0),           R],
+    ['Avg Win',      '+$' + avgWin.toFixed(2),          G],
+    ['Avg Loss',     '-$' + avgLoss.toFixed(2),         R],
+    ['Consistency',  fPct(consistency * 100),           grc(consistency - .5)],
+  ].map(([l, v, c]) => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:11px;color:var(--muted)">${l}</span>
+      <span style="font-family:var(--font-mono,'Space Mono',monospace);font-size:12px;color:${c};font-weight:700">${v}</span>
+    </div>`).join('');
+
+  const streakBadge = currentStreak >= 2 ? `
+    <div style="display:inline-flex;align-items:center;gap:7px;background:${currentStreakDir === 'W' ? 'rgba(25,195,125,.1)' : 'rgba(240,81,101,.1)'};border:1px solid ${currentStreakDir === 'W' ? 'rgba(25,195,125,.3)' : 'rgba(240,81,101,.3)'};border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;color:${currentStreakDir === 'W' ? G : R};margin-bottom:16px">
+      <i class="fa-solid ${currentStreakDir === 'W' ? 'fa-fire' : 'fa-snowflake'}"></i>
+      Currently on a ${currentStreak}-trade ${currentStreakDir === 'W' ? 'WIN' : 'LOSS'} streak
+    </div>` : '';
+
+  return `
+  <style>
+    .ins-grid{display:grid;grid-template-columns:300px 1fr;gap:16px}
+    .ins-findings{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+    @media(max-width:1023px){.ins-grid{grid-template-columns:1fr}.ins-findings{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:540px){.ins-findings{grid-template-columns:1fr 1fr}}
+  </style>
+
+  ${streakBadge}
+
+  <div class="card" style="margin-bottom:16px;border-left:3px solid ${scoreColor}">
+    <div style="display:flex;align-items:flex-start;gap:14px">
+      <div style="width:36px;height:36px;border-radius:10px;background:rgba(25,195,125,.1);border:1px solid rgba(25,195,125,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px">
+        <i class="fa-solid fa-brain" style="color:${G};font-size:15px"></i>
+      </div>
+      <div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:700;margin-bottom:8px">AI Performance Summary · ${vld.length} trades analyzed</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.75">${narrative}</div>
       </div>
     </div>
+  </div>
+
+  ${findings.length ? `
+  <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:700;margin-bottom:10px">Key Findings</div>
+  <div class="ins-findings">${findingsHtml}</div>` : ''}
+
+  <div class="ins-grid">
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:16px">
+          <span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:700">Risk Score</span>
+          <span class="sec-tip" data-tip="Composite 0–100 score across win rate (25%), profit factor (25%), max drawdown (25%), and day-to-day consistency (25%). Above 70 = Low Risk. 50–70 = Medium. Below 50 = High Risk.">?</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+          ${scoreGaugeHtml}
+          <div>
+            <div style="font-weight:700;font-size:16px;color:${scoreColor};margin-bottom:4px">${level}</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.5">Based on ${vld.length} trade${vld.length !== 1 ? 's' : ''} across ${dayCount} day${dayCount !== 1 ? 's' : ''}</div>
+            ${momData ? `<div style="font-size:11px;margin-top:6px;color:${momImproving ? G : R}"><i class="fa-solid fa-arrow-${momImproving ? 'up' : 'down'}" style="font-size:9px"></i> ${momImproving ? 'Improving' : 'Declining'} vs last month</div>` : ''}
+          </div>
+        </div>
+        ${miniMetrics}
+      </div>
+
+      <div class="card">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:700;margin-bottom:14px">Performance Breakdown</div>
+        ${radarHtml}
+      </div>
+
+      <div class="card" style="border-color:rgba(25,195,125,.2)">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
+          <i class="fa-solid fa-crosshairs" style="color:${G};font-size:12px"></i>
+          <span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:700">Focus This Week</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:12px">Top priorities based on your data</div>
+        ${focusHtml}
+      </div>
+
+    </div>
+
     <div>
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px"><span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:700">Recommendations</span><span class="sec-tip" data-tip="Personalized action items generated from your actual trading patterns — issues like overtrading, poor stop discipline, or loss streaks are detected automatically.">?</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div>
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:700;margin-bottom:3px">Recommendations</div>
+          <div style="font-size:11px;color:var(--muted)">${recs.length} action item${recs.length !== 1 ? 's' : ''} generated from your patterns</div>
+        </div>
+        <div style="display:flex;gap:8px;font-size:10px;color:var(--muted)">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;border-radius:50%;background:${R};display:inline-block"></span>High</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;border-radius:50%;background:${Y};display:inline-block"></span>Review</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;border-radius:50%;background:${G};display:inline-block"></span>Strength</span>
+        </div>
+      </div>
       ${recsHtml}
     </div>
+
   </div>`;
 }
 
@@ -579,7 +1069,6 @@ function _anaHideLoading(){
   if(overlay){overlay.classList?.add('hidden');overlay.style.opacity='0';overlay.style.visibility='hidden';setTimeout(()=>{overlay.style.display='none';},300);}
 }
 
-// ── Main IIFE ─────────────────────────────────────────────────────────────────
 (async()=>{
   if(!jid){
     document.getElementById('skelView').style.display='none';
@@ -641,7 +1130,7 @@ function _anaHideLoading(){
       <div id="tabContent"></div>
     `:`
       <div class="card" style="margin-bottom:16px" id="freeEqCard">
-        <div class="sec-hdr"><div class="sec-hdr-l"><span class="sec-ico"><i class="fa-solid fa-chart-area"></i></span><span class="sec-ttl">Equity Curve</span><span class="sec-tip" data-tip="Cumulative P&amp;L plotted over time — each point is the running total after that trade. A rising line means you are growing; a falling line means drawdown.">?</span></div></div>
+        <div class="sec-hdr"><div class="sec-hdr-l"><span class="sec-ico"><i class="fa-solid fa-chart-area"></i></span><span class="sec-ttl">Equity Curve</span><span class="sec-tip" data-tip="Cumulative P&amp;L plotted over time.each point is the running total after that trade. A rising line means you are growing; a falling line means drawdown.">?</span></div></div>
         <div style="height:260px;position:relative"><canvas id="eq-free"></canvas></div>
       </div>
       <div class="ad-slot" style="margin-bottom:16px" id="adSlot1">
@@ -651,10 +1140,10 @@ function _anaHideLoading(){
       <div class="card" style="border-color:rgba(25,195,125,.2);background:linear-gradient(135deg,rgba(25,195,125,.03),var(--panel))">
         <div style="text-align:center;padding:20px 16px">
           <i class="fa-solid fa-lock" style="font-size:28px;color:var(--muted);opacity:.4;display:block;margin-bottom:12px"></i>
-          <h3 style="font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:15px;font-weight:600;margin-bottom:8px;text-transform:none;letter-spacing:0;color:var(--text)">Advanced Analytics — Pro</h3>
+          <h3 style="font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:15px;font-weight:600;margin-bottom:8px;text-transform:none;letter-spacing:0;color:var(--text)">Advanced Analytics.Pro</h3>
           <p style="font-size:13px;color:var(--muted);line-height:1.6;max-width:420px;margin:0 auto 16px">Unlock Strategy PNL, Mood heatmaps, Hour analysis, Day-of-week breakdown, Long vs Short, and more.</p>
           <a href="/subscription" style="display:inline-flex;align-items:center;gap:7px;background:#19c37d;color:#0b0f0c;border:none;border-radius:var(--radius-md,8px);padding:10px 20px;font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:13px;font-weight:700;text-decoration:none;transition:opacity .2s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-            <i class="fa-solid fa-chevron-up"></i> Upgrade to Pro — $5/mo
+            <i class="fa-solid fa-chevron-up"></i> Upgrade to Pro.$5/mo
           </a>
         </div>
       </div>

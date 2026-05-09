@@ -136,7 +136,7 @@ let _bnbLastCsvText = '';
 })();
 
 function _preloadTabs(){
-  [{id:'presessionFrame',src:'/presession/presession.html'},
+  [{id:'presessionFrame',src:'/presession'},
    {id:'calFrame',src:'/calendar.html'},
    {id:'notesFrame',src:'/notes.html'},
    {id:'analyticsFrame',src:'/analytics.html'}]
@@ -185,7 +185,7 @@ function switchTab(name){
   activeTab=name;
   _syncMobMenu(name);
   const fm={
-    presession:{id:'presessionFrame',src:'/presession/presession.html'},
+    presession:{id:'presessionFrame',src:'/presession'},
     calendar:{id:'calFrame',src:'/calendar.html'},
     notes:{id:'notesFrame',src:'/notes.html'},
     analytics:{id:'analyticsFrame',src:'/analytics.html'}
@@ -484,7 +484,7 @@ async function confirmImport(){
       if(Object.keys(ju).length){await updateJournal(journalId,ju);Object.assign(journalObj,ju);if(s.journalName){document.getElementById('jnameHdr').textContent=s.journalName;document.title='TradingGrove | '+s.journalName;}}
     }
     sp(100,'Done!');await new Promise(r=>setTimeout(r,600));
-    closeImport();document.getElementById('logsFrame').src='/logs/index.html?t='+Date.now();
+    closeImport();document.getElementById('logsFrame').src='/logs?t='+Date.now();
     if(activeTab==='settings')populateSettings();
     showToast(`Import complete — ${fc} trade${fc!==1?'s':''}${shouldRestore?' + settings':''}!`,'fa-solid fa-circle-check','green');
   } catch(e){
@@ -771,7 +771,7 @@ async function bnbRunImport(){
   resultBody.innerHTML=bodyParts.join(' · ')+'.<br><span style="font-size:11px;color:var(--muted)">Switch to the Logs tab to see your imported trades.</span>';
   resultEl.classList.add('show');
 
-  try{if(lf?.contentWindow){lf.src='/logs/index.html?t='+Date.now();}}catch(ex){}
+  try{if(lf?.contentWindow){lf.src='/logs?t='+Date.now();}}catch(ex){}
   if(imported>0){
     showToast(`${imported} trade${imported!==1?'s':''} imported from Binance CSV!`,'fa-solid fa-circle-check','green');
   }

@@ -5,6 +5,7 @@
 .loading-overlay{display:flex;align-items:center;justify-content:center;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:9999;visibility:visible;opacity:1;transition:opacity 0.3s ease,visibility 0.3s ease}
 .loading-overlay.hidden{visibility:hidden;opacity:0;pointer-events:none}
 .loading-spinner{display:flex;flex-direction:column;align-items:center;gap:16px}
+.pl-spin{width:30px;height:30px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
 body{visibility:hidden;background:var(--bg);color:var(--text);font-family:var(--font-body,'Inter',sans-serif);padding:16px;min-height:100vh}
 .pw{max-width:820px;margin:0 auto}
 .cal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}

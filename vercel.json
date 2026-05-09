@@ -6,6 +6,8 @@
     { "source": "/auth",            "destination": "/src/pages/auth.html" },
     { "source": "/dashboard",       "destination": "/src/pages/dashboard.html" },
     { "source": "/journal",         "destination": "/src/pages/journal.html" },
+    { "source": "/logs",            "destination": "/src/pages/logs.html" },
+    { "source": "/presession",      "destination": "/src/pages/presession.html" },
     { "source": "/analytics",       "destination": "/src/pages/analytics.html" },
     { "source": "/calendar",        "destination": "/src/pages/calendar.html" },
     { "source": "/notes",           "destination": "/src/pages/notes.html" },
