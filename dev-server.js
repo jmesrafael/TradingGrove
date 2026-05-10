@@ -4,7 +4,6 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const url = require('url');
 
 const PREFERRED_PORT = 5500;
 const rootDir = __dirname;
@@ -45,8 +44,9 @@ const mimeTypes = {
 function serveFile(filePath, res) {
   fs.readFile(filePath, (err, data) => {
     if (err) {
+      console.error('[500]', filePath, err.code);
       res.writeHead(500);
-      res.end('Server Error');
+      res.end('Server Error: ' + err.code + ' — ' + filePath);
       return;
     }
     const ext = path.extname(filePath);
@@ -56,8 +56,7 @@ function serveFile(filePath, res) {
 }
 
 const server = http.createServer((req, res) => {
-  const parsedUrl = url.parse(req.url);
-  const pathname = parsedUrl.pathname;
+  const pathname = new URL(req.url, 'http://localhost').pathname;
 
   // CORS for local API testing
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -73,7 +72,7 @@ const server = http.createServer((req, res) => {
   // 1) Vercel rewrite match (clean URLs like /dashboard → /src/pages/dashboard.html)
   const rewritten = applyRewrite(pathname);
   if (rewritten) {
-    return serveFile(path.join(rootDir, rewritten), res);
+    return serveFile(path.join(rootDir, 'src', rewritten), res);
   }
 
   // 2) Direct file serve (for assets like /src/assets/...)
@@ -83,22 +82,30 @@ const server = http.createServer((req, res) => {
       return serveFile(directPath, res);
     }
 
-    // 3) Try with .html extension at root (only if pathname doesn't already end with .html)
-    if (!pathname.endsWith('.html')) {
-      const htmlPath = directPath + '.html';
-      fs.stat(htmlPath, (err2, stats2) => {
-        if (!err2 && stats2.isFile()) {
-          return serveFile(htmlPath, res);
-        }
+    // 2b) Also try src/ for assets that live under src/
+    const srcPath = path.join(rootDir, 'src', pathname);
+    fs.stat(srcPath, (errSrc, statsSrc) => {
+      if (!errSrc && statsSrc.isFile()) {
+        return serveFile(srcPath, res);
+      }
+
+      // 3) Try with .html extension at root (only if pathname doesn't already end with .html)
+      if (!pathname.endsWith('.html')) {
+        const htmlPath = directPath + '.html';
+        fs.stat(htmlPath, (err2, stats2) => {
+          if (!err2 && stats2.isFile()) {
+            return serveFile(htmlPath, res);
+          }
+          tryPagesPath();
+        });
+      } else {
         tryPagesPath();
-      });
-    } else {
-      tryPagesPath();
-    }
+      }
+    });
 
     function tryPagesPath() {
-      // 4) Try src/pages/{path} or src/pages/{path without .html}.html as fallback
-      let pagesPath = path.join(rootDir, 'src', 'pages', pathname.replace(/^\//, ''));
+      // 4) Try src/{path} or src/{path without .html}.html as fallback
+      let pagesPath = path.join(rootDir, 'src', pathname.replace(/^\//, ''));
 
       // If pathname ends with .html, try it as-is first, then without extension
       if (pathname.endsWith('.html')) {

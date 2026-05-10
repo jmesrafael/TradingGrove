@@ -5,6 +5,7 @@
   "description": "Professional trading journal and risk management platform for crypto and forex traders.",
   "scripts": {
     "dev": "node dev-server.js",
+    "build": "node build.js",
     "deploy:functions": "supabase functions deploy",
     "deploy:db": "supabase db push"
   },
