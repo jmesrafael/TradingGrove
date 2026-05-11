@@ -166,7 +166,7 @@ findFreePort(PREFERRED_PORT, (port) => {
     console.log('║        TradingGrove Dev Server Running                 ║');
     console.log('╠════════════════════════════════════════════════════════╣');
     console.log(`║  🚀 URL: ${serverUrl.padEnd(46)}║`);
-    console.log(`║  ✅ Vercel rewrites loaded: ${String(rewrites.length).padEnd(28)}║`);
+    console.log(`║  ✅ Vercel rewrites loaded: ${String(rewrites.length).padEnd(27)}║`);
     console.log('║  ✅ CORS enabled for local API testing                 ║');
     console.log('║  📝 Press Ctrl+C to stop the server                    ║');
     console.log('╚════════════════════════════════════════════════════════╝');
