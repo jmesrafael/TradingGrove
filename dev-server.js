@@ -41,7 +41,7 @@ const mimeTypes = {
   '.ttf': 'font/ttf'
 };
 
-function serveFile(filePath, res) {
+function serveFile(filePath, res, statusCode = 200) {
   fs.readFile(filePath, (err, data) => {
     if (err) {
       console.error('[500]', filePath, err.code);
@@ -50,8 +50,20 @@ function serveFile(filePath, res) {
       return;
     }
     const ext = path.extname(filePath);
-    res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'text/plain' });
+    res.writeHead(statusCode, { 'Content-Type': mimeTypes[ext] || 'text/plain' });
     res.end(data);
+  });
+}
+
+function serve404(res) {
+  const notFoundPath = path.join(rootDir, 'src', '404.html');
+  fs.stat(notFoundPath, (err) => {
+    if (!err) {
+      return serveFile(notFoundPath, res, 404);
+    }
+    // Fallback if 404.html doesn't exist
+    res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end('<h1>404 - Page Not Found</h1>');
   });
 }
 
@@ -119,8 +131,7 @@ const server = http.createServer((req, res) => {
             if (!err4 && stats4.isFile()) {
               return serveFile(pagesPath, res);
             }
-            res.writeHead(404);
-            res.end('404 Not Found - File not found: ' + req.url);
+            serve404(res);
           });
         });
       } else {
@@ -130,8 +141,7 @@ const server = http.createServer((req, res) => {
           if (!err3 && stats3.isFile()) {
             return serveFile(pagesPath, res);
           }
-          res.writeHead(404);
-          res.end('404 Not Found - File not found: ' + req.url);
+          serve404(res);
         });
       }
     }

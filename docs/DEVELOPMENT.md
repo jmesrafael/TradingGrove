@@ -37,7 +37,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the full folder layout.
    ```js
    Object.assign(window, { functionA, functionB });
    ```
-4. Create `src/styles/pages/{name}.css` with page styles
+4. Create `src/styles/{name}.css` with page styles
 5. Add a rewrite to `vercel.json`:
    ```json
    { "source": "/{name}", "destination": "/src/pages/{name}.html" }
@@ -46,7 +46,7 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the full folder layout.
 
 ## Editing Styles
 
-Each page has its own CSS file at `src/styles/pages/{page}.css`. Theme variables (`--bg`, `--text`, `--accent`, `--panel`, `--border`, etc.) are defined in `src/js/lib/theme.js` and applied as inline CSS variables on `<html>` by the theme system.
+Each page has its own CSS file at `src/styles/{page}.css`. Theme variables (`--bg`, `--text`, `--accent`, `--panel`, `--border`, etc.) are defined in `src/js/lib/theme.js` and applied as inline CSS variables on `<html>` by the theme system.
 
 ## Supabase Edge Functions
 
@@ -75,4 +75,4 @@ vercel --prod
 | Port 5500 already in use | Stop the process using the port, or edit `PORT` in `dev-server.js` |
 | `/dashboard` returns 404 | Make sure `dev-server.js` is running (not a plain file server) |
 | Supabase session not found | Clear localStorage and sign in again |
-| CSS not loading | Check the `<link>` href in the HTML matches the file in `src/styles/pages/` |
+| CSS not loading | Check the `<link>` href in the HTML matches the file in `src/styles/` |
