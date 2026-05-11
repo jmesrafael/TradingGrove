@@ -133,6 +133,9 @@ let _bnbLastCsvText = '';
   if(lf?.contentDocument?.readyState==='complete')frameReady('logs');
   _preloadTabs();
   cLoadDefaults();
+  // Check today's trades against configured limits after everything is ready
+  dllLoadSettings();
+  _dllCheckFromDB();
 })();
 
 function _preloadTabs(){
@@ -154,7 +157,7 @@ function navigateSafely(dest){
 window.addEventListener('message',e=>{
   if(e.data?.type==='tz_flushed'&&_flushTarget){clearTimeout(_flushTimer);const d=_flushTarget;_flushTarget=null;location.href=d;}
   if(e.data?.type==='tz_analytics_state'){const sw=document.getElementById('analyticsToggleSwitch');if(sw)sw.classList.toggle('on',!!e.data.on);}
-  if(e.data?.type==='tz_trades_changed'){bcast(e.data);}
+  if(e.data?.type==='tz_trades_changed'){bcast(e.data);_dllCheckFromDB();}
   if(e.data?.type==='tz_presession_summary'){
     const dot=document.getElementById('psTabDot');
     const mobDot=document.getElementById('mobPsDot');
@@ -170,6 +173,15 @@ window.addEventListener('message',e=>{
     ['logsFrame'].forEach(fid=>{try{const f=document.getElementById(fid);if(f?.contentWindow)f.contentWindow.postMessage(e.data,'*');}catch(ex){}});
   }
   if(e.data?.type==='tz_open_tab'&&e.data.tab){try{switchTab(e.data.tab);_syncMobMenu(e.data.tab);}catch(ex){}}
+  if(e.data?.type==='TRADE_LOGGED'&&typeof e.data.pnl==='number'&&e.data.pnl<0){
+    if(_dllSettings.enabled){
+      const log=_dllGetTodayLog();
+      log.push({amount:Math.abs(e.data.pnl),timestamp:Date.now()});
+      localStorage.setItem(_dllTodayKey(),JSON.stringify(log));
+      dllRenderToday();
+      _dllCheckAndPersist();
+    }
+  }
 });
 
 function goBack(){if(activeTab==='settings'&&isDirty){showToast('Save or discard settings first.','fa-solid fa-triangle-exclamation','red');return;}navigateSafely('/dashboard');}
@@ -205,6 +217,8 @@ function frameReady(n){
   try{if(f?.contentWindow)f.contentWindow.postMessage({type:'tz_plan',isPro:userIsPro},'*');}catch(e){}
   try{if(f?.contentWindow)f.contentWindow.postMessage({type:'tz_tab_changed',tab:activeTab},'*');}catch(e){}
   if(f){f.classList.add('ready');const l=document.getElementById('loader-'+n);if(l){l.classList.add('hidden');setTimeout(()=>{if(l.classList.contains('hidden'))l.style.display='none';},350);}}
+  _dllSendToFrame(n);
+  if(n==='logs')_dllCheckFromDB(); // re-check whenever the logs iframe (re)loads
 }
 function bcast(msg){['logsFrame','presessionFrame','calFrame','notesFrame','analyticsFrame'].forEach(id=>{const f=document.getElementById(id);try{if(f?.contentWindow)f.contentWindow.postMessage(msg,'*');}catch(e){}});}
 
@@ -220,7 +234,7 @@ function populateSettings(){
   document.getElementById('showCapToggle').classList.toggle('on',journalObj.show_capital!==false);
   const aOn=localStorage.getItem('tl_analytics_on')!=='false';
   const sw=document.getElementById('analyticsToggleSwitch');if(sw)sw.classList.toggle('on',aOn);
-  renderPinSection();renderTagLists();renderMoodGrid();renderExportImport();clearDirty();
+  renderPinSection();renderTagLists();renderMoodGrid();renderExportImport();dllPopulateSettings();clearDirty();
   _settingsReady=true;
 }
 function renderPinSection(){
@@ -999,5 +1013,226 @@ document.getElementById('cAcctCurrency')?.addEventListener('change',()=>{
   document.addEventListener('touchend',()=>{drag=false;});
 })();
 
+// ═══════════════════════════════════════════════════════════════════════
+//  DAILY LOSS LIMIT
+// ═══════════════════════════════════════════════════════════════════════
+const DLL_SETTINGS_KEY = 'tg_loss_limit';
+const DLL_STATE_KEY    = 'tg_loss_limit_state';
+const DLL_TIP_KEY      = 'tg_loss_limit_tip_dismissed';
+// Both thresholds are always active; whichever is hit first fires the alert.
+let _dllSettings = {enabled:false, losses:2, usd:50};
+
+function _dllTodayKey(){
+  const d=new Date();
+  return `tg_loss_log_${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function _dllToday(){return new Date().toISOString().slice(0,10);}
+function _dllGetTodayLog(){try{return JSON.parse(localStorage.getItem(_dllTodayKey()))||[];}catch{return[];}}
+function _dllGetTodayTotal(){
+  const log=_dllGetTodayLog();
+  return {losses:log.length, usd:log.reduce((s,e)=>s+(parseFloat(e.amount)||0),0)};
+}
+
+function dllLoadSettings(){
+  try{
+    // Supabase settings row takes priority if it has the new dual format
+    if(settings?.loss_limit&&(settings.loss_limit.losses!==undefined||settings.loss_limit.usd!==undefined)){
+      _dllSettings=Object.assign({enabled:false,losses:2,usd:50},settings.loss_limit);
+      localStorage.setItem(DLL_SETTINGS_KEY,JSON.stringify(_dllSettings));return;
+    }
+    const raw=localStorage.getItem(DLL_SETTINGS_KEY);
+    if(raw){
+      const parsed=JSON.parse(raw);
+      // Migrate old single-type format
+      if(parsed.type&&parsed.value!==undefined){
+        _dllSettings={enabled:parsed.enabled||false,losses:parsed.type==='losses'?parsed.value:2,usd:parsed.type==='usd'?parsed.value:50};
+      }else{
+        _dllSettings=Object.assign({enabled:false,losses:2,usd:50},parsed);
+      }
+    }
+  }catch{}
+}
+
+async function dllSave(){
+  const enabled=document.getElementById('dllEnabledToggle').classList.contains('on');
+  const losses=parseInt(document.getElementById('dllLossesVal').value)||2;
+  const usd=parseFloat(document.getElementById('dllUsdVal').value)||50;
+  _dllSettings={enabled,losses,usd};
+  localStorage.setItem(DLL_SETTINGS_KEY,JSON.stringify(_dllSettings));
+  try{if(journalId)await updateJournalSettings(journalId,{loss_limit:_dllSettings});}catch(e){}
+  dllDismissTip();
+  showToast('Loss limit saved!','fa-solid fa-circle-check','green');
+  _dllCheckFromDB(); // re-check against today's actual trades with the new limits
+}
+
+function dllToggleEnabled(){document.getElementById('dllEnabledToggle').classList.toggle('on');dllMarkDirty();}
+function dllMarkDirty(){}
+
+function dllScrollToInput(){
+  const inp=document.getElementById('dllLossesVal');
+  if(inp){inp.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>inp.focus(),300);}
+}
+
+function dllDismissTip(){
+  localStorage.setItem(DLL_TIP_KEY,'1');
+  const tip=document.getElementById('dllTipCard');
+  if(tip)tip.style.display='none';
+}
+
+function dllPopulateSettings(){
+  dllLoadSettings();
+  const s=_dllSettings;
+  document.getElementById('dllEnabledToggle')?.classList.toggle('on',!!s.enabled);
+  const lv=document.getElementById('dllLossesVal');if(lv)lv.value=s.losses||2;
+  const uv=document.getElementById('dllUsdVal');if(uv)uv.value=s.usd||50;
+  const tip=document.getElementById('dllTipCard');
+  if(tip)tip.style.display=(!s.enabled&&!localStorage.getItem(DLL_TIP_KEY))?'':'none';
+  dllRenderToday();
+}
+
+function dllRenderToday(totals){
+  const todayEl=document.getElementById('dllToday');
+  const logRow=document.getElementById('dllLogRow');
+  if(!todayEl)return;
+  if(!_dllSettings.enabled){todayEl.style.display='none';if(logRow)logRow.style.display='none';return;}
+  todayEl.style.display='';
+  if(logRow)logRow.style.display='';
+  const t=totals||_dllGetTodayTotal();
+  const lLimit=_dllSettings.losses||2, uLimit=_dllSettings.usd||50;
+  const lv=document.getElementById('dllTodayLossesVal');
+  if(lv)lv.textContent=`${t.losses} / ${lLimit} loss${lLimit!==1?'es':''}`;
+  const lf=document.getElementById('dllTodayLossesFill');
+  if(lf){const p=Math.min((t.losses/lLimit)*100,100);lf.style.width=p+'%';lf.classList.toggle('danger',p>=100);}
+  const uv=document.getElementById('dllTodayUsdVal');
+  if(uv)uv.textContent=`$${t.usd.toFixed(2)} / $${uLimit.toFixed(2)}`;
+  const uf=document.getElementById('dllTodayUsdFill');
+  if(uf){const p=Math.min((t.usd/uLimit)*100,100);uf.style.width=p+'%';uf.classList.toggle('danger',p>=100);}
+}
+
+function dllLogLoss(){
+  if(!_dllSettings.enabled)return;
+  const inp=document.getElementById('dllLogUsdInput');
+  const amount=parseFloat(inp?.value)||0;
+  if(inp)inp.value='';
+  // Append to localStorage as a manual entry (separate from actual trades)
+  const log=_dllGetTodayLog();
+  log.push({amount,timestamp:Date.now()});
+  localStorage.setItem(_dllTodayKey(),JSON.stringify(log));
+  // Re-check against DB (merges manual + actual trades)
+  _dllCheckFromDB();
+  showToast('Loss logged.','fa-solid fa-minus-circle','red');
+}
+
+function _dllCheckAndPersist(){
+  if(!_dllSettings.enabled)return;
+  const t=_dllGetTodayTotal();
+  const hitLosses=_dllSettings.losses>0&&t.losses>=_dllSettings.losses;
+  const hitUsd=_dllSettings.usd>0&&t.usd>=_dllSettings.usd;
+  if(hitLosses||hitUsd){
+    localStorage.setItem(DLL_STATE_KEY,JSON.stringify({hit:true,date:_dllToday()}));
+    _dllFireAlert(t,hitLosses,hitUsd);
+  }
+}
+
+// Query today's negative-PNL trades directly from Supabase
+async function _dllQueryTodayFromDB(){
+  try{
+    if(!journalId)return null;
+    const{data,error}=await db.from('trades').select('pnl')
+      .eq('journal_id',journalId)
+      .eq('trade_date',_dllToday())
+      .lt('pnl',0);
+    if(error||!data)return null;
+    return{
+      losses:data.length,
+      usd:data.reduce((s,t)=>s+Math.abs(parseFloat(t.pnl)||0),0)
+    };
+  }catch{return null;}
+}
+
+// Primary check — DB is the single source of truth.
+// Fires alert when over limit; clears ALL alert state when under limit.
+async function _dllCheckFromDB(){
+  if(!_dllSettings.enabled)return;
+  const totals=await _dllQueryTodayFromDB();
+  // If DB is unreachable don't touch state — avoids false clears on network hiccup
+  if(!totals)return;
+  dllRenderToday(totals);
+  const hitLosses=_dllSettings.losses>0&&totals.losses>=_dllSettings.losses;
+  const hitUsd=_dllSettings.usd>0&&totals.usd>=_dllSettings.usd;
+  if(hitLosses||hitUsd){
+    localStorage.setItem(DLL_STATE_KEY,JSON.stringify({hit:true,date:_dllToday()}));
+    if(!document.body.classList.contains('dll-glow'))_dllFireAlert(totals,hitLosses,hitUsd);
+    else _dllBroadcast(totals);
+  }else{
+    // Trades deleted / edited back below limit — clear everything
+    const wasHit=!!localStorage.getItem(DLL_STATE_KEY)||document.body.classList.contains('dll-glow');
+    localStorage.removeItem(DLL_STATE_KEY);
+    localStorage.removeItem(_dllTodayKey()); // clear manual log too so it doesn't inflate future checks
+    document.getElementById('dllOverlay')?.classList.remove('open');
+    document.body.classList.remove('dll-glow');
+    if(wasHit)bcast({type:'TG_LOSS_LIMIT_CLEAR'});
+  }
+}
+
+function _dllFireAlert(totals,hitLosses,hitUsd){
+  const parts=[];
+  if(hitLosses)parts.push(`${totals.losses} loss${totals.losses!==1?'es':''} today`);
+  if(hitUsd)parts.push(`$${totals.usd.toFixed(2)} lost today`);
+  const subEl=document.getElementById('dllModalSub');
+  if(subEl)subEl.textContent=parts.join(' · ');
+  document.getElementById('dllOverlay')?.classList.add('open');
+  _dllBroadcast(totals);
+}
+
+function _dllBroadcast(totals){
+  const t=totals||_dllGetTodayTotal();
+  bcast({type:'TG_LOSS_LIMIT_HIT',limitLosses:_dllSettings.losses,limitUsd:_dllSettings.usd,currentLosses:t.losses,currentUsd:t.usd});
+}
+
+function dllDismissOverlay(){
+  document.getElementById('dllOverlay')?.classList.remove('open');
+  document.body.classList.add('dll-glow');
+  _dllBroadcast();
+}
+
+function _dllSendToFrame(frameName){
+  if(!_dllSettings.enabled)return;
+  try{
+    const raw=localStorage.getItem(DLL_STATE_KEY);if(!raw)return;
+    const state=JSON.parse(raw);
+    if(state.hit&&state.date===_dllToday()){
+      const map={logs:'logsFrame',presession:'presessionFrame',calendar:'calFrame',notes:'notesFrame',analytics:'analyticsFrame'};
+      const f=document.getElementById(map[frameName]);
+      const t=_dllGetTodayTotal();
+      if(f?.contentWindow)f.contentWindow.postMessage({type:'TG_LOSS_LIMIT_HIT',limitLosses:_dllSettings.losses,limitUsd:_dllSettings.usd,currentLosses:t.losses,currentUsd:t.usd},'*');
+    }
+  }catch{}
+}
+
+function _dllCheckOnLoad(){
+  dllLoadSettings();
+  if(!_dllSettings.enabled)return;
+  try{
+    const raw=localStorage.getItem(DLL_STATE_KEY);if(!raw)return;
+    const state=JSON.parse(raw);
+    if(state.hit&&state.date===_dllToday())document.body.classList.add('dll-glow');
+  }catch{}
+}
+
+// Midnight reset
+(function _dllScheduleReset(){
+  const now=new Date();
+  const tomorrow=new Date(now.getFullYear(),now.getMonth(),now.getDate()+1,0,0,5);
+  setTimeout(()=>{
+    localStorage.removeItem(DLL_STATE_KEY);
+    document.body.classList.remove('dll-glow');
+    bcast({type:'TG_LOSS_LIMIT_CLEAR'});
+    _dllScheduleReset();
+  },tomorrow-now);
+})();
+
+_dllCheckOnLoad();
+
 // Inline handlers in HTML call these by global name.
-Object.assign(window, { addMoodTag, addTag, bnbClearFile, bnbDzDrop, bnbDzOver, bnbOnFileSelect, bnbRunImport, cCalc, checkDel, clearFile, closeDelJournal, closeExport, closeImport, closeMobSidebar, confirmExport, confirmImport, cSaveDefault, cSetAsset, cSetRiskMode, cSetSlMode, cSetTpMode, discardChanges, dzDrop, dzOver, executeDelete, exportCSV, frameReady, fSetRiskMode, fSetSlMode, fSetTpMode, goBack, markDirty, mobSwitchTab, onFileSelect, onPinInput, openDelJournal, openExport, openImport, openMobSidebar, removeMoodTag, removePin, removeTag, saveJournalSettings, setImpMode, setScope, showPinForm, switchTab, toggleAnalyticsBar, toggleCalc, toggleFlag, toggleSidebar, undoTagRemove, updateMoodColor });
+Object.assign(window, { addMoodTag, addTag, bnbClearFile, bnbDzDrop, bnbDzOver, bnbOnFileSelect, bnbRunImport, cCalc, checkDel, clearFile, closeDelJournal, closeExport, closeImport, closeMobSidebar, confirmExport, confirmImport, cSaveDefault, cSetAsset, cSetRiskMode, cSetSlMode, cSetTpMode, discardChanges, dllDismissOverlay, dllDismissTip, dllLogLoss, dllMarkDirty, dllSave, dllScrollToInput, dllToggleEnabled, dzDrop, dzOver, executeDelete, exportCSV, frameReady, fSetRiskMode, fSetSlMode, fSetTpMode, goBack, markDirty, mobSwitchTab, onFileSelect, onPinInput, openDelJournal, openExport, openImport, openMobSidebar, removeMoodTag, removePin, removeTag, saveJournalSettings, setImpMode, setScope, showPinForm, switchTab, toggleAnalyticsBar, toggleCalc, toggleFlag, toggleSidebar, undoTagRemove, updateMoodColor });

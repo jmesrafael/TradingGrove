@@ -204,6 +204,72 @@
             <div class="toggle-row"><div class="tinfo"><div class="tname">Show Analytics Bar in Logs</div><div class="tdesc">Win rate, streaks and PNL summary above table</div></div><div class="tswitch" id="analyticsToggleSwitch" onclick="toggleAnalyticsBar()"></div></div>
           </div>
 
+          <!-- ══════════ DAILY LOSS LIMIT ══════════ -->
+          <div class="ssec" id="dailyLossLimitSec">
+            <div class="ssec-title"><i class="fa-solid fa-shield-halved"></i>Daily Loss Limit</div>
+
+            <!-- Onboarding tip (shown once for new users) -->
+            <div class="dll-tip" id="dllTipCard">
+              <div class="dll-tip-text">Set a daily loss limit to protect your account. You can always change this later.</div>
+              <div style="display:flex;gap:8px;margin-top:10px">
+                <button class="dll-tip-set" onclick="dllScrollToInput()"><i class="fa-solid fa-shield-halved"></i> Set Now</button>
+                <button class="dll-tip-dismiss" onclick="dllDismissTip()">Dismiss</button>
+              </div>
+            </div>
+
+            <!-- Enable toggle -->
+            <div class="toggle-row">
+              <div class="tinfo"><div class="tname">Enable Daily Loss Limit</div><div class="tdesc">Get warned when your daily limit is hit</div></div>
+              <div class="tswitch" id="dllEnabledToggle" onclick="dllToggleEnabled()"></div>
+            </div>
+
+            <!-- Losses threshold -->
+            <div class="dll-row">
+              <div class="dll-label">Max losses per day<div style="font-size:10px;margin-top:2px;color:var(--muted2)">Alert fires when either threshold is hit</div></div>
+              <input type="number" class="dll-input" id="dllLossesVal" min="1" max="20" step="1" placeholder="e.g. 2" value="2" oninput="dllMarkDirty()">
+            </div>
+
+            <!-- USD threshold -->
+            <div class="dll-row">
+              <div class="dll-label">Max USD loss per day</div>
+              <div style="position:relative">
+                <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none">$</span>
+                <input type="number" class="dll-input" id="dllUsdVal" min="0.01" step="0.01" placeholder="50.00" style="padding-left:26px" oninput="dllMarkDirty()">
+              </div>
+            </div>
+
+            <div class="save-row" style="margin-top:14px">
+              <button class="jsave-btn" onclick="dllSave()"><i class="fa-solid fa-floppy-disk"></i>Save Limit</button>
+            </div>
+
+            <!-- Today's usage progress (dual bars) -->
+            <div class="dll-today" id="dllToday" style="display:none">
+              <div class="dll-today-title"><i class="fa-solid fa-calendar-day"></i> Today's Usage</div>
+              <div class="dll-today-row">
+                <span class="dll-today-label">Losses</span>
+                <span class="dll-today-val" id="dllTodayLossesVal">0 / 2</span>
+              </div>
+              <div class="dll-today-bar"><div class="dll-today-fill" id="dllTodayLossesFill"></div></div>
+              <div class="dll-today-row" style="margin-top:8px">
+                <span class="dll-today-label">USD Lost</span>
+                <span class="dll-today-val" id="dllTodayUsdVal">$0.00 / $50.00</span>
+              </div>
+              <div class="dll-today-bar"><div class="dll-today-fill" id="dllTodayUsdFill"></div></div>
+            </div>
+
+            <!-- Manual log row -->
+            <div class="dll-log-row" id="dllLogRow" style="display:none">
+              <div>
+                <div style="font-size:13px;font-weight:500;color:var(--text)">Log a Loss</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">Enter USD amount (optional)</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <input type="number" class="dll-usd-input" id="dllLogUsdInput" placeholder="$ 0.00" step="0.01">
+                <button class="dll-log-btn" onclick="dllLogLoss()"><i class="fa-solid fa-minus"></i> Log Loss</button>
+              </div>
+            </div>
+          </div>
+
           <div class="ssec"><div class="ssec-title"><i class="fa-solid fa-chess-knight"></i>Strategy Tags</div><div class="tag-list" id="stratList"></div><div class="tag-add-row"><input type="text" class="tag-input" id="stratInput" placeholder="Add strategy…"><button class="tag-add-btn" onclick="addTag('strategies','stratInput')"><i class="fa-solid fa-plus"></i>Add</button></div></div>
           <div class="ssec"><div class="ssec-title"><i class="fa-solid fa-clock"></i>Timeframe Tags</div><div class="tag-list" id="tfList"></div><div class="tag-add-row"><input type="text" class="tag-input" id="tfInput" placeholder="Add timeframe…"><button class="tag-add-btn" onclick="addTag('timeframes','tfInput')"><i class="fa-solid fa-plus"></i>Add</button></div></div>
           <div class="ssec"><div class="ssec-title"><i class="fa-solid fa-arrow-right-arrow-left"></i>Pair Suggestions</div><div class="tag-list" id="pairList"></div><div class="tag-add-row"><input type="text" class="tag-input" id="pairInput" placeholder="EURUSD…"><button class="tag-add-btn" onclick="addTag('pairs','pairInput')"><i class="fa-solid fa-plus"></i>Add</button></div></div>
@@ -598,6 +664,66 @@
 </div>
 
 <div id="toast"><i id="toastIcon" class="fa-solid fa-circle-check"></i><span id="toastMsg"></span></div>
+
+<!-- ══════════ DAILY LOSS LIMIT SKULL OVERLAY ══════════ -->
+<div id="dllOverlay" class="dll-overlay">
+  <div class="dll-modal">
+    <div class="dll-skull-icon"><i class="fa-solid fa-skull-crossbones"></i></div>
+    <div class="dll-modal-title">DAILY LOSS LIMIT REACHED</div>
+    <div class="dll-modal-sub" id="dllModalSub">2 losses today</div>
+    <div class="dll-modal-warn">Step away from the charts.</div>
+    <button class="dll-dismiss-btn" onclick="dllDismissOverlay()">I Understand — Dismiss</button>
+  </div>
+</div>
+
+<style>
+/* ── Daily Loss Limit: settings section ── */
+.dll-tip{background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.2);border-radius:var(--radius-md);padding:12px 14px;margin-bottom:14px;font-size:13px}
+.dll-tip-text{color:var(--text);line-height:1.6}
+.dll-tip-set{background:var(--accent2);color:#0b0f0c;border:none;border-radius:var(--radius-md);padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-heading,'Space Grotesk',sans-serif)}
+.dll-tip-dismiss{background:none;border:1px solid var(--border);color:var(--muted);border-radius:var(--radius-md);padding:7px 14px;font-size:12px;cursor:pointer}
+.dll-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--border)}
+.dll-label{font-size:13px;color:var(--muted);flex:1}
+.dll-input{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:7px 12px;font-size:13px;color:var(--text);font-family:var(--font-body,'Inter',sans-serif);width:120px;outline:none}
+.dll-input:focus{border-color:var(--accent2)}
+.dll-today{margin-top:14px;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md)}
+.dll-today-title{font-size:11px;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em}
+.dll-today-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.dll-today-label{font-size:11px;color:var(--muted)}
+.dll-today-val{font-size:12px;font-weight:600;color:var(--text)}
+.dll-today-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:2px}
+.dll-today-fill{height:100%;background:var(--accent2);border-radius:2px;transition:width .4s;max-width:100%}
+.dll-today-fill.danger{background:var(--red)}
+.dll-log-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-top:1px solid var(--border);margin-top:4px}
+.dll-log-btn{background:rgba(255,95,109,.1);border:1px solid rgba(255,95,109,.3);color:var(--red);border-radius:var(--radius-md);padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-heading,'Space Grotesk',sans-serif);transition:all .15s}
+.dll-log-btn:hover{background:rgba(255,95,109,.2)}
+.dll-usd-input{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-md);padding:6px 10px;font-size:12px;color:var(--text);font-family:var(--font-body,'Inter',sans-serif);width:100px;outline:none}
+.dll-usd-input:focus{border-color:var(--red)}
+
+/* ── Parent skull overlay ── */
+.dll-overlay{display:none;position:fixed;inset:0;z-index:99990;background:radial-gradient(ellipse at center,transparent 20%,rgba(120,0,0,.6) 65%,rgba(80,0,0,.92) 100%);align-items:center;justify-content:center;animation:dll-bg-pulse 2.2s ease-in-out infinite alternate}
+.dll-overlay.open{display:flex}
+@keyframes dll-bg-pulse{
+  from{background:radial-gradient(ellipse at center,transparent 25%,rgba(100,0,0,.5) 65%,rgba(60,0,0,.88) 100%)}
+  to{background:radial-gradient(ellipse at center,transparent 15%,rgba(150,0,0,.7) 60%,rgba(100,0,0,.95) 100%)}
+}
+.dll-modal{background:rgba(20,5,5,.97);border:1px solid rgba(200,0,0,.5);border-radius:16px;padding:40px 36px;max-width:420px;width:90%;text-align:center;box-shadow:0 0 80px rgba(200,0,0,.4),0 20px 60px rgba(0,0,0,.8);animation:dll-modal-in .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes dll-modal-in{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+.dll-skull-icon{font-size:52px;color:#ff3333;filter:drop-shadow(0 0 20px rgba(255,0,0,.6));animation:dll-skull-pulse 1.4s ease-in-out infinite alternate;margin-bottom:16px}
+@keyframes dll-skull-pulse{from{filter:drop-shadow(0 0 12px rgba(255,0,0,.4))}to{filter:drop-shadow(0 0 32px rgba(255,0,0,.9))}}
+.dll-modal-title{font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:20px;font-weight:800;color:#ff4444;letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+.dll-modal-sub{font-size:15px;color:#ffaaaa;margin-bottom:6px}
+.dll-modal-warn{font-size:13px;color:#ff8888;margin-bottom:28px;opacity:.85}
+.dll-dismiss-btn{background:rgba(200,0,0,.15);border:2px solid rgba(255,60,60,.6);color:#ff6666;border-radius:8px;padding:12px 28px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font-heading,'Space Grotesk',sans-serif);letter-spacing:.05em;transition:all .2s}
+.dll-dismiss-btn:hover{background:rgba(200,0,0,.3);border-color:rgba(255,80,80,.9)}
+
+/* ── Persistent body glow after dismiss ── */
+body.dll-glow{animation:dll-body-glow 2.5s ease-in-out infinite alternate}
+@keyframes dll-body-glow{
+  from{box-shadow:inset 0 0 0 2px rgba(200,0,0,.3),inset 0 0 40px rgba(150,0,0,.08)}
+  to{box-shadow:inset 0 0 0 3px rgba(255,60,60,.5),inset 0 0 80px rgba(200,0,0,.18)}
+}
+</style>
 
 <script src="/js/modules/journal.js"></script>
 </body>
