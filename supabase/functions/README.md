@@ -45,7 +45,7 @@
 | `SUPABASE_ANON_KEY` / `ANON_KEY` | billing-portal, delete-account | User token verification |
 | `STRIPE_SECRET_KEY` | create-checkout, billing-portal, stripe-webhook | Stripe API |
 | `STRIPE_WEBHOOK_SECRET` | stripe-webhook | Verify webhook signatures |
-| `APP_URL` | create-checkout, billing-portal | Build redirect URLs (defaults to `https://tradinggrove.vercel.app`) |
+| `APP_URL` | create-checkout, billing-portal | Build redirect URLs (defaults to `https://tradinggrove.com`) |
 | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_ENDPOINT` | generate-r2-upload-url | Cloudflare R2 credentials |
 | `R2_PUBLIC_URL` (optional) | generate-r2-upload-url | Custom public domain for uploaded images |
 

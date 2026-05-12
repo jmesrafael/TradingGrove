@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceKey  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const stripeKey   = Deno.env.get("STRIPE_SECRET_KEY");
-    const appUrl      = Deno.env.get("APP_URL") || "https://tradinggrove.vercel.app";
+    const appUrl      = Deno.env.get("APP_URL") || "https://tradinggrove.com";
 
     if (!supabaseUrl) return fail("SUPABASE_URL not set");
     if (!serviceKey)  return fail("SUPABASE_SERVICE_ROLE_KEY not set");

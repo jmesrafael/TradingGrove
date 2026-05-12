@@ -1,6 +1,8 @@
 // supabase/functions/paypal-webhook/index.ts
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { upgradePlan, downgradePlan } from '../_shared/plan-utils.ts'
+import { grantReferralReward } from '../_shared/referral-utils.ts'
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL')!,
@@ -10,6 +12,68 @@ const supabase = createClient(
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+async function verifyPayPalSignature(req: Request, body: any): Promise<boolean> {
+  try {
+    const transmissionId = req.headers.get('Paypal-Transmission-Id')
+    const transmissionTime = req.headers.get('Paypal-Transmission-Time')
+    const certUrl = req.headers.get('Paypal-Cert-Url')
+    const authAlgo = req.headers.get('Paypal-Auth-Algo')
+    const signature = req.headers.get('Paypal-Transmission-Sig')
+
+    if (!transmissionId || !transmissionTime || !certUrl || !authAlgo || !signature) {
+      console.log('Missing PayPal webhook headers')
+      return false
+    }
+
+    const clientId = Deno.env.get('PAYPAL_CLIENT_ID')
+    const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET')
+    const webhookId = Deno.env.get('PAYPAL_WEBHOOK_ID')
+
+    if (!clientId || !clientSecret || !webhookId) {
+      console.log('Missing PayPal configuration')
+      return false
+    }
+
+    // Prepare verification payload
+    const verifyPayload = {
+      transmission_id: transmissionId,
+      transmission_time: transmissionTime,
+      cert_url: certUrl,
+      auth_algo: authAlgo,
+      transmission_sig: signature,
+      webhook_id: webhookId,
+      webhook_event: body,
+    }
+
+    const auth = btoa(`${clientId}:${clientSecret}`)
+    const paypalMode = Deno.env.get('PAYPAL_MODE') || 'sandbox'
+    const apiUrl = paypalMode === 'live'
+      ? 'https://api.paypal.com'
+      : 'https://api.sandbox.paypal.com'
+
+    const response = await fetch(`${apiUrl}/v1/notifications/verify-webhook-signature`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(verifyPayload),
+    })
+
+    const result = await response.json() as Record<string, unknown>
+    const isValid = result.verification_status === 'SUCCESS'
+
+    if (!isValid) {
+      console.log('PayPal signature verification failed:', result)
+    }
+
+    return isValid
+  } catch (err) {
+    console.error('Signature verification error:', err)
+    return false
+  }
 }
 
 Deno.serve(async (req) => {
@@ -28,8 +92,15 @@ Deno.serve(async (req) => {
     return new Response('Invalid JSON', { status: 400 })
   }
 
+  // Verify webhook signature
+  const isValid = await verifyPayPalSignature(req, body)
+  if (!isValid) {
+    console.log('Invalid webhook signature')
+    return new Response('Unauthorized', { status: 401 })
+  }
+
   const { event_type, resource } = body
-  console.log('PayPal webhook received:', event_type)
+  console.log('PayPal webhook verified:', event_type)
 
   const subscriptionId = resource?.id || resource?.billing_agreement_id
   if (!subscriptionId) {
@@ -39,7 +110,7 @@ Deno.serve(async (req) => {
   // Find user by paypal_subscription_id (saved by create-paypal-subscription)
   const { data: profile, error } = await supabase
     .from('profiles')
-    .select('id, plan, plan_type, referred_by, subscription_expires_at')
+    .select('id, plan_type, referred_by, subscription_expires_at')
     .eq('paypal_subscription_id', subscriptionId)
     .single()
 
@@ -48,143 +119,80 @@ Deno.serve(async (req) => {
     return new Response('OK', { status: 200 })
   }
 
-  const now = new Date()
+  try {
+    switch (event_type) {
+      case 'BILLING.SUBSCRIPTION.ACTIVATED':
+      case 'BILLING.SUBSCRIPTION.RE-ACTIVATED': {
+        const planType = profile.plan_type === 'yearly' ? 'yearly' : 'monthly'
+        await upgradePlan(supabase, {
+          userId: profile.id,
+          subscriptionId,
+          gateway: 'paypal',
+          planType,
+        })
+        console.log('User upgraded to pro:', profile.id)
 
-  switch (event_type) {
+        if (profile.referred_by) {
+          try {
+            const { data: referral } = await supabase
+              .from('referrals')
+              .select('id')
+              .eq('referred_user_id', profile.id)
+              .eq('referrer_id', profile.referred_by)
+              .single()
 
-    case 'BILLING.SUBSCRIPTION.ACTIVATED':
-    case 'BILLING.SUBSCRIPTION.RE-ACTIVATED': {
-      const isYearly = profile.plan_type === 'yearly'
-      const expires = new Date(now)
-      if (isYearly) {
-        expires.setFullYear(expires.getFullYear() + 1)
-      } else {
-        expires.setMonth(expires.getMonth() + 1)
+            if (referral) {
+              await grantReferralReward(supabase, {
+                referrerId: profile.referred_by,
+                referralId: referral.id,
+              })
+            }
+          } catch (err) {
+            console.error('Referral reward error:', err)
+          }
+        }
+        break
       }
 
-      await supabase.from('profiles').update({
-        plan: 'pro',
-        subscription_expires_at: expires.toISOString(),
-      }).eq('id', profile.id)
-
-      console.log('User upgraded to pro:', profile.id)
-
-      if (profile.referred_by) {
-        await grantReferralReward(profile.id, profile.referred_by)
+      case 'BILLING.SUBSCRIPTION.RENEWED': {
+        const planType = profile.plan_type === 'yearly' ? 'yearly' : 'monthly'
+        await upgradePlan(supabase, {
+          userId: profile.id,
+          subscriptionId,
+          gateway: 'paypal',
+          planType,
+          currentExpiresAt: profile.subscription_expires_at?.toString(),
+        })
+        console.log('Subscription renewed:', profile.id)
+        break
       }
 
-      break
-    }
-
-    case 'BILLING.SUBSCRIPTION.RENEWED': {
-      // Extend from the current expiry (not from now) to avoid losing days
-      const isYearly = profile.plan_type === 'yearly'
-      const base = profile.subscription_expires_at
-        ? new Date(profile.subscription_expires_at)
-        : now
-      const newExpiry = new Date(base)
-      if (isYearly) {
-        newExpiry.setFullYear(newExpiry.getFullYear() + 1)
-      } else {
-        newExpiry.setMonth(newExpiry.getMonth() + 1)
+      case 'BILLING.SUBSCRIPTION.CANCELLED':
+      case 'BILLING.SUBSCRIPTION.EXPIRED': {
+        await downgradePlan(supabase, {
+          userId: profile.id,
+          gateway: 'paypal',
+        })
+        console.log('User downgraded to free:', profile.id)
+        break
       }
 
-      await supabase.from('profiles').update({
-        plan: 'pro',
-        subscription_expires_at: newExpiry.toISOString(),
-      }).eq('id', profile.id)
+      case 'BILLING.SUBSCRIPTION.SUSPENDED':
+      case 'BILLING.SUBSCRIPTION.PAYMENT.FAILED': {
+        await downgradePlan(supabase, {
+          userId: profile.id,
+          gateway: 'paypal',
+        })
+        console.log('User suspended:', profile.id)
+        break
+      }
 
-      console.log('Subscription renewed:', profile.id)
-      break
+      default:
+        console.log('Unhandled event type:', event_type)
     }
-
-    case 'BILLING.SUBSCRIPTION.CANCELLED':
-    case 'BILLING.SUBSCRIPTION.EXPIRED': {
-      await supabase.from('profiles').update({
-        plan: 'free',
-        plan_type: 'none',
-        subscription_expires_at: null,
-        paypal_subscription_id: null,
-      }).eq('id', profile.id)
-
-      console.log('User downgraded to free:', profile.id)
-      break
-    }
-
-    case 'BILLING.SUBSCRIPTION.SUSPENDED':
-    case 'BILLING.SUBSCRIPTION.PAYMENT.FAILED': {
-      await supabase.from('profiles').update({
-        plan: 'free',
-        subscription_expires_at: now.toISOString(),
-      }).eq('id', profile.id)
-
-      console.log('User suspended:', profile.id)
-      break
-    }
-
-    default:
-      console.log('Unhandled event type:', event_type)
+  } catch (err) {
+    console.error('Webhook processing error:', err)
   }
 
   return new Response('OK', { status: 200 })
 })
-
-
-// ── Referral Reward ──────────────────────────────────────────
-async function grantReferralReward(referredUserId: string, referrerId: string) {
-  try {
-    const { data: referral } = await supabase
-      .from('referrals')
-      .select('id, reward_granted')
-      .eq('referred_user_id', referredUserId)
-      .eq('referrer_id', referrerId)
-      .single()
-
-    if (!referral) {
-      console.log('No referral row found for:', referredUserId)
-      return
-    }
-
-    if (referral.reward_granted) {
-      console.log('Reward already granted for referral:', referral.id)
-      return
-    }
-
-    const { data: referrer } = await supabase
-      .from('profiles')
-      .select('id, plan, plan_type, subscription_expires_at')
-      .eq('id', referrerId)
-      .single()
-
-    if (!referrer) return
-
-    const baseDate = referrer.subscription_expires_at
-      ? new Date(referrer.subscription_expires_at)
-      : new Date()
-
-    const newExpiry = new Date(baseDate)
-    newExpiry.setDate(newExpiry.getDate() + 30)
-
-    // Update referrer plan + expiry
-    await supabase.from('profiles').update({
-      plan: 'pro',
-      plan_type: referrer.plan === 'pro' ? referrer.plan_type : 'monthly',
-      subscription_expires_at: newExpiry.toISOString(),
-    }).eq('id', referrerId)
-
-    // Increment referral_count via RPC (separate call — cannot embed rpc() in update body)
-    await supabase.rpc('increment_referral_count', { user_id: referrerId })
-
-    // Mark referral as rewarded
-    await supabase.from('referrals').update({
-      status: 'rewarded',
-      reward_granted: true,
-    }).eq('id', referral.id)
-
-    console.log(`✅ Referral reward granted: referrer=${referrerId} gets 30 days, referral=${referral.id}`)
-
-  } catch (err) {
-    console.error('grantReferralReward error:', err)
-    // Don't throw — reward failure must not break subscription activation
-  }
-}

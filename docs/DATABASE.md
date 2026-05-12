@@ -12,15 +12,20 @@ One row per authenticated user. Created by a Postgres trigger on `auth.users` in
 |---|---|---|
 | `id` | uuid (PK, FK → auth.users.id) | Supabase user ID |
 | `name` | text | Display name |
-| `plan` | text | `free` / `pro` |
-| `plan_type` | text | `none` / `monthly` / `yearly` / `lifetime` |
+| `plan` | text | `free` / `pro` (default: `free`) |
+| `plan_type` | text | `none` / `monthly` / `yearly` / `lifetime` (default: `none`) |
 | `stripe_customer_id` | text | Stripe customer (null if Pro via referral only) |
 | `stripe_subscription_id` | text | Active Stripe subscription |
-| `subscription_expires_at` | timestamptz | Pro access cutoff |
+| `paypal_subscription_id` | text | Active PayPal subscription |
+| `payment_gateway` | text | `stripe` / `paypal` (which gateway user is subscribed via) |
+| `subscription_expires_at` | timestamp | Pro access cutoff |
 | `referral_code` | text | This user's shareable code |
 | `referred_by` | uuid (FK → profiles.id) | Who referred this user |
-| `referral_count` | integer | Successful paid referrals |
-| Theme / font fields | various | Persisted UI prefs (applied by [`theme.js`](../src/js/lib/theme.js)) |
+| `referral_count` | integer | Successful paid referrals (default: 0) |
+| `color_theme` | text | UI theme preference (default: `dark`) |
+| `font_theme` | text | Font preference (default: `default`) |
+| `created_at` | timestamptz | Account creation timestamp |
+| `updated_at` | timestamptz | Last update timestamp |
 
 **Subscription field protection:** all of `plan`, `plan_type`, `stripe_*`, `subscription_expires_at`, and `referral_count` are **silently reverted** by a Postgres trigger if updated by a non-`service_role` caller. Only edge functions (which use the service-role key) can change billing state. See [`2026-04-30_profiles_rls_subscription_protection.sql`](../supabase/migrations/2026-04-30_profiles_rls_subscription_protection.sql).
 
@@ -33,9 +38,13 @@ User-created trading journals. Free users get 1; Pro users unlimited.
 | `id` | uuid (PK) | |
 | `user_id` | uuid (FK → profiles.id) | Owner |
 | `name` | text | "Forex", "Crypto", etc. |
-| `starting_capital` | numeric | Initial account balance |
-| `pin_hash`, `pin_salt` | text | Optional Pro PIN protection |
+| `capital` | numeric | Initial account balance |
+| `pin_hash` | text | Optional Pro PIN protection |
+| `show_pnl` | boolean | Display PnL in UI (default: true) |
+| `show_capital` | boolean | Display capital in UI (default: true) |
+| `position` | integer | Sort order for journals list |
 | `created_at` | timestamptz | |
+| `updated_at` | timestamptz | |
 
 ### `journal_settings`
 
@@ -43,24 +52,165 @@ Per-user UI preferences for the journal (display options, mood colours, custom t
 
 ### `trades`
 
-The main log. RLS scoped to `user_id`.
+The main trade execution log. RLS scoped to `user_id`. Records actual executed trades with outcome metrics.
 
-Key columns: `id`, `user_id`, `journal_id`, `pair`, `direction` (long/short), `entry`, `stop_loss`, `take_profit`, `pnl`, `r_factor`, `strategy`, `timeframe`, `mood`, `notes`, `entry_at`, `exit_at`.
+| Column | Type | Purpose |
+|---|---|---|
+| `id` | uuid (PK) | |
+| `journal_id` | uuid (FK) | Associated journal |
+| `user_id` | uuid (FK) | Owner |
+| `trade_date` | date | Trade execution date |
+| `trade_time` | time | Trade execution time |
+| `pair` | text | Currency/asset pair (e.g. "EURUSD") |
+| `position` | text | Position type (long/short) |
+| `strategy` | text[] | Applied strategies (array) |
+| `timeframe` | text[] | Used timeframes (array) |
+| `pnl` | numeric | Profit/loss amount |
+| `r_factor` | numeric | Risk/reward ratio |
+| `confidence` | smallint | Confidence level (1-10) |
+| `mood` | text[] | Trading mood(s) during trade |
+| `notes` | text | Trade notes/observations |
+| `pinned` | boolean | Pinned for quick review (default: false) |
+| `created_at`, `updated_at` | timestamptz | |
 
 ### `trade_images`
 
-One-to-many with `trades`. Stores R2 public URLs, not the image bytes themselves. Pro feature.
+One-to-many with `trades`. Stores image URLs and metadata. Pro feature.
 
-| Column | Purpose |
-|---|---|
-| `id`, `trade_id`, `user_id` | |
-| `url` | R2 public URL |
-| `key` | R2 object key (for deletion) |
-| `created_at` | |
+| Column | Type | Purpose |
+|---|---|---|
+| `id` | uuid (PK) | |
+| `trade_id` | uuid (FK → trades.id) | Associated trade |
+| `user_id` | uuid (FK → profiles.id) | Owner |
+| `url` | text | R2/cloud public URL |
+| `thumbnail_url` | text | Thumbnail URL for quick load |
+| `storage_url` | text | Storage backend URL |
+| `data` | text | Legacy: embedded image data (deprecated) |
+| `size_bytes` | integer | File size in bytes |
+| `mime_type` | text | Image MIME type (e.g. "image/png") |
+| `created_at` | timestamptz | |
 
 ### `custom_notes`
 
-Free-form notes panel inside journals.
+Free-form notes panel inside journals. Supports pinning, tags, and embedded images.
+
+| Column | Type | Purpose |
+|---|---|---|
+| `id` | uuid (PK) | |
+| `user_id` | uuid (FK) | Owner |
+| `journal_id` | uuid (FK) | Associated journal |
+| `title` | text | Note title |
+| `body` | text | Note content |
+| `tags` | text[] | Custom tags |
+| `color_label` | text | UI color label |
+| `pinned` | boolean | Pinned to top (default: false) |
+| `images` | jsonb | Embedded image metadata |
+| `created_at`, `updated_at` | timestamptz | |
+
+### `pre_sessions`
+
+Pre-trading session checklists and planning. Tracks mood, bias, key levels, rules, and reflection notes.
+
+| Column | Type | Purpose |
+|---|---|---|
+| `id` | uuid (PK) | |
+| `journal_id` | uuid (FK) | Associated journal |
+| `user_id` | uuid (FK) | Owner |
+| `session_date` | date | Session date |
+| `bias` | text | Market bias (bullish/bearish/neutral) |
+| `bias_reason` | text | Why this bias? |
+| `key_levels` | jsonb | Important price levels |
+| `session_goals` | text | Trading goals for session |
+| `rules` | jsonb | Rules to follow |
+| `checklist_state` | jsonb | Serialized checklist checkbox states |
+| `checklist_score` | integer | Checklist completion score |
+| `checklist_snapshot` | text | Serialized checklist snapshot |
+| `reflect_mood` | text | Post-session mood |
+| `reflect_well` | text | What went well |
+| `reflect_wrong` | text | What went wrong |
+| `reflect_lesson` | text | Key lesson learned |
+| `rules_broken` | jsonb | Which rules were violated |
+| `created_at`, `updated_at` | timestamptz | |
+
+### `presession_checklist_sets`
+
+Custom checklist templates for pre-session planning.
+
+| Column | Type | Purpose |
+|---|---|---|
+| `id` | uuid (PK) | |
+| `user_id` | uuid (FK) | Owner |
+| `journal_id` | uuid (FK) | Associated journal |
+| `name` | text | Checklist set name |
+| `description` | text | Description |
+| `reset_enabled` | boolean | Auto-reset after certain time |
+| `reset_time` | time | Time of day to reset |
+| `position` | integer | Sort order |
+| `mood_options` | jsonb | Available mood emoji options |
+| `created_at`, `updated_at` | timestamptz | |
+
+### `presession_checklist_items`
+
+Individual checklist items within a set.
+
+| Column | Type | Purpose |
+|---|---|---|
+| `id` | uuid (PK) | |
+| `set_id` | uuid (FK → presession_checklist_sets.id) | Parent checklist set |
+| `label` | text | Item label |
+| `order_index` | integer | Position in list |
+| `created_at`, `updated_at` | timestamptz | |
+
+### `presession_checklist_state`
+
+User's checkbox state for each checklist item (tracks if completed).
+
+| Column | Type | Purpose |
+|---|---|---|
+| `id` | uuid (PK) | |
+| `set_id` | uuid (FK) | Parent set |
+| `item_id` | uuid (FK) | Checklist item |
+| `user_id` | uuid (FK) | Owner |
+| `is_checked` | boolean | Checkbox state |
+| `last_reset_at` | timestamptz | Last reset timestamp |
+| `updated_at` | timestamptz | |
+
+### `presession_checklist_set_state`
+
+Aggregate state for a checklist set (mood, market bias, reset tracking).
+
+| Column | Type | Purpose |
+|---|---|---|
+| `id` | uuid (PK) | |
+| `set_id` | uuid (FK) | Parent checklist set |
+| `user_id` | uuid (FK) | Owner |
+| `session_mood` | text | Selected mood emoji |
+| `market_bias` | text | Market bias selection |
+| `last_reset_at` | timestamptz | Last reset time |
+| `last_prompted_at` | timestamptz | Last user prompt time |
+| `updated_at` | timestamptz | |
+
+### `trade_intents`
+
+Pre-trade setup planning—captures intent before execution (entry price, stop loss, take profit, why trade).
+
+| Column | Type | Purpose |
+|---|---|---|
+| `id` | uuid (PK) | |
+| `pre_session_id` | uuid (FK) | Associated pre-session |
+| `journal_id` | uuid (FK) | Associated journal |
+| `user_id` | uuid (FK) | Owner |
+| `setup_name` | text | Trade setup name |
+| `direction` | text | "Long" or "Short" |
+| `why_trade` | text | Rationale for trade |
+| `entry_price` | numeric | Intended entry price |
+| `stop_loss` | numeric | Stop loss level |
+| `take_profit` | numeric | Take profit level |
+| `invalidation` | text | Invalidation level (when setup breaks) |
+| `checklist_score` | integer | Pre-trade checklist score |
+| `checklist_snapshot` | text | Checklist state snapshot |
+| `trade_id` | uuid (FK → trades.id) | Linked actual trade (null until executed) |
+| `created_at`, `updated_at` | timestamptz | |
 
 ### `referrals`
 
@@ -108,6 +258,7 @@ Located in [`supabase/migrations/`](../supabase/migrations/), filenames `YYYY-MM
 | `2026-04-26_presession_mood_options.sql` | Pre-session mood option list |
 | `2026-04-30_profiles_rls_subscription_protection.sql` | RLS + trigger to protect billing fields |
 | `2026-05-06_cleanup_unused_trade_columns.sql` | Drop unused columns from `trades` |
+| `2026-05-12_paypal_integration.sql` | Add `payment_gateway` column, PayPal indexes, update subscription protection trigger |
 
 Apply with:
 

@@ -7,7 +7,10 @@ const CORS = {
   "Content-Type": "application/json",
 };
 
-const PAYPAL_API = "https://api-m.paypal.com";
+const PAYPAL_MODE = Deno.env.get("PAYPAL_MODE") || "sandbox";
+const PAYPAL_API = PAYPAL_MODE === "live"
+  ? "https://api-m.paypal.com"
+  : "https://api-m.sandbox.paypal.com";
 
 function ok(data: unknown) {
   return new Response(JSON.stringify(data), { status: 200, headers: CORS });
@@ -42,7 +45,7 @@ Deno.serve(async (req) => {
     const clientSecret  = Deno.env.get("PAYPAL_CLIENT_SECRET");
     const monthlyPlanId = Deno.env.get("PAYPAL_MONTHLY_PLAN_ID");
     const annualPlanId  = Deno.env.get("PAYPAL_ANNUAL_PLAN_ID");
-    const appUrl        = Deno.env.get("APP_URL") || "https://tradinggrove.vercel.app";
+    const appUrl        = Deno.env.get("APP_URL") || "https://tradinggrove.com";
 
     if (!supabaseUrl)   return fail("SUPABASE_URL not set");
     if (!serviceKey)    return fail("SUPABASE_SERVICE_ROLE_KEY not set");
@@ -147,9 +150,10 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         paypal_subscription_id: sub.id,
         plan_type: planType,
+        payment_gateway: "paypal",
       }),
     });
-    console.log("Saved paypal_subscription_id:", sub.id, "plan_type:", planType);
+    console.log("Saved paypal_subscription_id:", sub.id, "plan_type:", planType, "payment_gateway: paypal");
 
     return ok({ url: approvalLink.href });
 

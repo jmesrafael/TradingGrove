@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
     if (!profile?.stripe_customer_id) {
       // User is Pro via referral reward (no Stripe customer)
       // Redirect them to manage referrals instead
-      const appUrl = Deno.env.get('APP_URL') ?? 'https://tradinggrove.vercel.app'
+      const appUrl = Deno.env.get('APP_URL') ?? 'https://tradinggrove.com'
       console.log('[billing-portal] User has no Stripe customer - likely Pro via referral')
       return new Response(
         JSON.stringify({
@@ -110,7 +110,7 @@ Deno.serve(async (req) => {
     }
 
     // 3. Create billing portal session (for Stripe-paid Pro users)
-    const appUrl = Deno.env.get('APP_URL') ?? 'https://tradinggrove.vercel.app'
+    const appUrl = Deno.env.get('APP_URL') ?? 'https://tradinggrove.com'
     let returnUrl: string
     try { returnUrl = (await req.json()).return_url ?? `${appUrl}/subscription` }
     catch (_) { returnUrl = `${appUrl}/subscription` }

@@ -5,6 +5,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@12.18.0?target=deno&no-check";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { upgradePlan, downgradePlan } from "../_shared/plan-utils.ts";
+import { grantReferralReward } from "../_shared/referral-utils.ts";
 
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
   apiVersion: "2023-10-16",
@@ -116,49 +118,32 @@ async function resolveUserIdFromCustomer(customerId: string): Promise<string | n
   return null;
 }
 
-async function triggerReferralReward(userId: string): Promise<void> {
+async function grantReferralRewardForUser(userId: string): Promise<void> {
   try {
-    const res = await fetch(
-      `${Deno.env.get("SUPABASE_URL")}/functions/v1/grant-referral-reward`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-        },
-        body: JSON.stringify({ referred_user_id: userId }),
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("referred_by")
+      .eq("id", userId)
+      .single();
+
+    if (profile?.referred_by) {
+      const { data: referral } = await supabase
+        .from("referrals")
+        .select("id")
+        .eq("referred_user_id", userId)
+        .eq("referrer_id", profile.referred_by)
+        .single();
+
+      if (referral) {
+        await grantReferralReward(supabase, {
+          referrerId: profile.referred_by,
+          referralId: referral.id,
+        });
       }
-    );
-    const result = await res.json();
-    console.log(`[webhook] grant-referral-reward for ${userId}:`, result);
+    }
   } catch (e) {
-    console.error(`[webhook] grant-referral-reward failed:`, e);
+    console.error(`[webhook] grantReferralReward failed:`, e);
   }
-}
-
-// ── Upgrade a user to Pro by their Supabase user ID ───────
-async function upgradeUserToPro(
-  userId: string,
-  planType: "monthly" | "yearly",
-  expiresAt: string,
-  stripeCustomerId: string | null,
-  stripeSubscriptionId: string | null,
-): Promise<boolean> {
-  const { error } = await supabase.from("profiles").update({
-    plan:                    "pro",
-    plan_type:               planType,
-    stripe_customer_id:      stripeCustomerId,
-    stripe_subscription_id:  stripeSubscriptionId,
-    subscription_expires_at: expiresAt,
-  }).eq("id", userId);
-
-  if (error) {
-    console.error(`[webhook] upgradeUserToPro failed for ${userId}:`, error);
-    return false;
-  }
-
-  console.log(`[webhook] ✅ Upgraded user ${userId} → Pro (${planType}, expires: ${expiresAt})`);
-  return true;
 }
 
 // ── Main ──────────────────────────────────────────────────
@@ -189,7 +174,6 @@ serve(async (req) => {
 
         const userId = await resolveUserId(session);
         if (!userId) {
-          // Return 200 so Stripe doesn't retry endlessly, but log the failure
           console.error("[webhook] ❌ Cannot resolve user ID — upgrade skipped");
           break;
         }
@@ -211,29 +195,34 @@ serve(async (req) => {
             expiresAt = d.toISOString();
           }
         } else {
-          // One-time payment (no subscription object)
           const d = new Date();
           d.setDate(d.getDate() + 30);
           expiresAt = d.toISOString();
         }
 
-        const upgraded = await upgradeUserToPro(
-          userId,
-          planType,
-          expiresAt,
-          session.customer as string ?? null,
-          session.subscription as string ?? null,
-        );
+        try {
+          // Also store stripe_customer_id and stripe_subscription_id directly
+          await supabase.from("profiles").update({
+            stripe_customer_id: session.customer as string ?? null,
+            stripe_subscription_id: session.subscription as string ?? null,
+          }).eq("id", userId);
 
-        if (upgraded) {
-          await triggerReferralReward(userId);
+          await upgradePlan(supabase, {
+            userId,
+            subscriptionId: (session.subscription as string) ?? "",
+            gateway: "stripe",
+            planType,
+          });
+
+          console.log(`[webhook] ✅ Upgraded user ${userId} → Pro (${planType})`);
+          await grantReferralRewardForUser(userId);
+        } catch (e) {
+          console.error("[webhook] checkout.session.completed error:", e);
         }
         break;
       }
 
       // ── Invoice paid — handles BOTH first payment and renewals ──
-      // NOTE: For new subscriptions, Stripe fires invoice.payment_succeeded
-      // BEFORE checkout.session.completed. We handle both so neither is missed.
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
         console.log("[webhook] invoice.payment_succeeded — billing_reason:", invoice.billing_reason);
@@ -251,31 +240,35 @@ serve(async (req) => {
             break;
           }
 
-          // Try to find user by stripe_customer_id first
           const { data: existingProfile } = await supabase
             .from("profiles")
-            .select("id, plan")
+            .select("id, plan, subscription_expires_at")
             .eq("stripe_customer_id", customerId)
             .maybeSingle();
 
           if (existingProfile) {
-            // User already has customer ID linked — just refresh their expiry
-            const { error } = await supabase.from("profiles").update({
-              plan:                    "pro",
-              plan_type:               planType,
-              stripe_subscription_id:  sub.id,
-              subscription_expires_at: expiresAt,
-            }).eq("stripe_customer_id", customerId);
-
-            if (error) console.error(`[webhook] invoice renewal update failed:`, error);
-            else console.log(`[webhook] ✅ Renewed ${customerId} (${planType}, expires: ${expiresAt})`);
+            await upgradePlan(supabase, {
+              userId: existingProfile.id,
+              subscriptionId: sub.id,
+              gateway: "stripe",
+              planType,
+              currentExpiresAt: existingProfile.subscription_expires_at?.toString(),
+            });
+            console.log(`[webhook] ✅ Renewed ${customerId} (${planType})`);
           } else if (invoice.billing_reason === "subscription_create") {
-            // First invoice for a NEW subscription — customer_id not stored yet.
-            // checkout.session.completed should also fire, but handle here as backup.
-            console.log("[webhook] First invoice — attempting user resolution for new customer:", customerId);
             const userId = await resolveUserIdFromCustomer(customerId);
             if (userId) {
-              await upgradeUserToPro(userId, planType, expiresAt, customerId, sub.id);
+              await supabase.from("profiles").update({
+                stripe_customer_id: customerId,
+              }).eq("id", userId);
+
+              await upgradePlan(supabase, {
+                userId,
+                subscriptionId: sub.id,
+                gateway: "stripe",
+                planType,
+              });
+              console.log(`[webhook] ✅ First payment processed for ${userId}`);
             } else {
               console.warn("[webhook] invoice.payment_succeeded: Could not resolve user for new customer:", customerId);
             }
@@ -293,38 +286,38 @@ serve(async (req) => {
         const sub        = event.data.object as Stripe.Subscription;
         const customerId = sub.customer as string;
         const isActive   = ["active", "trialing"].includes(sub.status);
-        const planType   = detectPlanType(sub);
 
-        // calcExpiresAt has a 30-day fallback so it never returns null for active subs
-        const stripeExpiresAt = isActive ? calcExpiresAt(sub) : null;
-
-        // Don't overwrite a referral-extended expiry that reaches beyond the Stripe period.
-        // When going inactive, always clear the field regardless.
-        let finalExpiresAt = stripeExpiresAt;
-        if (isActive && stripeExpiresAt) {
-          const { data: existing } = await supabase
+        try {
+          const { data: profile } = await supabase
             .from("profiles")
-            .select("subscription_expires_at")
+            .select("id")
             .eq("stripe_customer_id", customerId)
             .maybeSingle();
 
-          const stored = existing?.subscription_expires_at
-            ? new Date(existing.subscription_expires_at)
-            : null;
-          if (stored && stored > new Date(stripeExpiresAt)) {
-            finalExpiresAt = existing!.subscription_expires_at;
+          if (!profile) {
+            console.warn("[webhook] No profile found for subscription update:", customerId);
+            break;
           }
+
+          if (isActive) {
+            const planType = detectPlanType(sub);
+            await upgradePlan(supabase, {
+              userId: profile.id,
+              subscriptionId: sub.id,
+              gateway: "stripe",
+              planType,
+            });
+            console.log(`[webhook] ✅ Updated ${customerId} → Pro/${planType}`);
+          } else {
+            await downgradePlan(supabase, {
+              userId: profile.id,
+              gateway: "stripe",
+            });
+            console.log(`[webhook] Updated ${customerId} → Free`);
+          }
+        } catch (e) {
+          console.error("[webhook] subscription.updated error:", e);
         }
-
-        const { error } = await supabase.from("profiles").update({
-          plan:                    isActive ? "pro" : "free",
-          plan_type:               isActive ? planType : "none",
-          subscription_expires_at: finalExpiresAt,
-          stripe_subscription_id:  isActive ? sub.id : null,
-        }).eq("stripe_customer_id", customerId);
-
-        if (error) console.error(`[webhook] subscription.updated failed:`, error);
-        else console.log(`[webhook] Updated ${customerId} → ${isActive ? "pro/" + planType : "free"}, expires: ${finalExpiresAt}`);
         break;
       }
 
@@ -333,15 +326,23 @@ serve(async (req) => {
         const sub        = event.data.object as Stripe.Subscription;
         const customerId = sub.customer as string;
 
-        const { error } = await supabase.from("profiles").update({
-          plan:                    "free",
-          plan_type:               "none",
-          stripe_subscription_id:  null,
-          subscription_expires_at: null,
-        }).eq("stripe_customer_id", customerId);
+        try {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("stripe_customer_id", customerId)
+            .maybeSingle();
 
-        if (error) console.error(`[webhook] Downgrade failed:`, error);
-        else console.log(`[webhook] Downgraded ${customerId} → Free`);
+          if (profile) {
+            await downgradePlan(supabase, {
+              userId: profile.id,
+              gateway: "stripe",
+            });
+            console.log(`[webhook] ✅ Downgraded ${customerId} → Free`);
+          }
+        } catch (e) {
+          console.error("[webhook] subscription.deleted error:", e);
+        }
         break;
       }
 

@@ -39,14 +39,14 @@ Returns a Stripe Customer Portal URL for managing/cancelling the subscription. I
 
 **Request body**
 ```json
-{ "return_url": "https://tradinggrove.vercel.app/subscription" }  // optional
+{ "return_url": "https://tradinggrove.com/subscription" }  // optional
 ```
 
 **Response (200)**
 ```json
 { "url": "https://billing.stripe.com/p/session/..." }
 // OR (referral-Pro user)
-{ "url": "https://tradinggrove.vercel.app/dashboard#referral",
+{ "url": "https://tradinggrove.com/dashboard#referral",
   "message": "Your Pro access is from referral rewards. ..." }
 ```
 

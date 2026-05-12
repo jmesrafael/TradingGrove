@@ -28,9 +28,106 @@ function toggleFaq(btn) {
   if (!open) item.classList.add('open');
 }
 
-// ── Upgrade — redirects to payment method selection ───────
+// ── Upgrade — opens payment gateway selector modal ────────
 function redirectToPayment() {
-  location.href = '/payment-method?plan=' + selectedPlan;
+  openPaymentModal();
+}
+
+function openPaymentModal() {
+  const badge = document.getElementById('pgwPlanBadgeText');
+  badge.textContent = selectedPlan === 'annual'
+    ? 'TradingGrove Pro — Annual · $10/mo billed $120/yr'
+    : 'TradingGrove Pro — Monthly · $15/mo';
+
+  _pgwReset();
+  document.getElementById('paymentGatewayOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePaymentModal() {
+  document.getElementById('paymentGatewayOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  _pgwReset();
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('paymentGatewayOverlay')) {
+    closePaymentModal();
+  }
+}
+
+function _pgwReset() {
+  ['pgwStripeBtn', 'pgwPaypalBtn'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.disabled = false;
+  });
+  const si = document.getElementById('pgwStripeInner');
+  const pi = document.getElementById('pgwPaypalInner');
+  const sl = document.getElementById('pgwStripeLoader');
+  const pl = document.getElementById('pgwPaypalLoader');
+  if (si) si.style.display = 'flex';
+  if (pi) pi.style.display = 'flex';
+  if (sl) sl.style.display = 'none';
+  if (pl) pl.style.display = 'none';
+}
+
+async function pgwPayWithStripe() {
+  const btn    = document.getElementById('pgwStripeBtn');
+  const inner  = document.getElementById('pgwStripeInner');
+  const loader = document.getElementById('pgwStripeLoader');
+  btn.disabled = true;
+  inner.style.display  = 'none';
+  loader.style.display = 'flex';
+
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    if (!session) { location.href = '/auth'; return; }
+
+    const lookupKey = selectedPlan === 'annual' ? 'tradinggrove_pro_annual' : 'tradinggrove_pro_monthly';
+    const res = await fetch(SUPABASE_URL + '/functions/v1/create-checkout', {
+      method:  'POST',
+      headers: { 'Authorization': 'Bearer ' + session.access_token, 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ lookup_key: lookupKey }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error(data.error || 'Could not create Stripe checkout session.');
+    }
+  } catch (err) {
+    showToast('Stripe error: ' + err.message, 'fa-solid fa-circle-exclamation', 'r');
+    _pgwReset();
+  }
+}
+
+async function pgwPayWithPayPal() {
+  const btn    = document.getElementById('pgwPaypalBtn');
+  const inner  = document.getElementById('pgwPaypalInner');
+  const loader = document.getElementById('pgwPaypalLoader');
+  btn.disabled = true;
+  inner.style.display  = 'none';
+  loader.style.display = 'flex';
+
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    if (!session) { location.href = '/auth'; return; }
+
+    const res = await fetch(SUPABASE_URL + '/functions/v1/create-paypal-subscription', {
+      method:  'POST',
+      headers: { 'Authorization': 'Bearer ' + session.access_token, 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ plan: selectedPlan }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      throw new Error(data.error || 'Could not create PayPal subscription.');
+    }
+  } catch (err) {
+    showToast('PayPal error: ' + err.message, 'fa-solid fa-circle-exclamation', 'r');
+    _pgwReset();
+  }
 }
 
 // ── Manage billing portal ─────────────────────────────────
@@ -122,6 +219,14 @@ function closeRewardModal() {
 // Close on backdrop click
 document.getElementById('rewardOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeRewardModal();
+});
+
+// Close payment modal on Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closePaymentModal();
+    closeRewardModal();
+  }
 });
 
 // ── Floating ✨ particles (exact copy from profile.html) ──
@@ -294,6 +399,11 @@ function showToast(msg, icon, type) {
 window.setPlan = setPlan;
 window.toggleFaq = toggleFaq;
 window.redirectToPayment = redirectToPayment;
+window.openPaymentModal = openPaymentModal;
+window.closePaymentModal = closePaymentModal;
+window.handleOverlayClick = handleOverlayClick;
+window.pgwPayWithStripe = pgwPayWithStripe;
+window.pgwPayWithPayPal = pgwPayWithPayPal;
 window.openBillingPortal = openBillingPortal;
 window.closeRewardModal = closeRewardModal;
 window._testRewardModal = _testRewardModal;

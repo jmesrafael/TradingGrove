@@ -16,7 +16,7 @@ Pushing to `main` triggers a Vercel deploy automatically. Routing is controlled 
 vercel --prod
 ```
 
-**Production URL:** `https://tradinggrove.vercel.app` (set as `APP_URL` secret on Supabase functions).
+**Production URL:** `https://tradinggrove.com` (set as `APP_URL` secret on Supabase functions).
 
 **Adding a new page:** see [DEVELOPMENT.md → Adding a New Page](DEVELOPMENT.md#adding-a-new-page). The `vercel.json` rewrite must be added or Vercel will 404 on the clean URL even though the file exists.
 
@@ -59,7 +59,7 @@ supabase functions deploy
 ```bash
 supabase secrets set STRIPE_SECRET_KEY=sk_live_...
 supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...
-supabase secrets set APP_URL=https://tradinggrove.vercel.app
+supabase secrets set APP_URL=https://tradinggrove.com
 # R2 (Cloudflare)
 supabase secrets set R2_ACCOUNT_ID=... R2_ACCESS_KEY_ID=... R2_SECRET_ACCESS_KEY=...
 supabase secrets set R2_BUCKET_NAME=... R2_ENDPOINT=https://<acct>.r2.cloudflarestorage.com

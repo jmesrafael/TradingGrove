@@ -298,6 +298,76 @@
 
 </main>
 
+<!-- ══════════════════════════════════════════
+     PAYMENT GATEWAY SELECTOR MODAL
+     Opens when user clicks "Upgrade to Pro"
+═══════════════════════════════════════════ -->
+<div id="paymentGatewayOverlay" class="pgw-overlay" onclick="handleOverlayClick(event)">
+  <div class="pgw-modal" id="paymentGatewayModal">
+
+    <button class="pgw-close" onclick="closePaymentModal()" aria-label="Close">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+
+    <div class="pgw-eyebrow"><i class="fa-solid fa-lock"></i> Secure Checkout</div>
+    <h2 class="pgw-title">Choose payment method</h2>
+
+    <!-- Plan badge -->
+    <div class="pgw-plan-badge" id="pgwPlanBadge">
+      <i class="fa-solid fa-star"></i>
+      <span id="pgwPlanBadgeText">TradingGrove Pro — Monthly · $15/mo</span>
+    </div>
+
+    <!-- Gateway cards -->
+    <div class="pgw-cards">
+
+      <!-- Stripe — commented out until Stripe is re-enabled
+      <button class="pgw-card" id="pgwStripeBtn" onclick="pgwPayWithStripe()">
+        <div class="pgw-card-inner" id="pgwStripeInner">
+          <div class="pgw-card-icon">
+            <svg viewBox="0 0 60 25" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:52px;height:22px;color:var(--text)">
+              <path d="M59.64 14.28h-8.06c.19 1.93 1.6 2.55 3.2 2.55 1.64 0 2.96-.37 4.05-.95v3.32a14.13 14.13 0 0 1-4.84.85c-4.3 0-7.09-2.76-7.09-7.26 0-4.06 2.28-7.38 6.6-7.38 4.17 0 6.11 3.4 6.11 7.33 0 .31-.02.71-.02 1.54h.05zm-5.29-5.71c-1.16 0-1.9.82-2.08 2.25h4.08c-.06-1.28-.6-2.25-2-2.25zM47.28 5.43V.77l4.43-.96v19.45h-4.43v-1.68c-.83 1.15-2.02 2.04-3.96 2.04-3.46 0-5.97-2.84-5.97-7.2 0-4.2 2.48-7.4 6.13-7.4 1.93 0 3.04.79 3.8 1.93V5.43zm0 9.21V11c-.48-1.02-1.38-1.73-2.5-1.73-1.68 0-2.65 1.43-2.65 3.46 0 1.97.97 3.43 2.65 3.43 1.13 0 2.03-.7 2.5-1.52zM34.3 5.43L30 19.26h-4.82L20.9 5.43H26l2.14 8.3 2.14-8.3h4.02zM16.38 2.54c0 1.4-1.1 2.52-2.52 2.52S11.34 3.94 11.34 2.54C11.34 1.14 12.44 0 13.86 0s2.52 1.14 2.52 2.54zm-4.73 2.89h4.44V19.26h-4.44V5.43zM0 19.26h4.43V5.43H0v13.83zM0 3.6a2.24 2.24 0 1 1 4.48 0A2.24 2.24 0 0 1 0 3.6z" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="pgw-card-body">
+            <div class="pgw-card-title">Credit or Debit Card</div>
+            <div class="pgw-card-desc">Visa, Mastercard, Amex &amp; more</div>
+          </div>
+          <i class="fa-solid fa-chevron-right pgw-arrow"></i>
+        </div>
+        <div class="pgw-card-loader" id="pgwStripeLoader" style="display:none">
+          <i class="fa-solid fa-spinner fa-spin"></i> Redirecting to Stripe…
+        </div>
+      </button>
+      -->
+
+      <!-- PayPal -->
+      <button class="pgw-card pgw-card-paypal" id="pgwPaypalBtn" onclick="pgwPayWithPayPal()">
+        <div class="pgw-card-inner" id="pgwPaypalInner">
+          <img src="/assets/images/paypal-logo.png" alt="PayPal" class="pgw-paypal-logo">
+          <div class="pgw-card-body">
+            <div class="pgw-card-desc">Pay securely with your PayPal account or linked card</div>
+          </div>
+          <i class="fa-solid fa-chevron-right pgw-arrow"></i>
+        </div>
+        <div class="pgw-card-loader" id="pgwPaypalLoader" style="display:none">
+          <i class="fa-solid fa-spinner fa-spin"></i> Redirecting to PayPal…
+        </div>
+      </button>
+
+    </div>
+
+    <div class="pgw-trust">
+      <span><i class="fa-solid fa-lock"></i> 256-bit SSL</span>
+      <span class="pgw-trust-sep">·</span>
+      <span><i class="fa-solid fa-ban"></i> Cancel anytime</span>
+      <span class="pgw-trust-sep">·</span>
+      <span><i class="fa-solid fa-database"></i> Your data, always</span>
+    </div>
+
+  </div>
+</div>
+
 <div id="toast"><i id="toastIcon"></i><span id="toastMsg"></span></div>
 
 <script src="/js/modules/subscription.js"></script>
