@@ -79,6 +79,8 @@ function renderSubBanner(s){const banner=document.getElementById('subBanner'),te
     else if(sub.expired){badge.textContent='Pro Expired';badge.className='plan-badge badge-free';}
     else{badge.textContent='Pro';badge.className='plan-badge badge-pro';}
     renderSubBanner(sub);
+    // Show Billing button for Pro users
+    document.getElementById('menuBillingBtn').style.display='flex';
   }else{
     document.getElementById('upgradeNudge').classList.add('visible');
   }
@@ -210,6 +212,87 @@ async function executeDeleteAccount(){
   }catch(e){showToast('Failed: '+e.message,'fa-solid fa-circle-exclamation','red');document.getElementById('delAccForm').style.display='block';document.getElementById('delAccProgress').classList.remove('show');}
 }
 document.getElementById('delAccountOverlay').addEventListener('click',function(e){if(e.target===this)closeDelAccount();});
+
+// ── Billing Modal ────────────────────────────────────────────────────────
+function openBillingModal(){
+  if(!isPro){showToast('Only Pro users have billing','fa-solid fa-info-circle');return;}
+
+  const planType = currentProfile?.plan_type || 'monthly';
+  const expiry = currentProfile?.subscription_expires_at;
+  const gateway = currentProfile?.payment_gateway || 'unknown';
+  const queued = currentProfile?.queued_subscription;
+
+  // Plan name
+  const planName = planType === 'yearly' ? 'Pro — Annual ($120/yr)' : 'Pro — Monthly ($15/mo)';
+  document.getElementById('billingPlanName').textContent = planName;
+
+  // Renewal date
+  if(expiry){
+    const date = new Date(expiry);
+    const fmt = date.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+    document.getElementById('billingRenewalDate').textContent = `Renews ${fmt}`;
+  }
+
+  // Queued subscription notice
+  if(queued){
+    const startDate = new Date(queued.starts_at);
+    const startFmt = startDate.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+    const queuedType = queued.plan_type === 'yearly' ? 'Annual ($120/yr)' : 'Monthly ($15/mo)';
+    document.getElementById('billingQueuedText').textContent = `Scheduled upgrade to ${queuedType} on ${startFmt}`;
+    document.getElementById('billingQueuedNotice').style.display = 'block';
+  }else{
+    document.getElementById('billingQueuedNotice').style.display = 'none';
+  }
+
+  // Payment method (PayPal only for now)
+  const paymentName = 'PayPal';
+  const paymentIcon = 'fa-brands fa-paypal';
+
+  /* STRIPE COMMENTED OUT - will enable when returning to multi-gateway
+  const paymentName = gateway === 'paypal' ? 'PayPal' : gateway === 'stripe' ? 'Stripe' : 'Unknown';
+  const paymentIcon = gateway === 'paypal'
+    ? 'fa-brands fa-paypal'
+    : gateway === 'stripe'
+    ? 'fa-credit-card'
+    : 'fa-credit-card';
+  */
+
+  document.getElementById('billingPaymentIcon').className = paymentIcon;
+  document.getElementById('billingPaymentName').textContent = paymentName;
+  document.getElementById('billingPaymentDetails').textContent = `Billing via ${paymentName}`;
+
+  document.getElementById('billingModal').classList.add('open');
+}
+
+function closeBillingModal(){
+  document.getElementById('billingModal').classList.remove('open');
+}
+
+function openBillingPortal(){
+  // PayPal only (for now)
+  window.open('https://www.paypal.com/myaccount/autopay/', '_blank');
+
+  /* STRIPE COMMENTED OUT - will enable when returning to multi-gateway
+  const gateway = currentProfile?.payment_gateway || 'paypal';
+  if(gateway === 'paypal'){
+    window.open('https://www.paypal.com/myaccount/autopay/', '_blank');
+  }else if(gateway === 'stripe'){
+    // Stripe portal - would need to call an edge function to get portal URL
+    location.href = '/subscription';
+  }
+  */
+}
+
+function confirmCancelSubscription(){
+  if(!confirm('Cancel your subscription? You\'ll keep Pro access until ' + new Date(currentProfile?.subscription_expires_at).toLocaleDateString())){
+    return;
+  }
+  openBillingPortal(); // Redirect to manage billing where they can cancel
+}
+
+document.getElementById('billingModal')?.addEventListener('click', function(e){
+  if(e.target === this) closeBillingModal();
+});
 
 async function logout(){await db.auth.signOut();sessionStorage.clear();location.href='/auth';}
 

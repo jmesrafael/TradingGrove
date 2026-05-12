@@ -14,6 +14,21 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Calculate subscription expiry date based on plan type
+function calculateExpiryDate(planType: string): string {
+  const now = new Date()
+  let expiryDate: Date
+
+  if (planType === 'yearly') {
+    expiryDate = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate())
+  } else {
+    // monthly
+    expiryDate = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate())
+  }
+
+  return expiryDate.toISOString()
+}
+
 async function verifyPayPalSignature(req: Request, body: any): Promise<boolean> {
   try {
     const transmissionId = req.headers.get('Paypal-Transmission-Id')
@@ -110,7 +125,7 @@ Deno.serve(async (req) => {
   // Find user by paypal_subscription_id (saved by create-paypal-subscription)
   const { data: profile, error } = await supabase
     .from('profiles')
-    .select('id, plan_type, referred_by, subscription_expires_at')
+    .select('id, plan_type, referred_by, subscription_expires_at, queued_subscription')
     .eq('paypal_subscription_id', subscriptionId)
     .single()
 
@@ -169,11 +184,35 @@ Deno.serve(async (req) => {
 
       case 'BILLING.SUBSCRIPTION.CANCELLED':
       case 'BILLING.SUBSCRIPTION.EXPIRED': {
-        await downgradePlan(supabase, {
-          userId: profile.id,
-          gateway: 'paypal',
-        })
-        console.log('User downgraded to free:', profile.id)
+        // Check if there's a queued subscription to activate
+        if (profile.queued_subscription) {
+          const queued = profile.queued_subscription
+          console.log('Activating queued subscription for user:', profile.id, 'plan_type:', queued.plan_type)
+
+          // Activate the queued subscription
+          await upgradePlan(supabase, {
+            userId: profile.id,
+            planType: queued.plan_type,
+            expiresAt: calculateExpiryDate(queued.plan_type),
+            gateway: 'paypal',
+            gatewaySubscriptionId: queued.subscription_id,
+            stripeCustomerId: null,
+          })
+
+          // Clear the queue
+          await supabase.from('profiles').update({
+            queued_subscription: null
+          }).eq('id', profile.id)
+
+          console.log('Queued subscription activated for user:', profile.id)
+        } else {
+          // No queued subscription, downgrade to free
+          await downgradePlan(supabase, {
+            userId: profile.id,
+            gateway: 'paypal',
+          })
+          console.log('User downgraded to free:', profile.id)
+        }
         break
       }
 

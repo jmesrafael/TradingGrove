@@ -6,7 +6,48 @@
 
 ---
 
-## Section 0: What Was Actually Done (Completed 2026-05-12)
+## Section 0: Critical Fix — Account Ownership Mismatch (2026-05-12)
+
+### The Problem
+PayPal sandbox has a critical quirk: **Plans created via the customer-facing dashboard (sandbox.paypal.com) belong to a different internal account than the REST API credentials.** This caused subscription creation to fail with either:
+- `404 INVALID_RESOURCE_ID` — plan doesn't exist
+- `403 PERMISSION_DENIED` — plan exists but API credentials can't access it
+
+**Proof:** We created a diagnostic function that listed all plans visible to the API credentials. Result: `"plans": [], "total_items": 0` — even though the user's dashboard showed 2 active plans.
+
+### The Solution
+**Create all plans via the REST API** using the same credentials that will create subscriptions. This guarantees the plans belong to the correct account.
+
+**Implementation:**
+1. Created `supabase/functions/paypal-setup-plans/index.ts` — a one-shot function that:
+   - Authenticates with `PAYPAL_CLIENT_ID` + `PAYPAL_CLIENT_SECRET`
+   - Creates the Product via `POST /v1/catalogs/products`
+   - Creates both Monthly and Annual plans via `POST /v1/billing/plans`
+   - Returns the generated plan IDs
+2. Deployed and ran it once to create the plans
+3. Updated Supabase secrets with the new plan IDs
+4. **Old dashboard-created plans are now orphaned and inaccessible** — delete them or ignore them
+
+**New Plan IDs (created via API — guaranteed working):**
+| Plan | Old ID (dashboard) | New ID (API) | Status |
+|---|---|---|---|
+| Monthly | `P-15043758HV009071TNIBGWKY` | `P-90B356618A182200KNIBKAQQ` | ✅ ACTIVE — in right account |
+| Annual | `P-03Y36566TM800231BNIBHK4Q` | `P-9A1451907C143631SNIBKAQQ` | ✅ ACTIVE — in right account |
+| Product | N/A | `PROD-5RG58512KX061661G` | ✅ CREATED |
+
+**Why this matters:** For **production (live) mode**, you'll need to:
+1. Set `PAYPAL_MODE=live` (don't switch yet)
+2. Run `paypal-setup-plans` with live credentials
+3. Get fresh live plan IDs
+4. Update the secrets and redeploy
+
+**Additional fixes made same session:**
+- Redeployed `paypal-webhook` with `--no-verify-jwt` (fixed 401 errors when PayPal sends webhooks)
+- Removed explicit OAuth scopes from `create-paypal-subscription` (scopes were restricting access)
+
+---
+
+## Section 0b: What Was Actually Done (Completed 2026-05-12)
 
 This section is the ground-truth record of every change made during the integration.
 
@@ -24,12 +65,13 @@ This section is the ground-truth record of every change made during the integrat
 | `supabase/functions/_shared/plan-utils.ts` | `upgradePlan()` and `downgradePlan()` — single source of truth for plan state writes, used by both webhooks |
 | `supabase/functions/_shared/referral-utils.ts` | `grantReferralReward()` — idempotent referral reward grant, used by both webhooks |
 
-### Functions Modified
+### Functions Created/Modified
 | Function | Changes Made |
 |---|---|
-| `paypal-webhook/index.ts` | Added PayPal signature verification via `/v1/notifications/verify-webhook-signature`; refactored all event handlers to use `_shared/plan-utils` and `_shared/referral-utils`; removed inline duplicate `grantReferralReward` function |
+| `paypal-setup-plans/index.ts` | **NEW (2026-05-12)** — One-shot setup function to create PayPal Product and plans via API (resolves account mismatch issue). Creates product, monthly plan, annual plan. Deployed with `--no-verify-jwt`. Run once to generate plan IDs. |
+| `paypal-webhook/index.ts` | Added PayPal signature verification via `/v1/notifications/verify-webhook-signature`; refactored all event handlers to use `_shared/plan-utils` and `_shared/referral-utils`; removed inline duplicate `grantReferralReward` function; redeployed with `--no-verify-jwt` (2026-05-12) |
 | `stripe-webhook/index.ts` | Removed inline `upgradeUserToPro()` and `triggerReferralReward()`; refactored to use `_shared/plan-utils` and `_shared/referral-utils`; now sets `payment_gateway='stripe'` |
-| `create-paypal-subscription/index.ts` | Added `payment_gateway: 'paypal'` to the profile PATCH when saving `paypal_subscription_id` |
+| `create-paypal-subscription/index.ts` | Added `payment_gateway: 'paypal'` to the profile PATCH when saving `paypal_subscription_id`; removed explicit OAuth scopes (2026-05-12) |
 | `create-checkout/index.ts` | Updated `APP_URL` default to `https://tradinggrove.com` |
 | `billing-portal/index.ts` | Updated `APP_URL` default to `https://tradinggrove.com` (2 locations) |
 
@@ -42,14 +84,14 @@ This section is the ground-truth record of every change made during the integrat
 | `src/index.html` | Updated `og:url` meta tag to `https://tradinggrove.com` |
 
 ### Supabase Secrets Set
-| Secret | Value | Environment |
-|---|---|---|
-| `PAYPAL_MODE` | `sandbox` | Set via CLI |
-| `PAYPAL_CLIENT_ID` | See memory file | Set via CLI |
-| `PAYPAL_CLIENT_SECRET` | See memory file | Set via CLI |
-| `PAYPAL_WEBHOOK_ID` | See memory file | Set via CLI |
-| `PAYPAL_MONTHLY_PLAN_ID` | `P-15043758HV009071TNIBGWKY` | Set via CLI |
-| `PAYPAL_ANNUAL_PLAN_ID` | `P-03Y36566TM800231BNIBHK4Q` | Set via CLI |
+| Secret | Value | Environment | Notes |
+|---|---|---|---|
+| `PAYPAL_MODE` | `sandbox` | Set via CLI | Controls sandbox vs live API endpoints |
+| `PAYPAL_CLIENT_ID` | See memory file | Set via CLI | Sandbox credentials |
+| `PAYPAL_CLIENT_SECRET` | See memory file | Set via CLI | Sandbox credentials |
+| `PAYPAL_WEBHOOK_ID` | `2YR17827NW408100D` | Set via CLI | Sandbox webhook ID |
+| `PAYPAL_MONTHLY_PLAN_ID` | `P-90B356618A182200KNIBKAQQ` | Set via CLI | **NEW API-created plan (2026-05-12)** — old `P-15043758HV009071TNIBGWKY` is orphaned |
+| `PAYPAL_ANNUAL_PLAN_ID` | `P-9A1451907C143631SNIBKAQQ` | Set via CLI | **NEW API-created plan (2026-05-12)** — old `P-03Y36566TM800231BNIBHK4Q` is orphaned |
 
 ### Deployed
 All functions deployed via `supabase functions deploy` on 2026-05-12:
@@ -64,6 +106,17 @@ All functions deployed via `supabase functions deploy` on 2026-05-12:
 ---
 
 ## Section 1: Current Progress Summary
+
+### ⚠️ Critical Issue RESOLVED (2026-05-12)
+PayPal sandbox account mismatch was causing 404/403 errors on subscription creation. **FIXED** by:
+- Creating plans via REST API (`paypal-setup-plans` function)
+- Using new API-generated plan IDs
+- Removing explicit OAuth scopes that were restricting access
+- Redeploying webhook with `--no-verify-jwt`
+
+**Status:** ✅ **PayPal subscriptions now functional**
+
+---
 
 ### Stripe — What's Working (reference implementation)
 

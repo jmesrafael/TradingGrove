@@ -60,12 +60,6 @@
   </div>
 </div>
 
-<!-- ▼ REMOVE THIS BUTTON WHEN DONE TESTING ▼ -->
-<button class="test-toggle-btn" onclick="_testRewardModal()">
-  <i class="fa-solid fa-flask"></i> Test Pro Modal
-</button>
-<!-- ▲ REMOVE THIS BUTTON WHEN DONE TESTING ▲ -->
-
 <header>
   <a href="/dashboard" class="logo">Trading<span>Grove</span></a>
   <div style="display:flex;align-items:center;gap:8px">
@@ -103,6 +97,21 @@
       <button class="manage-btn" id="manageBtn" style="display:none" onclick="openBillingPortal()">
         <i class="fa-solid fa-gear"></i> Manage Billing
       </button>
+    </div>
+  </div>
+
+  <!-- Queued subscription notice -->
+  <div id="queuedNotice" style="display:none;background:rgba(0,156,222,.08);border:1px solid rgba(0,156,222,.2);border-radius:10px;padding:14px 16px;margin-top:16px;margin-bottom:16px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <i class="fa-solid fa-clock" style="color:#009cde;font-size:16px"></i>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;color:var(--text)">
+          Upgrade Scheduled: <span id="queuedNoticeBadge" style="color:#009cde">—</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted)">
+          Your plan will upgrade on <span id="queuedNoticeDate">—</span>
+        </div>
+      </div>
     </div>
   </div>
 

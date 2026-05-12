@@ -85,16 +85,21 @@ Deno.serve(async (req) => {
 
     // ── Profile check ─────────────────────────────────────────
     const profRes = await fetch(
-      `${supabaseUrl}/rest/v1/profiles?id=eq.${userId}&select=plan,subscription_expires_at,plan_type`,
+      `${supabaseUrl}/rest/v1/profiles?id=eq.${userId}&select=plan,subscription_expires_at,plan_type,queued_subscription`,
       { headers: { "Authorization": `Bearer ${serviceKey}`, "apikey": serviceKey } }
     );
     const profRows = await profRes.json();
     const profile  = Array.isArray(profRows) ? profRows[0] : null;
 
-    if (profile?.plan === "pro") {
-      const isLifetime = profile.plan_type === "lifetime";
-      const isActive   = profile.subscription_expires_at && new Date(profile.subscription_expires_at) > new Date();
-      if (isLifetime || isActive) return fail("Already on an active Pro plan", 400);
+    const isLifetime = profile?.plan_type === "lifetime";
+    const isActive   = profile?.subscription_expires_at && new Date(profile.subscription_expires_at) > new Date();
+    const hasQueued  = profile?.queued_subscription !== null && profile?.queued_subscription !== undefined;
+
+    // If already Pro with active subscription and no queue, queue the new one
+    if (profile?.plan === "pro" && (isLifetime || isActive)) {
+      if (hasQueued) return fail("You already have a scheduled upgrade. Cancel it first.", 400);
+      // Will queue this subscription after creation
+      console.log("User has active Pro. New subscription will be QUEUED for", planType);
     }
 
     // ── Get PayPal access token ───────────────────────────────
@@ -140,23 +145,50 @@ Deno.serve(async (req) => {
     const approvalLink = (sub.links || []).find((l: any) => l.rel === "approve");
     if (!approvalLink?.href) return fail("No PayPal approval URL in response", 500);
 
-    // Save subscription ID + plan_type to profile NOW so the webhook can
-    // look up this user when BILLING.SUBSCRIPTION.ACTIVATED fires.
-    await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userId}`, {
-      method: "PATCH",
-      headers: {
-        "Authorization": `Bearer ${serviceKey}`,
-        "apikey": serviceKey,
-        "Content-Type": "application/json",
-        "Prefer": "return=minimal",
-      },
-      body: JSON.stringify({
-        paypal_subscription_id: sub.id,
+    // Save subscription ID + plan_type to profile
+    // If user already has active Pro: queue the subscription for later activation
+    // Otherwise: activate immediately (webhook will handle it)
+    const isQueueing = profile?.plan === "pro" && (isLifetime || isActive);
+
+    if (isQueueing) {
+      // Queue this subscription to activate when current one expires
+      const queuedData = {
         plan_type: planType,
         payment_gateway: "paypal",
-      }),
-    });
-    console.log("Saved paypal_subscription_id:", sub.id, "plan_type:", planType, "payment_gateway: paypal");
+        subscription_id: sub.id,
+        starts_at: profile.subscription_expires_at,
+      };
+      await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userId}`, {
+        method: "PATCH",
+        headers: {
+          "Authorization": `Bearer ${serviceKey}`,
+          "apikey": serviceKey,
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal",
+        },
+        body: JSON.stringify({
+          queued_subscription: queuedData,
+        }),
+      });
+      console.log("QUEUED paypal_subscription_id:", sub.id, "plan_type:", planType, "starts_at:", profile.subscription_expires_at);
+    } else {
+      // Activate immediately (normal flow for new users or expired subscriptions)
+      await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userId}`, {
+        method: "PATCH",
+        headers: {
+          "Authorization": `Bearer ${serviceKey}`,
+          "apikey": serviceKey,
+          "Content-Type": "application/json",
+          "Prefer": "return=minimal",
+        },
+        body: JSON.stringify({
+          paypal_subscription_id: sub.id,
+          plan_type: planType,
+          payment_gateway: "paypal",
+        }),
+      });
+      console.log("ACTIVATED paypal_subscription_id:", sub.id, "plan_type:", planType, "payment_gateway: paypal");
+    }
 
     return ok({ url: approvalLink.href });
 

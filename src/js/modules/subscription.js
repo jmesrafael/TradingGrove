@@ -71,6 +71,7 @@ function _pgwReset() {
   if (pl) pl.style.display = 'none';
 }
 
+/* STRIPE COMMENTED OUT - will enable when returning to multi-gateway
 async function pgwPayWithStripe() {
   const btn    = document.getElementById('pgwStripeBtn');
   const inner  = document.getElementById('pgwStripeInner');
@@ -100,6 +101,7 @@ async function pgwPayWithStripe() {
     _pgwReset();
   }
 }
+*/
 
 async function pgwPayWithPayPal() {
   const btn    = document.getElementById('pgwPaypalBtn');
@@ -319,6 +321,13 @@ function showToast(msg, icon, type) {
   const user = await requireAuth();
   if (!user) return;
 
+  // Auto-refresh after PayPal payment redirect to show updated Pro status
+  const sp = new URLSearchParams(window.location.search);
+  if (sp.get('upgraded') === '1') {
+    // Wait a moment for webhook to process, then refresh
+    setTimeout(() => location.reload(), 1500);
+  }
+
   currentProfile = await getProfile(user.id);
 
   // Apply the user's saved theme before anything else renders
@@ -346,6 +355,20 @@ function showToast(msg, icon, type) {
       psMeta.className   = 'ps-meta warn';
     } else {
       psMeta.textContent = subStatus.label;
+    }
+
+    // Show queued subscription notice if exists
+    const queued = currentProfile?.queued_subscription;
+    if (queued) {
+      const queuedElement = document.getElementById('queuedNotice');
+      if (queuedElement) {
+        const startsAt = new Date(queued.starts_at);
+        const queuedType = queued.plan_type === 'yearly' ? 'Annual' : 'Monthly';
+        const startFmt = startsAt.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+        document.getElementById('queuedNoticeBadge').textContent = queuedType;
+        document.getElementById('queuedNoticeDate').textContent = startFmt;
+        queuedElement.style.display = 'block';
+      }
     }
 
     document.getElementById('manageBtn').style.display = 'inline-flex';
@@ -402,7 +425,7 @@ window.redirectToPayment = redirectToPayment;
 window.openPaymentModal = openPaymentModal;
 window.closePaymentModal = closePaymentModal;
 window.handleOverlayClick = handleOverlayClick;
-window.pgwPayWithStripe = pgwPayWithStripe;
+// window.pgwPayWithStripe = pgwPayWithStripe; // STRIPE COMMENTED OUT - will enable when returning to multi-gateway
 window.pgwPayWithPayPal = pgwPayWithPayPal;
 window.openBillingPortal = openBillingPortal;
 window.closeRewardModal = closeRewardModal;

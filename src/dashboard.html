@@ -47,6 +47,9 @@
         </div>
         <div class="menu-items">
           <a class="menu-item" onclick="location.href='/profile'"><i class="fa-solid fa-user"></i> Profile</a>
+          <button class="menu-item" id="menuBillingBtn" onclick="openBillingModal()" style="display:none">
+            <i class="fa-solid fa-receipt"></i> Billing
+          </button>
           <button class="menu-item" onclick="openReferModal()">
             <i class="fa-solid fa-gift"></i> Refer a Friend
             <span class="menu-badge" id="menuRefBadge" style="display:none">0</span>
@@ -294,6 +297,62 @@
     <div class="del-progress" id="delAccProgress">
       <div class="del-spin"></div>
       <p id="delAccMsg" style="font-size:13px;color:var(--muted)">Deleting your account…</p>
+    </div>
+  </div>
+</div>
+
+<!-- Billing Modal -->
+<div class="overlay" id="billingModal">
+  <div class="modal" style="max-width: 520px;">
+    <div class="modal-hdr">
+      <h3><i class="fa-solid fa-receipt" style="color:var(--accent2);margin-right:8px"></i>Billing</h3>
+      <button class="modal-close" onclick="closeBillingModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Current Plan Section -->
+      <div style="background:rgba(var(--accent-rgb,0,255,136),.04);border:1px solid rgba(var(--accent-rgb,0,255,136),.15);border-radius:12px;padding:16px;margin-bottom:20px">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--accent2);font-weight:600;margin-bottom:8px">Current Plan</div>
+        <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px" id="billingPlanName">—</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:12px" id="billingRenewalDate">—</div>
+
+        <!-- Queued Subscription Notice -->
+        <div id="billingQueuedNotice" style="display:none;background:rgba(0,156,222,.08);border:1px solid rgba(0,156,222,.2);border-radius:8px;padding:10px;font-size:12px;color:var(--muted);margin-bottom:12px">
+          <i class="fa-solid fa-clock" style="margin-right:6px;color:#009cde"></i>
+          <span id="billingQueuedText"></span>
+        </div>
+
+        <div style="display:flex;gap:8px">
+          <button class="btn-primary" id="billingChangePlanBtn" onclick="location.href='/subscription'" style="flex:1;font-size:13px">
+            <i class="fa-solid fa-arrow-up" style="margin-right:6px"></i>Change Plan
+          </button>
+          <button class="btn-cancel" id="billingManageBtn" onclick="openBillingPortal()" style="flex:1;font-size:13px">
+            <i class="fa-solid fa-link" style="margin-right:6px"></i>Manage
+          </button>
+        </div>
+      </div>
+
+      <!-- Payment Method -->
+      <div style="margin-bottom:20px">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--accent2);font-weight:600;margin-bottom:8px">Payment Method</div>
+        <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;align-items:center;gap:12px">
+          <i id="billingPaymentIcon" class="fa-solid fa-credit-card" style="font-size:20px;color:var(--accent2)"></i>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;color:var(--text)" id="billingPaymentName">—</div>
+            <div style="font-size:11px;color:var(--muted)" id="billingPaymentDetails">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cancellation -->
+      <div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--red,#ff5f6d);font-weight:600;margin-bottom:8px">Cancellation</div>
+        <button class="btn-cancel" id="billingCancelBtn" onclick="confirmCancelSubscription()" style="width:100%;font-size:13px">
+          <i class="fa-solid fa-ban" style="margin-right:6px"></i>Cancel Subscription
+        </button>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px">Your subscription will remain active until the renewal date.</div>
+      </div>
+
     </div>
   </div>
 </div>
