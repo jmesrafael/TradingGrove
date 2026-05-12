@@ -26,11 +26,14 @@ async function getPayPalToken(clientId: string, clientSecret: string): Promise<s
     headers: {
       "Authorization": "Basic " + btoa(`${clientId}:${clientSecret}`),
       "Content-Type": "application/x-www-form-urlencoded",
+      "Accept": "application/json",
+      "Accept-Language": "en_US",
     },
-    body: "grant_type=client_credentials&scope=https://api.paypal.com/v1/billing/subscriptions.* https://api.paypal.com/v1/vault/.*",
+    body: "grant_type=client_credentials",
   });
   const data = await res.json();
   if (!data.access_token) throw new Error("PayPal auth failed: " + JSON.stringify(data));
+  console.log("PayPal token scopes:", data.scope || "(no scope info)");
   return data.access_token;
 }
 
