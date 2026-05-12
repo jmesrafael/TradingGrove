@@ -19,6 +19,8 @@ let selectedPlan = 'monthly';
 })();
 
 // ── Pay with Stripe ───────────────────────────────────────
+// Stripe payment disabled for now — use PayPal only
+/*
 async function payWithStripe() {
   const btn    = document.getElementById('stripeBtn');
   const loader = document.getElementById('stripeLoader');
@@ -51,6 +53,7 @@ async function payWithStripe() {
     loader.style.display = 'none';
   }
 }
+*/
 
 // ── Pay with PayPal ───────────────────────────────────────
 async function payWithPayPal() {
@@ -125,5 +128,5 @@ function showToast(msg, icon, type) {
   setTimeout(() => { if (loader) loader.style.display = 'none'; }, 450);
 })();
 
-window.payWithStripe  = payWithStripe;
+// window.payWithStripe  = payWithStripe; // Disabled — Stripe payment disabled
 window.payWithPayPal  = payWithPayPal;
