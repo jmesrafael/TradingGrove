@@ -140,7 +140,7 @@ async function openBillingPortal() {
   try {
     // PayPal subscribers manage their subscription directly on paypal.com
     if (currentProfile?.paypal_subscription_id && !currentProfile?.stripe_customer_id) {
-      window.open('https://www.paypal.com/myaccount/autopay/', '_blank');
+      window.open('https://sandbox.paypal.com/myaccount/autopay/', '_blank');
       return;
     }
 
@@ -318,8 +318,9 @@ function showToast(msg, icon, type) {
 
 // ── Init ──────────────────────────────────────────────────
 (async () => {
-  const user = await requireAuth();
-  if (!user) return;
+  try {
+    const user = await requireAuth();
+    if (!user) return;
 
   // Auto-refresh after PayPal payment redirect to show updated Pro status
   const sp = new URLSearchParams(window.location.search);
@@ -404,17 +405,20 @@ function showToast(msg, icon, type) {
     document.getElementById('freePlanBtn').textContent = 'Current Plan';
   }
 
-  const loader = document.getElementById('pageLoader');
-  loader.classList.add('gone');
-  setTimeout(() => { if (loader) loader.style.display = 'none'; }, 450);
-
-  // ── Fire the Pro celebration modal on successful upgrade ──
+    // ── Fire the Pro celebration modal on successful upgrade ──
   const sp = new URLSearchParams(window.location.search);
   if (sp.get('upgraded') === '1') {
     setTimeout(() => _openRewardModal(), 700);
   }
   if (sp.get('cancelled') === '1') {
     setTimeout(() => showToast('Checkout cancelled — still on Free plan.', 'fa-solid fa-circle-info', ''), 600);
+  }
+  } finally {
+    const loader = document.getElementById('pageLoader');
+    if (loader) {
+      loader.classList.add('gone');
+      setTimeout(() => { if (loader) loader.style.display = 'none'; }, 450);
+    }
   }
 })();
 
