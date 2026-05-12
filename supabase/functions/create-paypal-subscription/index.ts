@@ -27,7 +27,7 @@ async function getPayPalToken(clientId: string, clientSecret: string): Promise<s
       "Authorization": "Basic " + btoa(`${clientId}:${clientSecret}`),
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: "grant_type=client_credentials&scope=https://api.paypal.com/v1/payments/.* https://api.paypal.com/v1/billing/.*",
+    body: "grant_type=client_credentials&scope=https://api.paypal.com/v1/billing/subscriptions.* https://api.paypal.com/v1/vault/.*",
   });
   const data = await res.json();
   if (!data.access_token) throw new Error("PayPal auth failed: " + JSON.stringify(data));
