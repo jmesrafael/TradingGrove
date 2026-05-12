@@ -146,13 +146,13 @@ main{position:relative;z-index:1;display:flex;align-items:center;justify-content
 .pm-card.paypal:hover:not(:disabled) .pm-card-arrow{color:#009cde}
 
 /* PayPal-only card with logo image */
-.pm-card.paypal-only .pm-card-inner{padding:18px 20px;gap:14px}
+.pm-card.paypal-only .pm-card-inner{padding:20px 22px;gap:16px}
 .pm-paypal-logo{
-  height:28px;width:auto;
+  height:40px;width:auto;
   object-fit:contain;
   flex-shrink:0;
   filter:brightness(0) invert(1);
-  opacity:.85;
+  opacity:.9;
 }
 .pm-card.paypal-only:hover:not(:disabled) .pm-paypal-logo{opacity:1}
 
