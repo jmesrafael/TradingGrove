@@ -46,11 +46,11 @@ serve(async (req) => {
 
     console.log(`[grant-reward] Processing reward for referred_user_id: ${referred_user_id}`);
 
-    // ── 0. Verify referred user has a genuine Stripe-paid subscription ──
-    // Prevents: free users triggering rewards, referral-pro chains, abuse.
+    // ── 0. Verify referred user has a genuine paid subscription ──
+    // Accepts both Stripe and PayPal. Prevents: free users triggering rewards, referral-pro chains, abuse.
     const { data: referredProfile, error: referredErr } = await supabase
       .from("profiles")
-      .select("plan, stripe_subscription_id, subscription_expires_at")
+      .select("plan, stripe_subscription_id, paypal_subscription_id, payment_gateway, subscription_expires_at")
       .eq("id", referred_user_id)
       .single();
 
@@ -61,8 +61,11 @@ serve(async (req) => {
       });
     }
 
-    if (referredProfile.plan !== "pro" || !referredProfile.stripe_subscription_id) {
-      console.log(`[grant-reward] Referred user ${referred_user_id} is not a paid Stripe subscriber — skipping`);
+    const hasStripeSubscription = referredProfile.stripe_subscription_id;
+    const hasPayPalSubscription = referredProfile.paypal_subscription_id;
+
+    if (referredProfile.plan !== "pro" || (!hasStripeSubscription && !hasPayPalSubscription)) {
+      console.log(`[grant-reward] Referred user ${referred_user_id} is not a paid subscriber — skipping`);
       return new Response(JSON.stringify({ skipped: true, reason: "referred_user_not_paid" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

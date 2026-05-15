@@ -389,18 +389,6 @@ function _markRewardIdsSeen(ids) {
   localStorage.setItem(REWARD_SEEN_KEY, JSON.stringify([...seen]));
 }
 
-// ── REMOVE THIS ENTIRE FUNCTION WHEN DONE TESTING ──────────
-function _testRewardModal() {
-  // Bypasses the seen-IDs check so the modal always fires on click.
-  // Fills stats from whatever is already rendered on the page.
-  const total    = document.getElementById('statTotal').textContent;
-  const rewarded = parseInt(document.getElementById('statRewarded').textContent) || 1;
-  document.getElementById('rewardTotalReferrals').textContent = total === '—' ? '3' : total;
-  document.getElementById('rewardDaysEarned').textContent     = (rewarded * 30) + 'd';
-  _openRewardModal();
-}
-// ── END REMOVE ──────────────────────────────────────────────
-
 function checkAndShowRewardModal(referrals) {
   if (!referrals || !referrals.length) return;
 

@@ -140,7 +140,7 @@ async function openBillingPortal() {
   try {
     // PayPal subscribers manage their subscription directly on paypal.com
     if (currentProfile?.paypal_subscription_id && !currentProfile?.stripe_customer_id) {
-      window.open('https://sandbox.paypal.com/myaccount/autopay/', '_blank');
+      window.open('https://www.paypal.com/myaccount/autopay/', '_blank');
       return;
     }
 
@@ -191,13 +191,6 @@ async function openBillingPortal() {
 //  Ported exactly from profile.html reward modal.
 //  Fires automatically when ?upgraded=1 is in the URL.
 // ══════════════════════════════════════════════════════════════
-
-// ── REMOVE THIS ENTIRE FUNCTION WHEN DONE TESTING ──────────
-function _testRewardModal() {
-  // Bypasses the normal trigger so the modal always fires on click.
-  _openRewardModal();
-}
-// ── END REMOVE ──────────────────────────────────────────────
 
 function _openRewardModal() {
   document.getElementById('rewardOverlay').classList.add('open');

@@ -270,9 +270,7 @@ function closeBillingModal(){
 
 function openBillingPortal(){
   // PayPal only (for now)
-  // For now, use SANDBOX for testing (can switch to live when ready)
-  // TODO: Check PAYPAL_MODE env or use live when production
-  const paypalUrl = 'https://sandbox.paypal.com/myaccount/autopay/';
+  const paypalUrl = 'https://www.paypal.com/myaccount/autopay/';
   window.open(paypalUrl, '_blank');
 
   /* STRIPE COMMENTED OUT - will enable when returning to multi-gateway
