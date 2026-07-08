@@ -72,6 +72,76 @@ function toggleSidebar() {
 
 _applySidebarState(false);
 
+// ─── Sidebar footer: theme + font picker ───────────────────────────────────
+let _sfThemeOpen = false;
+
+function toggleSidebarTheme() {
+  _sfThemeOpen = !_sfThemeOpen;
+  document.getElementById('sfThemePop').classList.toggle('open', _sfThemeOpen);
+  document.getElementById('sfThemeBtn').classList.toggle('open', _sfThemeOpen);
+  if (_sfThemeOpen) { _sfBuildThemeGrid(); _sfBuildFontGrid(); }
+}
+function closeSidebarTheme() {
+  _sfThemeOpen = false;
+  document.getElementById('sfThemePop')?.classList.remove('open');
+  document.getElementById('sfThemeBtn')?.classList.remove('open');
+}
+document.addEventListener('click', e => {
+  if (!_sfThemeOpen) return;
+  const pop = document.getElementById('sfThemePop'), btn = document.getElementById('sfThemeBtn');
+  if (pop && !pop.contains(e.target) && btn && !btn.contains(e.target)) closeSidebarTheme();
+});
+
+function _sfUpdateSwatchDot() {
+  const cur = localStorage.getItem('tl_theme') || 'dark';
+  const meta = TZ.themeList?.find(t => t.id === cur) || TZ.themeList?.[1];
+  const dot = document.getElementById('sfSwatchDot');
+  if (dot && meta) dot.style.background = meta.swatches[meta.swatches.length - 1];
+}
+
+function _sfBuildThemeGrid() {
+  const grid = document.getElementById('sfThemeGrid');
+  if (!grid || !window.TZ) return;
+  const cur = localStorage.getItem('tl_theme') || 'dark';
+  grid.innerHTML = '';
+  TZ.themeList.forEach(th => {
+    const locked = th.pro && !userIsPro, active = th.id === cur;
+    const sw = document.createElement('div');
+    sw.className = 'sf-swatch' + (active ? ' active' : '') + (locked ? ' locked' : '');
+    sw.style.background = th.swatches[th.swatches.length - 1];
+    sw.title = th.label + (locked ? ' (Pro)' : '');
+    if (active) sw.innerHTML = '<span class="sf-swatch-mark"><i class="fa-solid fa-check"></i></span>';
+    else if (locked) sw.innerHTML = '<span class="sf-swatch-mark"><i class="fa-solid fa-lock"></i></span>';
+    sw.addEventListener('click', () => {
+      if (locked) { showToast(`${th.label} is a Pro theme.`, 'fa-solid fa-crown', 'red'); return; }
+      TZ.setTheme(th.id);
+      _sfUpdateSwatchDot();
+      _sfBuildThemeGrid();
+    });
+    grid.appendChild(sw);
+  });
+}
+
+function _sfBuildFontGrid() {
+  const grid = document.getElementById('sfFontGrid');
+  if (!grid || !window.TZ) return;
+  const cur = localStorage.getItem('tl_font') || 'default';
+  grid.innerHTML = '';
+  TZ.fontList.forEach(f => {
+    if (f.url) TZ._injectFont(f.url);
+    const locked = f.pro && !userIsPro, active = f.id === cur;
+    const row = document.createElement('div');
+    row.className = 'sf-font-opt' + (active ? ' active' : '') + (locked ? ' locked' : '');
+    row.innerHTML = `<span class="sf-font-name" style="font-family:${f.heading}">${f.label}</span>${active ? '<i class="fa-solid fa-check" style="font-size:11px"></i>' : (locked ? '<span class="sf-font-pro">PRO</span>' : '')}`;
+    row.addEventListener('click', () => {
+      if (locked) { showToast(`${f.label} is a Pro font.`, 'fa-solid fa-crown', 'red'); return; }
+      TZ.setFont(f.id);
+      _sfBuildFontGrid();
+    });
+    grid.appendChild(row);
+  });
+}
+
 // ─── Tabs ───────────────────────────────────────────────────────────────────
 const TABS=['logs','presession','calendar','notes','analytics','settings'];
 let activeTab='logs', journalId = sessionStorage.getItem('tz_current_journal')
@@ -98,23 +168,28 @@ let _bnbLastCsvText = '';
   const _sub = getSubscriptionStatus(profile);
   userIsPro = _sub.isPro;
   window._userIsPro = userIsPro;
-  document.getElementById('hUserName').textContent = profile?.name || currentUser.email;
+  const _uname = profile?.name || currentUser.email;
+  document.getElementById('hUserName').textContent = _uname;
   const _badge = document.getElementById('hPlanBadge');
+  const _sfBadge = document.getElementById('sfPlanBadge');
   if (userIsPro) {
     if (_sub.inGrace) {
-      _badge.textContent = 'Grace period';
-      _badge.className = 'plan-badge badge-expiring';
+      _badge.textContent = _sfBadge.textContent = 'Grace period';
+      _badge.className = _sfBadge.className = 'plan-badge badge-expiring';
     } else if (_sub.expiring) {
-      _badge.textContent = `Expires in ${_sub.daysLeft}d`;
-      _badge.className = 'plan-badge badge-expiring';
+      _badge.textContent = _sfBadge.textContent = `Expires in ${_sub.daysLeft}d`;
+      _badge.className = _sfBadge.className = 'plan-badge badge-expiring';
     } else {
-      _badge.textContent = 'Pro';
-      _badge.className = 'plan-badge badge-pro';
+      _badge.textContent = _sfBadge.textContent = 'Pro';
+      _badge.className = _sfBadge.className = 'plan-badge badge-pro';
     }
   } else if (_sub.downgraded) {
-    _badge.textContent = 'Pro Expired';
-    _badge.className = 'plan-badge badge-free';
+    _badge.textContent = _sfBadge.textContent = 'Pro Expired';
+    _badge.className = _sfBadge.className = 'plan-badge badge-free';
   }
+  document.getElementById('sfUserName').textContent = _uname;
+  document.getElementById('sfAvatar').textContent = _uname.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  _sfUpdateSwatchDot();
   journalObj = journals.find(j => j.id === journalId);
   if (!journalObj) { location.href = '/dashboard'; return; }
   settings = settingsData;

@@ -45,6 +45,8 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 .hright{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .huser-info{display:flex;align-items:center;gap:7px;padding:5px 10px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:var(--radius-md);cursor:pointer;transition:border-color var(--transition-base)}
 .huser-info:hover{border-color:var(--accent2)}
+/* Account info now lives in the sidebar footer on wider screens — only shown in the mobile header below 521px */
+@media(min-width:521px){.huser-info{display:none}}
 .huser-name{font-size:12px;color:var(--muted);max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @keyframes goldShimmer{0%{background-position:200% center}100%{background-position:-200% center}}
 @keyframes goldGlare{0%{left:-80%;opacity:0}10%{opacity:1}50%{left:110%;opacity:1}51%{opacity:0}100%{left:110%;opacity:0}}
@@ -202,8 +204,10 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 }
 
 /* Tooltip on collapsed */
-.nav-item[data-tip]{position:relative}
-.sidebar.collapsed .nav-item[data-tip]::after{
+.nav-item[data-tip],.sf-theme-btn[data-tip],.sf-user-row[data-tip]{position:relative}
+.sidebar.collapsed .nav-item[data-tip]::after,
+.sidebar.collapsed .sf-theme-btn[data-tip]::after,
+.sidebar.collapsed .sf-user-row[data-tip]::after{
   content:attr(data-tip);
   position:absolute;
   left:calc(100% + 10px);
@@ -223,7 +227,9 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
   box-shadow:0 4px 14px rgba(0,0,0,.4);
   transition:opacity .15s;
 }
-.sidebar.collapsed .nav-item[data-tip]:hover::after{opacity:1}
+.sidebar.collapsed .nav-item[data-tip]:hover::after,
+.sidebar.collapsed .sf-theme-btn[data-tip]:hover::after,
+.sidebar.collapsed .sf-user-row[data-tip]:hover::after{opacity:1}
 
 /* Presession dot */
 .nav-icon-wrap{
@@ -247,12 +253,92 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
 /* Sidebar footer */
 .sidebar-footer{
   border-top:1px solid var(--border);
-  padding:4px 6px;
+  padding:6px 6px;
   flex-shrink:0;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
 }
 .sidebar-footer .nav-item{
   font-size:13px;
 }
+
+/* Theme toggle in sidebar footer */
+.sf-theme{position:relative}
+.sf-theme-btn{
+  display:flex;align-items:center;gap:8px;width:100%;
+  padding:8px 10px;border-radius:var(--radius-md);
+  background:none;border:none;color:var(--muted);
+  font-size:13px;font-family:var(--font-body,'Inter',sans-serif);
+  cursor:pointer;transition:all var(--transition-base);
+}
+.sf-theme-btn:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.sf-theme-btn.open{color:var(--accent2);background:rgba(var(--accent-rgb,0,255,136),.08)}
+.sf-theme-btn .nav-item-label{flex:1;text-align:left;margin-left:0}
+.sf-swatch-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;background:var(--accent);box-shadow:0 0 0 2px var(--panel),0 0 0 3px var(--border)}
+.sf-chev{font-size:10px;transition:transform .2s;flex-shrink:0;color:var(--muted2)}
+.sf-theme-btn.open .sf-chev{transform:rotate(180deg)}
+
+.sf-theme-pop{
+  position:absolute;bottom:calc(100% + 6px);left:6px;right:6px;
+  background:var(--panel2,var(--panel));border:1px solid var(--border);
+  border-radius:var(--radius-lg,10px);padding:12px;
+  box-shadow:0 12px 28px rgba(0,0,0,.45);
+  opacity:0;visibility:hidden;transform:translateY(6px);
+  transition:opacity .18s ease,transform .18s ease,visibility .18s;
+  z-index:250;min-width:220px;
+}
+.sf-theme-pop.open{opacity:1;visibility:visible;transform:translateY(0)}
+.sf-pop-title{font-size:10px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted2);font-weight:700;margin-bottom:9px;display:flex;align-items:center;gap:6px}
+.sf-theme-swatch-grid{display:flex;flex-wrap:wrap;gap:9px}
+.sf-swatch{
+  width:28px;height:28px;border-radius:50%;cursor:pointer;position:relative;flex-shrink:0;
+  border:2px solid transparent;box-shadow:0 0 0 1px var(--border) inset;transition:all .15s;
+}
+.sf-swatch:hover{transform:scale(1.1)}
+.sf-swatch.active{border-color:var(--accent2)}
+.sf-swatch.locked{opacity:.45;cursor:not-allowed}
+.sf-swatch .sf-swatch-mark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+
+.sf-font-grid{display:flex;flex-direction:column;gap:3px}
+.sf-font-opt{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:7px 9px;border-radius:var(--radius-md);cursor:pointer;
+  font-size:12px;color:var(--muted);transition:all .15s;
+}
+.sf-font-opt:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.sf-font-opt.active{color:var(--accent2);background:rgba(var(--accent-rgb,0,255,136),.08)}
+.sf-font-opt.locked{opacity:.5;cursor:not-allowed}
+.sf-font-name{font-weight:600}
+.sf-font-pro{font-size:8px;font-weight:700;color:var(--amber);border:1px solid var(--amber);border-radius:4px;padding:1px 4px;letter-spacing:.3px}
+
+/* Account rows in sidebar footer */
+.sf-user{margin-top:2px;padding-top:6px;border-top:1px solid var(--border)}
+.sf-user-row{
+  display:flex;align-items:center;gap:8px;width:100%;
+  padding:7px 10px;border-radius:var(--radius-md);
+  background:none;border:none;color:var(--muted);cursor:pointer;
+  font-size:12px;font-family:var(--font-body,'Inter',sans-serif);
+  transition:all var(--transition-base);text-align:left;
+}
+.sf-user-row:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.sf-user-row .nav-item-label{margin-left:0}
+.sf-user-icon{width:16px;text-align:center;font-size:12px;color:var(--amber);flex-shrink:0}
+.sf-avatar{
+  width:20px;height:20px;border-radius:50%;flex-shrink:0;
+  background:rgba(var(--accent-rgb,0,255,136),.15);color:var(--accent2);
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;
+}
+.sf-uname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Collapsed sidebar adaptations */
+.sidebar.collapsed .sf-theme-btn .nav-item-label,
+.sidebar.collapsed .sf-chev,
+.sidebar.collapsed .sf-user-row .nav-item-label,
+.sidebar.collapsed #sfPlanBadge{display:none}
+.sidebar.collapsed .sf-theme-btn,
+.sidebar.collapsed .sf-user-row{justify-content:center;padding:8px}
+.sidebar.collapsed .sf-theme-pop{left:calc(100% + 10px);right:auto;bottom:0;width:240px}
 
 /* ── Main content ── */
 .main-content{

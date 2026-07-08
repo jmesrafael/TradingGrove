@@ -135,13 +135,39 @@
         <i class="fa-solid fa-chart-line nav-item-icon"></i>
         <span class="nav-item-label">Analytics</span>
       </button>
-    </nav>
 
-    <div class="sidebar-footer">
-      <button class="nav-item" data-tab="settings" onclick="switchTab('settings')" data-tip="Settings" style="width:100%">
+      <button class="nav-item" data-tab="settings" onclick="switchTab('settings')" data-tip="Settings">
         <i class="fa-solid fa-gear nav-item-icon"></i>
         <span class="nav-item-label">Settings</span>
       </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sf-theme" id="sfTheme">
+        <button class="sf-theme-btn" id="sfThemeBtn" onclick="toggleSidebarTheme()" data-tip="Theme">
+          <span class="sf-swatch-dot" id="sfSwatchDot"></span>
+          <span class="nav-item-label">Theme</span>
+          <i class="fa-solid fa-chevron-down sf-chev" id="sfChev"></i>
+        </button>
+        <div class="sf-theme-pop" id="sfThemePop">
+          <div class="sf-pop-title"><i class="fa-solid fa-droplet"></i> Color Theme</div>
+          <div class="sf-theme-swatch-grid" id="sfThemeGrid"></div>
+          <div class="sf-pop-title" style="margin-top:12px"><i class="fa-solid fa-font"></i> Font</div>
+          <div class="sf-font-grid" id="sfFontGrid"></div>
+        </div>
+      </div>
+
+      <div class="sf-user">
+        <button class="sf-user-row" id="sfPlanBtn" onclick="location.href='/subscription'" data-tip="Subscription">
+          <i class="fa-solid fa-crown sf-user-icon"></i>
+          <span class="nav-item-label">Plan</span>
+          <span class="plan-badge badge-free" id="sfPlanBadge" style="margin-left:auto">Free</span>
+        </button>
+        <button class="sf-user-row" id="sfProfileBtn" onclick="location.href='/profile'" data-tip="Profile">
+          <span class="sf-avatar" id="sfAvatar">?</span>
+          <span class="nav-item-label sf-uname" id="sfUserName">—</span>
+        </button>
+      </div>
     </div>
 
   </aside>
