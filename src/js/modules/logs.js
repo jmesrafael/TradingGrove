@@ -745,7 +745,7 @@ function buildNotesBtnHTML(t){const hasNotes=t.notes&&t.notes.trim(),imgCount=t.
 function buildRow(t,num){
   const tr=document.createElement('tr');tr.dataset.id=t.id;
   const nb=buildNotesBtnHTML(t),isLong=t.position!=='Short';
-  tr.innerHTML=`<td class="row-cb-cell"><input type="checkbox" class="row-cb" id="cb_${t.id}" onchange="toggleRowSelect('${t.id}')"></td><td><div class="dt-cell" id="dcel_${t.id}"><div style="display:flex;flex-direction:column;align-items:center;gap:2px"><div style="display:flex;align-items:center;gap:3px"><span class="dt-val${t.date?'':' empty'}" id="dval_${t.id}" onclick="toggleDtEdit('${t.id}','date')" style="cursor:pointer">${t.date||'—'}</span><input class="dt-input" type="date" id="dinp_${t.id}" value="${t.date||''}" autocomplete="off" onblur="commitDtEdit('${t.id}','date')" onkeydown="dtKey(event,'${t.id}','date')"></div><div style="display:flex;align-items:center;gap:3px"><span class="dt-val${t.time?'':' empty'}" id="tval_${t.id}" onclick="toggleDtEdit('${t.id}','time')" style="font-size:10px;color:var(--muted);cursor:pointer">${t.time?fmt12(t.time):'—'}</span><input class="dt-input" type="time" id="tinp_${t.id}" value="${t.time||''}" autocomplete="off" onblur="commitDtEdit('${t.id}','time')" onkeydown="dtKey(event,'${t.id}','time')"></div></div></div></td><td class="pw-cell"><input class="ci" value="${esc(t.pair||'')}" placeholder="EURUSD" oninput="onPairInput(this,'${t.id}')" onfocus="showSugOnFocus(this,'${t.id}')" autocomplete="off" onblur="confirmPair('${t.id}',this);hideSug()" style="min-width:80px"><div class="sugs" id="sug_${t.id}" style="display:none"></div></td><td><select class="csel ${isLong?'long':'short'}" id="pos_${t.id}" onchange="updPos(this,'${t.id}')"><option ${isLong?'selected':''}>Long</option><option ${!isLong?'selected':''}>Short</option></select></td><td><div class="tc" id="st_${t.id}" onclick="openPP(event,'${t.id}','strategy')">${buildPills(t.strategy)}</div></td><td><div class="tc" id="tf_${t.id}" onclick="openPP(event,'${t.id}','timeframe')">${buildPills(t.timeframe)}</div></td><td><input class="ci" id="pnl_${t.id}" type="text" inputmode="decimal" autocomplete="off" value="${fmtVal(t.pnl,'pnl')}" placeholder="0.00" onfocus="vFocus(this)" oninput="onValInput('${t.id}','pnl',this.value)" onkeydown="numericOnly(event)" onblur="vBlur(this,'${t.id}','pnl')" style="min-width:58px;font-weight:600;font-family:var(--font-mono,'Space Grotesk',sans-serif);color:${pnlCol(t.pnl)}"></td><td><input class="ci" id="r_${t.id}" type="text" inputmode="decimal" autocomplete="off" value="${fmtVal(t.r,'r')}" placeholder="+2R" onfocus="vFocus(this)" oninput="onValInput('${t.id}','r',this.value)" onkeydown="numericOnly(event)" onblur="vBlur(this,'${t.id}','r')" style="min-width:40px;font-weight:600;font-family:var(--font-mono,'Space Grotesk',sans-serif);color:${pnlCol(t.r)}"></td><td><div class="stars" id="s_${t.id}">${[1,2,3,4,5].map(n=>`<span class="star${(t.confidence||0)>=n?' on':''}" onclick="setConf('${t.id}',${n})">★</span>`).join('')}</div></td><td><div class="tc" id="md_${t.id}" onclick="openPP(event,'${t.id}','mood')">${buildMoodPills(t.mood)}</div></td><td><button class="${nb.cls}" onclick="openNotesGuarded('${t.id}')">${nb.html}</button></td><td><button class="del-btn" onclick="askDel('${t.id}')"><i class="fa-solid fa-xmark"></i></button></td>`;
+  tr.innerHTML=`<td class="row-cb-cell"><input type="checkbox" class="row-cb" id="cb_${t.id}" onchange="toggleRowSelect('${t.id}')"></td><td><div class="dt-cell" id="dcel_${t.id}"><div style="display:flex;flex-direction:column;align-items:center;gap:2px"><div style="display:flex;align-items:center;gap:3px"><span class="dt-val${t.date?'':' empty'}" id="dval_${t.id}" onclick="toggleDtEdit('${t.id}','date')" style="cursor:pointer">${t.date?fmtDate(t.date):'—'}</span><input class="dt-input" type="date" id="dinp_${t.id}" value="${t.date||''}" autocomplete="off" onblur="commitDtEdit('${t.id}','date')" onkeydown="dtKey(event,'${t.id}','date')"></div><div style="display:flex;align-items:center;gap:3px"><span class="dt-val${t.time?'':' empty'}" id="tval_${t.id}" onclick="toggleDtEdit('${t.id}','time')" style="font-size:10px;color:var(--muted);cursor:pointer">${t.time?fmt12(t.time):'—'}</span><input class="dt-input" type="time" id="tinp_${t.id}" value="${t.time||''}" autocomplete="off" onblur="commitDtEdit('${t.id}','time')" onkeydown="dtKey(event,'${t.id}','time')"></div></div></div></td><td class="pw-cell"><input class="ci" value="${esc(t.pair||'')}" placeholder="EURUSD" oninput="onPairInput(this,'${t.id}')" onfocus="showSugOnFocus(this,'${t.id}')" onkeydown="pairKey(event,'${t.id}')" autocomplete="off" onblur="confirmPair('${t.id}',this);hideSug()" style="min-width:80px"><div class="sugs" id="sug_${t.id}" style="display:none"></div></td><td><select class="csel ${isLong?'long':'short'}" id="pos_${t.id}" onchange="updPos(this,'${t.id}')"><option ${isLong?'selected':''}>Long</option><option ${!isLong?'selected':''}>Short</option></select></td><td><div class="tc" id="st_${t.id}" onclick="openPP(event,'${t.id}','strategy')">${buildPills(t.strategy)}</div></td><td><div class="tc" id="tf_${t.id}" onclick="openPP(event,'${t.id}','timeframe')">${buildPills(t.timeframe)}</div></td><td><input class="ci" id="pnl_${t.id}" type="text" inputmode="decimal" autocomplete="off" value="${fmtVal(t.pnl,'pnl')}" placeholder="0.00" onfocus="vFocus(this)" oninput="onValInput('${t.id}','pnl',this.value)" onkeydown="numericOnly(event)" onblur="vBlur(this,'${t.id}','pnl')" style="min-width:58px;font-weight:600;font-family:var(--font-mono,'Space Grotesk',sans-serif);color:${pnlCol(t.pnl)}"></td><td><input class="ci" id="r_${t.id}" type="text" inputmode="decimal" autocomplete="off" value="${fmtVal(t.r,'r')}" placeholder="+2R" onfocus="vFocus(this)" oninput="onValInput('${t.id}','r',this.value)" onkeydown="numericOnly(event)" onblur="vBlur(this,'${t.id}','r')" style="min-width:40px;font-weight:600;font-family:var(--font-mono,'Space Grotesk',sans-serif);color:${pnlCol(t.r)}"></td><td><div class="stars" id="s_${t.id}">${[1,2,3,4,5].map(n=>`<span class="star${(t.confidence||0)>=n?' on':''}" onclick="setConf('${t.id}',${n})">★</span>`).join('')}</div></td><td><div class="tc" id="md_${t.id}" onclick="openPP(event,'${t.id}','mood')">${buildMoodPills(t.mood)}</div></td><td><button class="${nb.cls}" onclick="openNotesGuarded('${t.id}')">${nb.html}</button></td><td><button class="row-menu-btn" onclick="openRowMenu(event,'${t.id}')"><i class="fa-solid fa-ellipsis-vertical"></i></button></td>`;
   return tr;
 }
 function buildPills(arr){const a=arr||[];if(!a.length)return'<span class="pill ep"><i class="fa-solid fa-plus" style="font-size:9px"></i></span>';return a.map(s=>`<span class="pill">${esc(s)}</span>`).join('');}
@@ -755,7 +755,7 @@ function numericOnly(e){const allowed=['Backspace','Delete','ArrowLeft','ArrowRi
 
 let _dtEditing=null;
 function toggleDtEdit(id,field){const px=field==='date'?'d':'t';if(_dtEditing&&_dtEditing.id===id&&_dtEditing.field===field){commitDtEdit(id,field);return;}if(_dtEditing)commitDtEdit(_dtEditing.id,_dtEditing.field);_dtEditing={id,field};document.getElementById(px+'val_'+id).style.display='none';const inp=document.getElementById(px+'inp_'+id);inp.classList.add('active');inp.style.pointerEvents='';setTimeout(()=>{inp.focus();try{inp.showPicker();}catch(e){}},30);}
-function commitDtEdit(id,field){const px=field==='date'?'d':'t';const v=document.getElementById(px+'val_'+id),i=document.getElementById(px+'inp_'+id);if(!v||!i)return;const val=i.value;v.textContent=field==='time'?(val?fmt12(val):'—'):(val||'—');v.classList.toggle('empty',!val);v.style.display='';i.classList.remove('active');localUpd(id,field,val,true);saveToLocalCache(id);scheduleSave(id,true);if(_dtEditing&&_dtEditing.id===id&&_dtEditing.field===field)_dtEditing=null;}
+function commitDtEdit(id,field){const px=field==='date'?'d':'t';const v=document.getElementById(px+'val_'+id),i=document.getElementById(px+'inp_'+id);if(!v||!i)return;const val=i.value;v.textContent=field==='time'?(val?fmt12(val):'—'):(val?fmtDate(val):'—');v.classList.toggle('empty',!val);v.style.display='';i.classList.remove('active');localUpd(id,field,val,true);saveToLocalCache(id);scheduleSave(id,true);if(_dtEditing&&_dtEditing.id===id&&_dtEditing.field===field)_dtEditing=null;}
 function dtKey(e,id,field){if(['Enter','Tab','Escape'].includes(e.key)){e.preventDefault();commitDtEdit(id,field);}}
 document.addEventListener('click',function(e){if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT'||e.target.tagName==='TEXTAREA')return;if(!_dtEditing)return;const{id,field}=_dtEditing;const cel=document.getElementById('dcel_'+id);if(cel&&cel.contains(e.target))return;commitDtEdit(id,field);},{capture:true});
 
@@ -968,6 +968,62 @@ async function addRow(){
   }
 }
 
+let _rowMenuId=null;
+function openRowMenu(e,id){
+  e.stopPropagation();
+  const btn=e.currentTarget,menu=document.getElementById('rowMenu');
+  if(_rowMenuId===id&&menu.style.display!=='none'){closeRowMenu();return;}
+  _rowMenuId=id;
+  btn.classList.add('active');
+  menu.style.display='block';
+  const rect=btn.getBoundingClientRect();
+  const mw=menu.offsetWidth||150,mh=menu.offsetHeight||90;
+  let top=rect.bottom+4,left=rect.right-mw;
+  if(top+mh>window.innerHeight-8)top=rect.top-mh-4;
+  if(left<8)left=8;
+  if(left+mw>window.innerWidth-8)left=window.innerWidth-mw-8;
+  menu.style.top=Math.max(4,top)+'px';menu.style.left=left+'px';
+  document.getElementById('rmDuplicate').onclick=()=>{closeRowMenu();duplicateRow(id);};
+  document.getElementById('rmRemove').onclick=()=>{closeRowMenu();askDel(id);};
+}
+function closeRowMenu(){
+  const menu=document.getElementById('rowMenu');
+  if(menu)menu.style.display='none';
+  document.querySelectorAll('.row-menu-btn.active').forEach(b=>b.classList.remove('active'));
+  _rowMenuId=null;
+}
+document.addEventListener('click',e=>{const menu=document.getElementById('rowMenu');if(menu&&menu.style.display!=='none'&&!menu.contains(e.target))closeRowMenu();});
+
+async function duplicateRow(id){
+  if(_newDraftIds.size>0){showDraftBlockToast();return;}
+  captureActiveInputs();
+  const src=trades.find(t=>t.id===id);if(!src)return;
+  const tempId='temp_'+Date.now();
+  const fields={date:src.date,time:src.time,pair:src.pair||'',position:src.position||'Long',strategy:[...(src.strategy||[])],timeframe:[...(src.timeframe||[])],pnl:src.pnl,r:src.r,confidence:src.confidence||0,mood:[...(src.mood||[])],notes:''};
+  const nt={id:tempId,...fields,images:[]};
+  _newDraftIds.add(tempId);
+  const idx=trades.findIndex(t=>t.id===id);
+  trades.splice(idx+1,0,nt);
+  updateAnalytics();render();
+  try{
+    const row=await createTrade(currentUser.id,jid,fields);
+    const i=trades.findIndex(t=>t.id===tempId);
+    if(i>-1){
+      trades[i].id=row.id;
+      _newDraftIds.delete(tempId);
+      const tr=document.querySelector(`tr[data-id="${tempId}"]`);
+      if(tr){tr.dataset.id=row.id;rebindRowId(tr,tempId,row.id);}
+      showToast('Trade duplicated.','fa-solid fa-circle-check','green');
+    }
+  }catch(e){
+    console.error('Error duplicating trade:',e);
+    showToast('❌ Error duplicating trade: '+e.message,'fa-solid fa-circle-exclamation','red');
+    _newDraftIds.delete(tempId);
+    trades=trades.filter(t=>t.id!==tempId);
+    updateAnalytics();render();
+  }
+}
+
 function askDel(id){pendingDelId=id;document.getElementById('cOverlay').classList.add('open');}
 function closeCon(){pendingDelId=null;document.getElementById('cOverlay').classList.remove('open');}
 async function confirmDelete(){
@@ -1001,6 +1057,7 @@ function _renderSugBox(box,id,matches,limit){
   const key=slice.join('|');
   if(box.dataset.lastKey!==key){
     box.dataset.lastKey=key;
+    box.dataset.activeIdx='-1';
     box.innerHTML=slice.map(p=>`<div class="sug" onmousedown="event.preventDefault();pickPair('${id}','${esc(p)}')">${esc(p)}</div>`).join('');
   }
   box.style.display='block';
@@ -1022,6 +1079,35 @@ function showSug(el,id){
 }
 function hideSug(){setTimeout(()=>document.querySelectorAll('.sugs').forEach(s=>{s.style.display='none';s.dataset.lastKey='';}),180);}
 function hideSugImmediate(id){const box=document.getElementById('sug_'+id);if(box){box.style.display='none';box.dataset.lastKey='';}}
+function pairKey(e,id){
+  const box=document.getElementById('sug_'+id);
+  if(!box||box.style.display==='none')return;
+  const items=[...box.children];
+  if(!items.length)return;
+  if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+    e.preventDefault();
+    let idx=parseInt(box.dataset.activeIdx,10);if(isNaN(idx))idx=-1;
+    idx=e.key==='ArrowDown'?(idx+1)%items.length:(idx<=0?items.length-1:idx-1);
+    items.forEach((el,i)=>el.classList.toggle('active',i===idx));
+    box.dataset.activeIdx=String(idx);
+    items[idx].scrollIntoView({block:'nearest'});
+  }else if(e.key==='Enter'){
+    const v=e.target.value.trim();if(!v)return;
+    e.preventDefault();
+    const idx=parseInt(box.dataset.activeIdx,10);
+    let pick;
+    if(!isNaN(idx)&&idx>=0&&idx<items.length){
+      pick=items[idx].textContent;
+    }else{
+      const uv=v.toUpperCase();
+      pick=items.map(el=>el.textContent).find(p=>p.startsWith(uv))||items[0].textContent;
+    }
+    pickPair(id,pick);
+    e.target.blur();
+  }else if(e.key==='Escape'){
+    hideSugImmediate(id);
+  }
+}
 function pickPair(id,p){
   const inp=document.querySelector(`tr[data-id="${id}"] .pw-cell input`);
   if(inp)inp.value=p;
@@ -1145,7 +1231,7 @@ async function openNotes(id){
   _notesOriginalText=t.notes||'';
   _notesDirty=false;
   document.getElementById('nOverlay').classList.add('open');
-  document.getElementById('nmTitle').textContent=`${t.pair||'Trade'} — ${t.date||'—'}`;
+  document.getElementById('nmTitle').textContent=`${t.pair||'Trade'} — ${t.date?fmtDate(t.date):'—'}`;
   document.getElementById('nmText').value=t.notes||'';
   document.getElementById('nmUploadProgress').style.display='none';
   const loadingEl=document.getElementById('nmLoadingState');
@@ -1361,8 +1447,8 @@ document.addEventListener('keydown',e=>{if(!document.getElementById('lb').classL
 
 // ─── ANALYTICS ────────────────────────────────────────────────────────────────
 function applyAnalyticsState(){document.getElementById('aBar').classList.toggle('show',analyticsOn);}
-function computeAnalytics(src){const vld=src.filter(t=>t.pnl!==''&&!isNaN(parseFloat(t.pnl)));const wins=vld.filter(t=>parseFloat(t.pnl)>0),losses=vld.filter(t=>parseFloat(t.pnl)<0);const total=vld.reduce((s,t)=>s+parseFloat(t.pnl),0);const rv=src.filter(t=>t.r&&!isNaN(parseFloat(t.r))).map(t=>parseFloat(t.r));const avgR=rv.length?rv.reduce((a,b)=>a+b,0)/rv.length:0;const wr=vld.length?wins.length/vld.length*100:0;let mxW=0,mxL=0,cW=0,cL=0;vld.forEach(t=>{const p=parseFloat(t.pnl);if(p>0){cW++;cL=0;if(cW>mxW)mxW=cW;}else if(p<0){cL++;cW=0;if(cL>mxL)mxL=cL;}else{cW=0;cL=0;}});return{count:src.length,vldCount:vld.length,winCount:wins.length,lossCount:losses.length,totalPnl:total,wr,avgR,mxW,mxL,rv};}
-function updateAnalytics(){if(!analyticsOn)return;const src=getFilteredTrades();const{count,vldCount,winCount,lossCount,totalPnl,wr,avgR,mxW,mxL}=computeAnalytics(src);document.getElementById('sTrades').textContent=count;const wrEl=document.getElementById('sWR');wrEl.textContent=vldCount?wr.toFixed(1)+'%':'—';wrEl.style.color=vldCount?(wr>=50?G:R):'';document.getElementById('sW').textContent=winCount;document.getElementById('sL').textContent=lossCount;document.getElementById('sWS').textContent=mxW;document.getElementById('sLS').textContent=mxL;const rEl=document.getElementById('sR');rEl.textContent=avgR?(avgR>=0?'+':'')+avgR.toFixed(2)+'R':'—';rEl.style.color=avgR?pnlCol(avgR):'';const pe=document.getElementById('sP');if(vldCount){pe.textContent=(totalPnl>=0?'+':'-')+'$'+Math.abs(totalPnl).toFixed(2);pe.style.color=pnlCol(totalPnl);}else{pe.textContent='—';pe.style.color='';}}
+function computeAnalytics(src){const vld=src.filter(t=>t.pnl!==''&&!isNaN(parseFloat(t.pnl)));const wins=vld.filter(t=>parseFloat(t.pnl)>0),losses=vld.filter(t=>parseFloat(t.pnl)<0);const total=vld.reduce((s,t)=>s+parseFloat(t.pnl),0);const rv=src.filter(t=>t.r&&!isNaN(parseFloat(t.r))).map(t=>parseFloat(t.r));const avgR=rv.length?rv.reduce((a,b)=>a+b,0)/rv.length:0;const winR=rv.filter(r=>r>0).reduce((s,r)=>s+r,0);const lossR=Math.abs(rv.filter(r=>r<0).reduce((s,r)=>s+r,0));const totalR=rv.reduce((s,r)=>s+r,0);const wr=vld.length?wins.length/vld.length*100:0;let mxW=0,mxL=0,cW=0,cL=0;vld.forEach(t=>{const p=parseFloat(t.pnl);if(p>0){cW++;cL=0;if(cW>mxW)mxW=cW;}else if(p<0){cL++;cW=0;if(cL>mxL)mxL=cL;}else{cW=0;cL=0;}});return{count:src.length,vldCount:vld.length,winCount:wins.length,lossCount:losses.length,totalPnl:total,wr,avgR,winR,lossR,totalR,mxW,mxL,rv};}
+function updateAnalytics(){if(!analyticsOn)return;const src=getFilteredTrades();const{count,vldCount,winCount,lossCount,totalPnl,wr,avgR,winR,lossR,totalR,mxW,mxL,rv}=computeAnalytics(src);document.getElementById('sTrades').textContent=count;const wrEl=document.getElementById('sWR');wrEl.textContent=vldCount?wr.toFixed(1)+'%':'—';wrEl.style.color=vldCount?(wr>=50?G:R):'';document.getElementById('sW').textContent=winCount;document.getElementById('sL').textContent=lossCount;document.getElementById('sWS').textContent=mxW;document.getElementById('sLS').textContent=mxL;const rEl=document.getElementById('sR');rEl.textContent=avgR?(avgR>=0?'+':'')+avgR.toFixed(2)+'R':'—';rEl.style.color=avgR?pnlCol(avgR):'';const pe=document.getElementById('sP');if(vldCount){pe.textContent=(totalPnl>=0?'+':'-')+'$'+Math.abs(totalPnl).toFixed(2);pe.style.color=pnlCol(totalPnl);}else{pe.textContent='—';pe.style.color='';}const hasR=rv&&rv.length>0;document.getElementById('sWinR').textContent=hasR?'+'+winR.toFixed(2)+'R':'—';document.getElementById('sLossR').textContent=hasR?'-'+lossR.toFixed(2)+'R':'—';const tre=document.getElementById('sTotalR');tre.textContent=hasR?(totalR>=0?'+':'')+totalR.toFixed(2)+'R':'—';tre.style.color=hasR?pnlCol(totalR):'';}
 
 // ─── SHARE MODAL ──────────────────────────────────────────────────────────────
 let _shareVisibility={totalPnl:true,winRate:true,totalTrades:true,wins:true,losses:true,avgR:true,winStreak:true,lossStreak:true};

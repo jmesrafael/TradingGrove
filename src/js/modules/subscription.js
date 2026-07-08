@@ -327,9 +327,8 @@ function showToast(msg, icon, type) {
     if (queued) {
       const queuedElement = document.getElementById('queuedNotice');
       if (queuedElement) {
-        const startsAt = new Date(queued.starts_at);
         const queuedType = queued.plan_type === 'yearly' ? 'Annual' : 'Monthly';
-        const startFmt = startsAt.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+        const startFmt = fmtDate(queued.starts_at);
         document.getElementById('queuedNoticeBadge').textContent = queuedType;
         document.getElementById('queuedNoticeDate').textContent = startFmt;
         queuedElement.style.display = 'block';

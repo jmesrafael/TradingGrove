@@ -3,6 +3,7 @@
 const jid = sessionStorage.getItem('tz_current_journal')||localStorage.getItem('tz_current_journal')||(()=>{try{return parent?.sessionStorage?.getItem('tz_current_journal')||parent?.localStorage?.getItem('tz_current_journal');}catch(e){return null;}})();
 
 const G='#19c37d', R='#f05165', Y='#f5c518';
+function esc(s){const d=document.createElement('div');d.textContent=String(s??'');return d.innerHTML;}
 
 let _anaQueuedReload=false,_anaReloadTimer=null,_anaTabActive=false;
 function _anaMaybeReload(){
@@ -54,7 +55,11 @@ function computeStats(trades){
   const best=vld.length?Math.max(...vld.map(t=>t.pnl)):0;
   const worst=vld.length?Math.min(...vld.map(t=>t.pnl)):0;
   const rvs=vld.filter(t=>t.r!==undefined&&t.r!==''&&!isNaN(parseFloat(t.r)));
-  const avgR=rvs.length?rvs.reduce((s,t)=>s+parseFloat(t.r),0)/rvs.length:0;
+  const rNums=rvs.map(t=>parseFloat(t.r));
+  const avgR=rvs.length?rNums.reduce((s,r)=>s+r,0)/rvs.length:0;
+  const winR=rNums.filter(r=>r>0).reduce((s,r)=>s+r,0);
+  const lossR=Math.abs(rNums.filter(r=>r<0).reduce((s,r)=>s+r,0));
+  const totalR=rNums.reduce((s,r)=>s+r,0);
   const daily={};
   sorted.forEach(t=>{daily[t.date]=(daily[t.date]||0)+t.pnl;});
   const dpnls=Object.values(daily);
@@ -62,7 +67,7 @@ function computeStats(trades){
   const variance=dpnls.reduce((s,n)=>s+Math.pow(n-mean,2),0)/(dpnls.length||1);
   const std=Math.sqrt(variance);
   const consistency=std===0?1:Math.max(0,1-(std/Math.abs(mean||1)));
-  return{vld,wins,losses,be,total,wr,pf,avgWin,avgLoss,maxDd,mxW,mxL,best,worst,avgR,sorted,consistency,daily};
+  return{vld,wins,losses,be,total,wr,pf,avgWin,avgLoss,maxDd,mxW,mxL,best,worst,avgR,winR,lossR,totalR,rvs,sorted,consistency,daily};
 }
 
 function filterByRange(trades,range){
@@ -142,15 +147,20 @@ function _makeEquityChart(canvasId,sorted){
   return c;
 }
 
-function renderKpiStrip(stats,container){
-  const{total,wr,pf,maxDd,mxW,mxL,vld,wins,losses}=stats;
-  const cards=[
+function buildKpiCards(stats){
+  const{total,wr,pf,maxDd,mxW,mxL,vld,wins,losses,winR,lossR,totalR,rvs}=stats;
+  const hasR=rvs&&rvs.length>0;
+  return[
     {label:'Net P&L',value:fP(total),color:grc(total),sub:`${vld.length} trade${vld.length!==1?'s':''}`,tip:'Total profit/loss for the selected period'},
     {label:'Win Rate',value:fPct(wr),color:wrColor(wr),sub:`${wins.length}W · ${losses.length}L`,tip:'Percentage of profitable trades'},
     {label:'Profit Factor',value:pf===999?'∞':pf.toFixed(2),color:pf>=1.5?G:pf>=1?Y:R,sub:'gross W ÷ gross L',tip:'Ratio of gross profit to gross loss. >1.5 is strong.'},
     {label:'Max Drawdown',value:maxDd>0?'-$'+maxDd.toFixed(0):'-',color:maxDd>0?R:'var(--muted)',sub:'peak-to-trough',tip:'Largest peak-to-trough equity decline'},
     {label:'Streaks',value:`${mxW}W · ${mxL}L`,color:'var(--text)',sub:'best win / loss run',tip:'Longest consecutive winning and losing streaks'},
+    {label:'Number of R\'s',value:hasR?(totalR>=0?'+':'')+totalR.toFixed(2)+'R':'—',color:hasR?(totalR>0?G:totalR<0?R:'var(--text)'):'var(--muted)',sub:hasR?`+${winR.toFixed(2)}R win · -${lossR.toFixed(2)}R loss`:'no R data',tip:'Sum of winning R minus sum of losing R across the selected period'},
   ];
+}
+function renderKpiStrip(stats,container){
+  const cards=buildKpiCards(stats);
   container.innerHTML=cards.map(k=>`
     <div class="kpi-card">
       <div class="kpi-label">${k.label}</div>
@@ -158,6 +168,119 @@ function renderKpiStrip(stats,container){
       <div class="kpi-sub">${k.sub}</div>
       <div class="kpi-tip">${k.tip}</div>
     </div>`).join('');
+}
+
+const PDF_RANGE_LABELS={'7d':'Last 7 Days','30d':'Last 30 Days','90d':'Last 90 Days','all':'All Time'};
+
+// Builds the print-friendly (light-themed) HTML for the Analytics PDF export.
+// Pulls chart images from whatever canvases are currently rendered on the page
+// (via canvas.toDataURL) and, for the Insights tab, pulls narrative/findings/
+// recommendation TEXT via data-pdf-* markers rather than their live dark-theme styling.
+function buildAnalyticsPdfHtml(stats,journalName,rangeKey){
+  const kpiHtml=buildKpiCards(stats).map(k=>`
+    <div class="pdf-kpi">
+      <div class="pdf-kpi-lbl">${esc(k.label)}</div>
+      <div class="pdf-kpi-val">${esc(k.value)}</div>
+      <div class="pdf-kpi-sub">${esc(k.sub)}</div>
+    </div>`).join('');
+
+  let chartsHtml='';
+  document.querySelectorAll('#tabContent .card, #freeEqCard').forEach(cardEl=>{
+    const canvas=cardEl.querySelector('canvas');
+    if(!canvas||!canvas.width||!canvas.height)return;
+    let dataUrl='';
+    try{dataUrl=canvas.toDataURL('image/png');}catch(e){}
+    if(!dataUrl)return;
+    const title=cardEl.querySelector('.sec-ttl')?.textContent.trim()||'Chart';
+    chartsHtml+=`<div class="pdf-chart-block"><div class="pdf-section-title">${esc(title)}</div><img class="pdf-chart-img" src="${dataUrl}" alt="${esc(title)}"></div>`;
+  });
+
+  let insightsHtml='';
+  const narrativeEl=document.querySelector('[data-pdf="narrative"]');
+  if(narrativeEl){
+    insightsHtml+=`<div class="pdf-section-title">AI Performance Summary</div><div class="pdf-narrative">${esc(narrativeEl.textContent.trim())}</div>`;
+  }
+  const findingsEl=document.querySelector('[data-pdf="findings"]');
+  if(findingsEl&&findingsEl.children.length){
+    const items=[...findingsEl.children].map(c=>{
+      const label=c.querySelector('[data-pdf-f-label]')?.textContent.trim()||'';
+      const value=c.querySelector('[data-pdf-f-value]')?.textContent.trim()||'';
+      const sub=c.querySelector('[data-pdf-f-sub]')?.textContent.trim()||'';
+      return`<div class="pdf-finding"><div class="pdf-finding-lbl">${esc(label)}</div><div class="pdf-finding-val">${esc(value)}</div><div class="pdf-finding-sub">${esc(sub)}</div></div>`;
+    }).join('');
+    insightsHtml+=`<div class="pdf-section-title">Key Findings</div><div class="pdf-findings-grid">${items}</div>`;
+  }
+  const recsEl=document.querySelector('[data-pdf="recs"]');
+  if(recsEl&&recsEl.children.length){
+    const items=[...recsEl.children].map(c=>{
+      const action=c.querySelector('[data-pdf-rec-a]')?.textContent.trim()||'';
+      const reason=c.querySelector('[data-pdf-rec-r]')?.textContent.trim()||'';
+      return`<div class="pdf-rec"><div class="pdf-rec-a">${esc(action)}</div><div class="pdf-rec-r">${esc(reason)}</div></div>`;
+    }).join('');
+    insightsHtml+=`<div class="pdf-section-title">Recommendations</div>${items}`;
+  }
+
+  return`<h1>TradingGrove — Analytics</h1>
+    <div class="export-meta">${esc(journalName)} · Generated ${fmtDate(new Date())} · ${esc(PDF_RANGE_LABELS[rangeKey]||'All Time')}</div>
+    <div class="pdf-kpi-grid">${kpiHtml}</div>
+    ${chartsHtml}
+    ${insightsHtml}`;
+}
+
+function pdfPrevOverlayClick(e){if(e.target===document.getElementById('pdfPrevOverlay'))closePdfPreview();}
+function closePdfPreview(){
+  document.getElementById('pdfPrevOverlay').classList.remove('open');
+  document.getElementById('pdfPrevPage').innerHTML='';
+}
+let _pdfStatusTimer=null;
+function _pdfStatus(msg,isError){
+  const el=document.getElementById('pdfExportStatus');
+  if(!el)return;
+  el.textContent=msg;
+  el.style.color=isError?'#ff5f6d':'var(--accent2)';
+  el.style.display='inline';
+  clearTimeout(_pdfStatusTimer);
+  _pdfStatusTimer=setTimeout(()=>{el.style.display='none';},3500);
+}
+async function downloadAnalyticsPdf(){
+  if(typeof html2pdf==='undefined'&&!((window.jspdf&&window.jspdf.jsPDF)||window.jsPDF)){_pdfStatus('PDF library still loading — try again.',true);return;}
+  const page=document.getElementById('pdfPrevPage'),btn=document.getElementById('pdfDownloadBtn');
+  if(!page||!page.innerHTML.trim()||btn.disabled)return;
+  const orig=btn.innerHTML;
+  btn.disabled=true;
+  btn.innerHTML='<i class="fa-solid fa-spinner" style="animation:spin 1s linear infinite"></i> Downloading…';
+  try{
+    const filename=`tradinggrove-analytics-${new Date().toISOString().split('T')[0]}.pdf`;
+    const jsPDFCtor=(window.jspdf&&window.jspdf.jsPDF)||window.jsPDF;
+    if(jsPDFCtor){
+      const pdf=new jsPDFCtor({unit:'pt',format:'a4',orientation:'portrait',compress:true});
+      const margin=24;
+      const pageW=pdf.internal.pageSize.getWidth();
+      const contentW=pageW-margin*2;
+      const sourcePx=page.scrollWidth||794;
+      await new Promise((resolve,reject)=>{
+        pdf.html(page,{
+          callback:p=>{try{p.save(filename);resolve();}catch(err){reject(err);}},
+          margin:[margin,margin,margin,margin],
+          autoPaging:'text',
+          width:contentW,
+          windowWidth:sourcePx,
+          html2canvas:{scale:contentW/sourcePx,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',logging:false}
+        });
+      });
+    }else{
+      await html2pdf().set({
+        margin:[10,10,10,10],
+        filename,
+        image:{type:'jpeg',quality:0.95},
+        html2canvas:{scale:2,useCORS:true,allowTaint:true,backgroundColor:'#ffffff',logging:false},
+        jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+        pagebreak:{mode:['css','legacy'],avoid:['.pdf-kpi','.pdf-chart-block','.pdf-finding','.pdf-rec']}
+      }).from(page).save();
+    }
+    _pdfStatus('Exported!',false);
+  }catch(e){_pdfStatus('Download failed: '+e.message,true);}
+  finally{btn.disabled=false;btn.innerHTML=orig;}
 }
 
 function renderInsightBar(stats,container,isPro){
@@ -934,10 +1057,10 @@ function renderInsightsHtml(trades, stats) {
     <div style="background:var(--panel2,#192219);border:1px solid var(--border2,#253127);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:4px">
       <div style="display:flex;align-items:center;gap:7px;margin-bottom:2px">
         <i class="fa-solid ${f.icon}" style="color:${f.color};font-size:12px"></i>
-        <span style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:700">${f.label}</span>
+        <span data-pdf-f-label style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:700">${f.label}</span>
       </div>
-      <div style="font-weight:700;font-size:14px;color:${f.color}">${f.value}</div>
-      <div style="font-size:11px;color:var(--muted);line-height:1.5">${f.sub}</div>
+      <div data-pdf-f-value style="font-weight:700;font-size:14px;color:${f.color}">${f.value}</div>
+      <div data-pdf-f-sub style="font-size:11px;color:var(--muted);line-height:1.5">${f.sub}</div>
     </div>`).join('');
 
   const recsHtml = recs.map(r => {
@@ -948,10 +1071,10 @@ function renderInsightsHtml(trades, stats) {
       </div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap">
-          <span style="font-weight:700;font-size:13px;color:var(--text)">${r.a}</span>
+          <span data-pdf-rec-a style="font-weight:700;font-size:13px;color:var(--text)">${r.a}</span>
           <span style="font-size:9px;font-weight:700;letter-spacing:.8px;color:${m.dot};background:${m.border};padding:2px 7px;border-radius:4px">${m.label}</span>
         </div>
-        <div style="font-size:12px;color:var(--muted);line-height:1.65">${r.r}</div>
+        <div data-pdf-rec-r style="font-size:12px;color:var(--muted);line-height:1.65">${r.r}</div>
       </div>
     </div>`;
   }).join('');
@@ -1001,14 +1124,14 @@ function renderInsightsHtml(trades, stats) {
       </div>
       <div>
         <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:700;margin-bottom:8px">AI Performance Summary · ${vld.length} trades analyzed</div>
-        <div style="font-size:13px;color:var(--text);line-height:1.75">${narrative}</div>
+        <div data-pdf="narrative" style="font-size:13px;color:var(--text);line-height:1.75">${narrative}</div>
       </div>
     </div>
   </div>
 
   ${findings.length ? `
   <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-weight:700;margin-bottom:10px">Key Findings</div>
-  <div class="ins-findings">${findingsHtml}</div>` : ''}
+  <div class="ins-findings" data-pdf="findings">${findingsHtml}</div>` : ''}
 
   <div class="ins-grid">
 
@@ -1058,7 +1181,7 @@ function renderInsightsHtml(trades, stats) {
           <span style="display:flex;align-items:center;gap:4px"><span style="width:7px;height:7px;border-radius:50%;background:${G};display:inline-block"></span>Strength</span>
         </div>
       </div>
-      ${recsHtml}
+      <div data-pdf="recs">${recsHtml}</div>
     </div>
 
   </div>`;
@@ -1111,11 +1234,14 @@ function _anaHideLoading(){
         <div class="page-label">Trading Journal</div>
         <h1 class="page-title">Analytics</h1>
       </div>
-      <div class="range-group">
-        <button class="range-btn" data-range="7d" onclick="window._setRange('7d')">7D</button>
-        <button class="range-btn" data-range="30d" onclick="window._setRange('30d')">30D</button>
-        <button class="range-btn" data-range="90d" onclick="window._setRange('90d')">90D</button>
-        <button class="range-btn active" data-range="all" onclick="window._setRange('all')">All</button>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div class="range-group">
+          <button class="range-btn" data-range="7d" onclick="window._setRange('7d')">7D</button>
+          <button class="range-btn" data-range="30d" onclick="window._setRange('30d')">30D</button>
+          <button class="range-btn" data-range="90d" onclick="window._setRange('90d')">90D</button>
+          <button class="range-btn active" data-range="all" onclick="window._setRange('all')">All</button>
+        </div>
+        <button class="btn-export-pdf" onclick="window._exportPdf()" title="Export current view to PDF"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
       </div>
     </div>
     <div class="kpi-strip" id="kpiStrip"></div>
@@ -1193,6 +1319,24 @@ function _anaHideLoading(){
     document.querySelectorAll('.tz-tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
     const trades=getFiltered();
     renderTab(trades,computeStats(trades));
+  };
+
+  let _pdfJournalName=null;
+  window._exportPdf=async function(){
+    const overlay=document.getElementById('pdfPrevOverlay'),page=document.getElementById('pdfPrevPage'),btn=document.getElementById('pdfDownloadBtn');
+    if(!overlay||!page)return;
+    page.innerHTML='<div class="pdf-prev-loading"><i class="fa-solid fa-spinner" style="animation:spin 1s linear infinite"></i> Building preview…</div>';
+    overlay.classList.add('open');
+    if(btn)btn.disabled=true;
+    try{
+      if(!_pdfJournalName){try{const jrn=await getJournal(jid);_pdfJournalName=jrn?.name||'Journal';}catch(e){_pdfJournalName='Journal';}}
+      const trades=getFiltered();
+      const stats=computeStats(trades);
+      page.innerHTML=buildAnalyticsPdfHtml(stats,_pdfJournalName,activeRange);
+      if(btn)btn.disabled=false;
+    }catch(e){
+      page.innerHTML=`<div class="pdf-prev-empty">Build failed: ${esc(e.message)}</div>`;
+    }
   };
 
   fullRender();

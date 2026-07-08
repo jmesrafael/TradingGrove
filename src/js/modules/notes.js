@@ -498,7 +498,7 @@ async function exportFilteredToPdf(){
       }
     }
     const filterDiv=filterSummary?`<div class="filter-summary"><strong>Active filters:</strong> ${esc(filterSummary)}</div>`:'';
-    page.innerHTML=`<h1>TradingGrove — Notes Export</h1><div class="export-meta">Generated ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})} · ${items.length} note${items.length!==1?'s':''} · ${activeTab==='logs'?'Logs Notes':'Custom Notes'}</div>${filterDiv}${bodyHtml}`;
+    page.innerHTML=`<h1>TradingGrove — Notes Export</h1><div class="export-meta">Generated ${fmtDate(new Date())} · ${items.length} note${items.length!==1?'s':''} · ${activeTab==='logs'?'Logs Notes':'Custom Notes'}</div>${filterDiv}${bodyHtml}`;
     // Wait for images to settle before enabling download
     const imgs=[...page.querySelectorAll('img')];
     await Promise.all(imgs.map(img=>{

@@ -46,6 +46,10 @@
     <div class="abar-divider"></div>
     <div class="stat"><span class="slbl">Avg R</span><span class="sval" id="sR">—</span></div>
     <div class="stat"><span class="slbl">Total PNL</span><span class="sval" id="sP">—</span></div>
+    <div class="abar-divider"></div>
+    <div class="stat"><span class="slbl">Win R</span><span class="sval g" id="sWinR">—</span></div>
+    <div class="stat"><span class="slbl">Loss R</span><span class="sval r" id="sLossR">—</span></div>
+    <div class="stat"><span class="slbl">Total R</span><span class="sval" id="sTotalR">—</span></div>
   </div>
   <button class="abar-share-btn" onclick="openShareModal()" title="Share Performance Snapshot">
     <i class="fa-solid fa-arrow-up-from-bracket"></i>
@@ -214,6 +218,11 @@
   <div class="ppills" id="pp-pills"></div>
   <div class="pnew" id="pp-new" style="display:none"><div class="pnew-lbl">Create new</div><div id="pp-new-pill"></div></div>
   <button class="pp-done-btn" onmousedown="event.stopPropagation()" onclick="closePP()">Done</button>
+</div>
+
+<div class="row-menu" id="rowMenu" style="display:none" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()">
+  <button class="row-menu-item" id="rmDuplicate"><i class="fa-solid fa-clone"></i>Duplicate</button>
+  <button class="row-menu-item danger" id="rmRemove"><i class="fa-solid fa-trash"></i>Remove</button>
 </div>
 
 <div id="logsUpgradeNudge" class="upgrade-nudge">

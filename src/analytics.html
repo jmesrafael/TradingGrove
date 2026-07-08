@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 </head>
 <body>
@@ -42,6 +43,28 @@
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div class="skel-chart"></div><div class="skel-chart"></div></div>
 </div>
 <div id="root" style="display:none"></div>
+</div>
+
+<!-- ── PDF Preview Modal ── -->
+<div class="pdf-prev-overlay" id="pdfPrevOverlay" onclick="pdfPrevOverlayClick(event)">
+  <div class="pdf-prev-modal">
+    <div class="pdf-prev-hdr">
+      <div class="pdf-prev-hdr-title">
+        <i class="fa-solid fa-file-pdf"></i>
+        <span>Analytics PDF Preview</span>
+        <span class="pdf-prev-hdr-count" id="pdfExportStatus" style="display:none"></span>
+      </div>
+      <div class="pdf-prev-hdr-actions">
+        <button class="btn-ghost" onclick="closePdfPreview()"><i class="fa-solid fa-xmark"></i> Close</button>
+        <button class="btn-primary" id="pdfDownloadBtn" onclick="downloadAnalyticsPdf()"><i class="fa-solid fa-download"></i> Download PDF</button>
+      </div>
+    </div>
+    <div class="pdf-prev-body" id="pdfPrevBody">
+      <div class="pdf-prev-page" id="pdfPrevPage">
+        <div class="pdf-prev-loading"><i class="fa-solid fa-spinner" style="animation:spin 1s linear infinite"></i> Building preview…</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script src="/js/modules/analytics.js"></script>

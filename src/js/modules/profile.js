@@ -207,7 +207,7 @@ async function loadReferrals() {
       <thead><tr><th>User</th><th>Date Joined</th><th>Status</th><th>Reward</th></tr></thead>
       <tbody>
         ${referrals.map(r => {
-          const date = new Date(r.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+          const date = fmtDate(r.created_at);
           const name = r.referred_profile?.name || 'Anonymous';
           let statusClass = 'status-pending', statusLabel = 'Pending';
           if (r.status === 'rewarded')   { statusClass = 'status-rewarded';  statusLabel = 'Rewarded'; }

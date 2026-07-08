@@ -1,7 +1,8 @@
 ﻿// dashboard.js - dashboard page
 // Loaded by /src/pages/dashboard.html. Depends on globals from supabase-client.js & theme.js.
-let currentUser=null,journals=[],pnlMap={},isPro=false,currentProfile=null;
+let currentUser=null,journals=[],pnlMap={},pnlSeries={},isPro=false,currentProfile=null;
 let _themeDropOpen=false,_fontDropOpen=false,_menuOpen=false;
+const DASH_G='#19c37d', DASH_R='#f05165';
 
 // ── Welcome ─────────────────────────────────────────────────────────────────
 const WELCOME_KEY='tz_welcome_seen';
@@ -156,7 +157,8 @@ async function closeDowngradeSummary(){
 // ── Journals ─────────────────────────────────────────────────────────────────
 async function loadJournals(){
   journals=await getJournals(currentUser.id);
-  pnlMap=await getJournalsPnl(journals.map(j=>j.id));
+  const pnlResult=await getJournalsPnl(journals.map(j=>j.id));
+  pnlMap=pnlResult.sums;pnlSeries=pnlResult.series;
   document.getElementById('loadingState').style.display='none';
   renderJournals();initDrag();
   maybeShowWelcome(journals.length===0);
@@ -171,14 +173,45 @@ function renderJournals(){
     if((j.show_pnl!==false)&&pnl!=null){const cls=pnl>=0?'pnl-pos':'pnl-neg';const fmt=(pnl>=0?'+':'-')+'$'+Math.abs(pnl).toFixed(2);pnlHtml=`<div class="pnl-row"><span class="pnl-lbl">PNL</span><span class="pnl-val ${cls}">${fmt}</span></div>`;}
     const locked=isJournalLocked(j,currentProfile);
     const lockedBadge=locked?`<span class="journal-locked-badge" title="Read-only — subscription expired"><i class="fa-solid fa-lock"></i> Locked</span>`:'';
+    const hasEq=(pnlSeries[j.id]||[]).length>=2;
+    const eqCanvas=hasEq?`<canvas class="jcard-eq" id="eq_${j.id}"></canvas>`:'';
     return`<div class="jcard${locked?' jcard-locked':''}" data-id="${j.id}" style="animation-delay:${i*.06}s">
       <i class="fa-solid fa-grip-dots-vertical drag-handle" title="Drag to reorder"></i>
       <div class="jcard-body">
-        <div><div class="jcard-top"><h3>${esc(j.name)}</h3>${pin}${lockedBadge}</div>${cap}${pnlHtml}</div>
+        <div><div class="jcard-top"><h3>${esc(j.name)}</h3>${pin}${lockedBadge}</div>
+          <div class="jcard-metrics-row"><div class="jcard-metrics-col">${cap}${pnlHtml}</div>${eqCanvas}</div>
+        </div>
         <button class="open-btn" onclick="goJournal('${j.id}')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Journal</button>
       </div>
     </div>`;
   }).join('');
+  renderJournalSparklines();
+}
+
+let _jcardCharts={};
+function renderJournalSparklines(){
+  Object.values(_jcardCharts).forEach(c=>{try{c.destroy();}catch(e){}});
+  _jcardCharts={};
+  if(typeof Chart==='undefined')return;
+  journals.forEach(j=>{
+    const series=pnlSeries[j.id]||[];
+    if(series.length<2)return;
+    const canvas=document.getElementById('eq_'+j.id);
+    if(!canvas)return;
+    let acc=0;
+    const data=series.map(t=>{acc+=t.pnl;return+acc.toFixed(2);});
+    const totalPnl=pnlMap[j.id]||0;
+    const color=totalPnl>=0?DASH_G:DASH_R;
+    _jcardCharts[j.id]=new Chart(canvas.getContext('2d'),{
+      type:'line',
+      data:{labels:series.map(t=>t.date),datasets:[{data,borderColor:color,backgroundColor:color+'22',fill:true,tension:.38,borderWidth:1.5,pointRadius:0}]},
+      options:{
+        responsive:true,maintainAspectRatio:false,animation:false,
+        plugins:{legend:{display:false},tooltip:{enabled:false}},
+        scales:{x:{display:false},y:{display:false}}
+      }
+    });
+  });
 }
 function goJournal(id){if(!id)return;sessionStorage.setItem('tz_current_journal',id);localStorage.setItem('tz_current_journal',id);location.href='/journal';}
 
@@ -230,7 +263,7 @@ async function openReferModal(){
     // History table
     const wrap=document.getElementById('refHistoryTable');
     if(!refs.length){wrap.innerHTML='<div class="ref-empty"><i class="fa-solid fa-user-group"></i>No referrals yet. Share your link!</div>';return;}
-    wrap.innerHTML=`<table class="ref-table"><thead><tr><th>User</th><th>Date</th><th>Status</th><th>Reward</th></tr></thead><tbody>${refs.map(r=>{const d=new Date(r.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});const n=r.referred_profile?.name||'Anonymous';let sc='status-pending',sl='Pending';if(r.status==='rewarded'){sc='status-rewarded';sl='Rewarded';}if(r.status==='converted'){sc='status-converted';sl='Subscribed';}return`<tr><td style="font-weight:500">${esc(n)}</td><td>${d}</td><td><span class="status-badge ${sc}">${sl}</span></td><td style="color:${r.reward_granted?'var(--accent2)':'var(--muted)'}">${r.reward_granted?'<i class="fa-solid fa-circle-check" style="margin-right:4px"></i>+30 days':'<i class="fa-solid fa-clock" style="margin-right:4px;opacity:.5"></i>Waiting'}</td></tr>`;}).join('')}</tbody></table>`;
+    wrap.innerHTML=`<table class="ref-table"><thead><tr><th>User</th><th>Date</th><th>Status</th><th>Reward</th></tr></thead><tbody>${refs.map(r=>{const d=fmtDate(r.created_at);const n=r.referred_profile?.name||'Anonymous';let sc='status-pending',sl='Pending';if(r.status==='rewarded'){sc='status-rewarded';sl='Rewarded';}if(r.status==='converted'){sc='status-converted';sl='Subscribed';}return`<tr><td style="font-weight:500">${esc(n)}</td><td>${d}</td><td><span class="status-badge ${sc}">${sl}</span></td><td style="color:${r.reward_granted?'var(--accent2)':'var(--muted)'}">${r.reward_granted?'<i class="fa-solid fa-circle-check" style="margin-right:4px"></i>+30 days':'<i class="fa-solid fa-clock" style="margin-right:4px;opacity:.5"></i>Waiting'}</td></tr>`;}).join('')}</tbody></table>`;
   }catch(e){console.error(e);}
 }
 function closeReferModal(){document.getElementById('referModal').classList.remove('open');}
@@ -281,15 +314,13 @@ function openBillingModal(){
 
   // Renewal date
   if(expiry){
-    const date = new Date(expiry);
-    const fmt = date.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+    const fmt = fmtDate(expiry);
     document.getElementById('billingRenewalDate').textContent = `Renews ${fmt}`;
   }
 
   // Queued subscription notice
   if(queued){
-    const startDate = new Date(queued.starts_at);
-    const startFmt = startDate.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+    const startFmt = fmtDate(queued.starts_at);
     const queuedType = queued.plan_type === 'yearly' ? 'Annual ($120/yr)' : 'Monthly ($15/mo)';
     document.getElementById('billingQueuedText').textContent = `Scheduled upgrade to ${queuedType} on ${startFmt}`;
     document.getElementById('billingQueuedNotice').style.display = 'block';
@@ -338,7 +369,7 @@ function openBillingPortal(){
 }
 
 function confirmCancelSubscription(){
-  if(!confirm('Cancel your subscription? You\'ll keep Pro access until ' + new Date(currentProfile?.subscription_expires_at).toLocaleDateString())){
+  if(!confirm('Cancel your subscription? You\'ll keep Pro access until ' + fmtDate(currentProfile?.subscription_expires_at))){
     return;
   }
   openBillingPortal(); // Redirect to manage billing where they can cancel

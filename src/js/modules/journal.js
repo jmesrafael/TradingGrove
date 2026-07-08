@@ -124,9 +124,8 @@ let _bnbLastCsvText = '';
   window._journalLocked = journalLocked;
   bcast({type:'tz_plan',isPro:userIsPro,locked:journalLocked});
   if(userIsPro&&profile?.pro_expires_at){
-    const exp=new Date(profile.pro_expires_at);
     document.getElementById('proDurationRow').style.display='block';
-    document.getElementById('proDurationText').textContent='Active — renews '+exp.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+    document.getElementById('proDurationText').textContent='Active — renews '+fmtDate(profile.pro_expires_at);
   } else if(userIsPro){
     document.getElementById('proDurationRow').style.display='block';
     document.getElementById('proDurationText').textContent='Active';
@@ -300,7 +299,53 @@ async function saveJournalSettings(){
 }
 async function toggleFlag(field){if(!requireUnlocked())return;const cur=journalObj[field]!==false;journalObj[field]=!cur;document.getElementById(field==='show_pnl'?'showPnlToggle':'showCapToggle').classList.toggle('on',!cur);await updateJournal(journalId,{[field]:!cur});showToast('Display setting updated.','fa-solid fa-circle-check','green');}
 function renderTagLists(){renderTagList('strategies','stratList');renderTagList('timeframes','tfList');renderTagList('pairs','pairList');}
-function renderTagList(key,listId){const list=settings?.[key]||[];document.getElementById(listId).innerHTML=list.map(t=>`<span class="stag">${esc(t)}<button class="rm" onclick="removeTag('${key}','${esc(t)}')"><i class="fa-solid fa-xmark" style="font-size:9px"></i></button></span>`).join('');}
+function renderTagList(key,listId){const list=settings?.[key]||[];document.getElementById(listId).innerHTML=list.map(t=>`<span class="stag"><span class="stag-lbl" ondblclick="startRenameTag('${key}','${esc(t)}',this)">${esc(t)}</span><button class="ren" title="Rename" onclick="startRenameTag('${key}','${esc(t)}',this.previousElementSibling)"><i class="fa-solid fa-pen" style="font-size:8px"></i></button><button class="rm" onclick="removeTag('${key}','${esc(t)}')"><i class="fa-solid fa-xmark" style="font-size:9px"></i></button></span>`).join('');}
+function startRenameTag(key,oldVal,labelEl){
+  if(!requireUnlocked())return;
+  const span=labelEl.closest('.stag');if(!span)return;
+  let done=false;
+  const input=document.createElement('input');
+  input.className='tag-edit-input';input.value=oldVal;input.autocomplete='off';input.spellcheck=false;
+  span.replaceChild(input,labelEl);
+  input.focus();input.select();
+  const finish=(commit)=>{
+    if(done)return;done=true;
+    if(commit){
+      const v=input.value.trim();
+      if(v&&v!==oldVal){renameTag(key,oldVal,v);return;}
+    }
+    renderTagLists();
+  };
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();finish(true);}
+    else if(e.key==='Escape'){e.preventDefault();finish(false);}
+  });
+  input.addEventListener('blur',()=>finish(true));
+}
+async function renameTag(key,oldVal,newVal){
+  if(!requireUnlocked())return;
+  if(key==='pairs')newVal=newVal.toUpperCase();
+  const list=settings[key]||[];
+  if(newVal!==oldVal&&list.find(x=>x.toLowerCase()===newVal.toLowerCase())){
+    showToast(`Tag "${newVal}" already exists.`,'fa-solid fa-triangle-exclamation','red');
+    renderTagLists();
+    return;
+  }
+  const category={strategies:'strategy',timeframes:'timeframe',pairs:'pair'}[key];
+  settings[key]=list.map(x=>x===oldVal?newVal:x);
+  try{
+    await updateJournalSettings(journalId,{[key]:settings[key]});
+    await renameTagInTrades(journalId,category,oldVal,newVal);
+    renderTagLists();
+    bcast({type:'tz_settings_updated'});
+    bcast({type:'tz_trades_changed',journalId});
+    showToast(`Tag renamed to "${newVal}".`,'fa-solid fa-circle-check','green');
+  }catch(e){
+    settings[key]=list;
+    renderTagLists();
+    showToast('Rename failed: '+e.message,'fa-solid fa-circle-exclamation','red');
+  }
+}
 async function addTag(key,inputId){if(!requireUnlocked())return;const inp=document.getElementById(inputId);let val=inp.value.trim();if(!val)return;if(key==='pairs')val=val.toUpperCase();const list=settings[key]||[];if(!list.find(x=>x.toLowerCase()===val.toLowerCase())){settings[key]=[...list,val];await updateJournalSettings(journalId,{[key]:settings[key]});renderTagLists();bcast({type:'tz_settings_updated'});showToast(`Tag "${val}" added.`,'fa-solid fa-circle-check','green');}inp.value='';}
 async function removeTag(key,val){
   if(!requireUnlocked())return;
@@ -311,7 +356,56 @@ async function removeTag(key,val){
 async function undoTagRemove(){if(!_lastRemovedTag||!_lastRemovedKey)return;const key=_lastRemovedKey,val=_lastRemovedTag;const list=settings[key]||[];if(!list.includes(val)){settings[key]=[...list,val];await updateJournalSettings(journalId,{[key]:settings[key]});renderTagLists();bcast({type:'tz_settings_updated'});}const t=document.getElementById('toast');t.classList.remove('show','toast-red');clearTimeout(_undoTimer);_lastRemovedTag=null;_lastRemovedKey=null;showToast(`Tag "${val}" restored.`,'fa-solid fa-rotate-left','green');}
 function renderMoodGrid(){
   const moods=settings?.moods||[],colors=settings?.mood_colors||{};
-  document.getElementById('moodGrid').innerHTML=moods.length?moods.map(m=>{const col=colors[m]||'#8fa39a';const[r,g,b]=[col.slice(1,3),col.slice(3,5),col.slice(5,7)].map(x=>parseInt(x,16));const colorEl=userIsPro?`<input type="color" class="mtag-color" value="${col}" style="background:${col}" oninput="updateMoodColor('${esc(m)}',this.value)" title="Change color">`:`<span class="mtag-dot" style="background:${col}"></span>`;return`<div class="mtag" style="background:rgba(${r},${g},${b},.15);color:${col};border-color:rgba(${r},${g},${b},.35)">${colorEl}<span>${esc(m)}</span><button class="mtag-rm" onclick="removeMoodTag('${esc(m)}')"><i class="fa-solid fa-xmark" style="font-size:9px"></i></button></div>`;}).join(''):'<span style="font-size:12px;color:var(--muted)">No moods yet.</span>';
+  document.getElementById('moodGrid').innerHTML=moods.length?moods.map(m=>{const col=colors[m]||'#8fa39a';const[r,g,b]=[col.slice(1,3),col.slice(3,5),col.slice(5,7)].map(x=>parseInt(x,16));const colorEl=userIsPro?`<input type="color" class="mtag-color" value="${col}" style="background:${col}" oninput="updateMoodColor('${esc(m)}',this.value)" title="Change color">`:`<span class="mtag-dot" style="background:${col}"></span>`;return`<div class="mtag" style="background:rgba(${r},${g},${b},.15);color:${col};border-color:rgba(${r},${g},${b},.35)">${colorEl}<span class="mtag-lbl" ondblclick="startRenameMood('${esc(m)}',this)">${esc(m)}</span><button class="mtag-ren" title="Rename" onclick="startRenameMood('${esc(m)}',this.previousElementSibling)"><i class="fa-solid fa-pen" style="font-size:8px"></i></button><button class="mtag-rm" onclick="removeMoodTag('${esc(m)}')"><i class="fa-solid fa-xmark" style="font-size:9px"></i></button></div>`;}).join(''):'<span style="font-size:12px;color:var(--muted)">No moods yet.</span>';
+}
+function startRenameMood(oldVal,labelEl){
+  if(!requireUnlocked())return;
+  const wrap=labelEl.closest('.mtag');if(!wrap)return;
+  let done=false;
+  const input=document.createElement('input');
+  input.className='tag-edit-input';input.value=oldVal;input.autocomplete='off';input.spellcheck=false;
+  wrap.replaceChild(input,labelEl);
+  input.focus();input.select();
+  const finish=(commit)=>{
+    if(done)return;done=true;
+    if(commit){
+      const v=input.value.trim();
+      if(v&&v!==oldVal){renameMoodTag(oldVal,v);return;}
+    }
+    renderMoodGrid();
+  };
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();finish(true);}
+    else if(e.key==='Escape'){e.preventDefault();finish(false);}
+  });
+  input.addEventListener('blur',()=>finish(true));
+}
+async function renameMoodTag(oldVal,newVal){
+  if(!requireUnlocked())return;
+  const moods=settings.moods||[];
+  if(moods.find(x=>x.toLowerCase()===newVal.toLowerCase())){
+    showToast(`Mood "${newVal}" already exists.`,'fa-solid fa-triangle-exclamation','red');
+    renderMoodGrid();
+    return;
+  }
+  const prevMoods=moods,prevColors=settings.mood_colors;
+  const newColors={...settings.mood_colors};
+  newColors[newVal]=newColors[oldVal];
+  delete newColors[oldVal];
+  settings.moods=moods.map(x=>x===oldVal?newVal:x);
+  settings.mood_colors=newColors;
+  try{
+    await updateJournalSettings(journalId,{moods:settings.moods,mood_colors:settings.mood_colors});
+    await renameTagInTrades(journalId,'mood',oldVal,newVal);
+    renderMoodGrid();
+    bcast({type:'tz_settings_updated'});
+    bcast({type:'tz_trades_changed',journalId});
+    showToast(`Mood renamed to "${newVal}".`,'fa-solid fa-circle-check','green');
+  }catch(e){
+    settings.moods=prevMoods;settings.mood_colors=prevColors;
+    renderMoodGrid();
+    showToast('Rename failed: '+e.message,'fa-solid fa-circle-exclamation','red');
+  }
 }
 async function addMoodTag(){if(!requireUnlocked())return;const inp=document.getElementById('moodInput'),col=document.getElementById('moodColor').value,val=inp.value.trim();if(!val)return;const moods=settings.moods||[];if(!moods.find(m=>m.toLowerCase()===val.toLowerCase())){settings.moods=[...moods,val];settings.mood_colors={...settings.mood_colors,[val]:col};await updateJournalSettings(journalId,{moods:settings.moods,mood_colors:settings.mood_colors});renderMoodGrid();bcast({type:'tz_settings_updated'});showToast(`Mood "${val}" added.`,'fa-solid fa-circle-check','green');}inp.value='';document.getElementById('moodColor').value='#8fa39a';}
 async function removeMoodTag(val){

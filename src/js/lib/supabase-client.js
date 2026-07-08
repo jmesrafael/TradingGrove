@@ -8,6 +8,16 @@ const SUPABASE_ANON = "sb_publishable_0JIYopUpUp6DonOkOzWcJQ_KL0OyIho";
 
 const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
+// ── Shared date formatting: "Jul 02, 2026" (MMM DD, YYYY) ──
+// Accepts a plain 'YYYY-MM-DD' date, a full ISO datetime string, or a Date.
+function fmtDate(input) {
+  if (!input) return '—';
+  const d = input instanceof Date ? input
+    : new Date(typeof input === 'string' && !input.includes('T') ? input + 'T00:00:00' : input);
+  if (isNaN(d)) return String(input);
+  return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+}
+
 
 // ══════════════════════════════════════════════════════════
 //  SESSION STORAGE CACHE
@@ -278,13 +288,13 @@ function getSubscriptionStatus(profile) {
 
   let label;
   if (downgraded) {
-    label = `Expired ${expires.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    label = `Expired ${fmtDate(expires)}`;
   } else if (inGrace) {
     label = `Expired — ${graceDaysLeft} day${graceDaysLeft === 1 ? '' : 's'} grace left`;
   } else if (expiring) {
     label = `Expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`;
   } else {
-    label = `Renews ${expires.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    label = `Renews ${fmtDate(expires)}`;
   }
 
   // isPro stays true during the grace period; it only goes false once fully downgraded.
@@ -430,6 +440,32 @@ async function updateJournalSettings(journalId, updates) {
     .eq('journal_id', journalId);
   if (error) throw error;
   _cacheInvalidate('jsettings:' + journalId); // bust cache so panel reflects new tags
+}
+
+// Global find-replace for a tag value across every trade in a journal.
+// `category` is one of 'strategy' | 'timeframe' | 'mood' (array columns) or 'pair' (scalar column).
+async function renameTagInTrades(journalId, category, oldVal, newVal) {
+  if (category === 'pair') {
+    const { error } = await db
+      .from('trades')
+      .update({ pair: newVal })
+      .eq('journal_id', journalId)
+      .eq('pair', oldVal);
+    if (error) throw error;
+    return;
+  }
+  const col = category; // 'strategy' | 'timeframe' | 'mood'
+  const { data, error } = await db
+    .from('trades')
+    .select('id, ' + col)
+    .eq('journal_id', journalId)
+    .contains(col, [oldVal]);
+  if (error) throw error;
+  for (const row of (data || [])) {
+    const remapped = (row[col] || []).map(v => v === oldVal ? newVal : v);
+    const { error: updErr } = await db.from('trades').update({ [col]: remapped }).eq('id', row.id);
+    if (updErr) throw updErr;
+  }
 }
 
 async function updateJournal(journalId, updates) {
@@ -1029,21 +1065,27 @@ async function getTradeImages(tradeId) {
 // ── Dashboard PNL helper ──────────────────────────────────
 // Fetches PNL for multiple journals in ONE query instead of
 // calling getTrades() per journal (N+1 problem on dashboard).
+// Returns { sums, series } — sums is the total PNL per journal (for the card
+// number), series is a date-ordered { date, pnl } list per journal (for the
+// mini equity sparkline).
 async function getJournalsPnl(journalIds) {
-  if (!journalIds.length) return {};
+  if (!journalIds.length) return { sums: {}, series: {} };
   const { data } = await db
     .from('trades')
-    .select('journal_id, pnl')
+    .select('journal_id, pnl, trade_date')
     .in('journal_id', journalIds)
-    .not('pnl', 'is', null);
+    .not('pnl', 'is', null)
+    .order('trade_date', { ascending: true });
 
-  const map = {};
+  const sums = {}, series = {};
   (data || []).forEach(row => {
-    if (row.pnl != null) {
-      map[row.journal_id] = (map[row.journal_id] || 0) + parseFloat(row.pnl);
-    }
+    if (row.pnl == null) return;
+    const pnl = parseFloat(row.pnl);
+    sums[row.journal_id] = (sums[row.journal_id] || 0) + pnl;
+    if (!series[row.journal_id]) series[row.journal_id] = [];
+    series[row.journal_id].push({ date: row.trade_date, pnl });
   });
-  return map;
+  return { sums, series };
 }
 
 

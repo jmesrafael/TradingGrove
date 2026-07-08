@@ -185,6 +185,8 @@ function renderMonth(){
   const rVals=allMonthTrades.filter(t=>t.r!==undefined&&t.r!==''&&t.r!==null&&!isNaN(parseFloat(t.r))).map(t=>parseFloat(t.r));
   const totalR=rVals.reduce((s,v)=>s+v,0);
   const avgR=rVals.length>0?totalR/rVals.length:null;
+  const winR=rVals.filter(v=>v>0).reduce((s,v)=>s+v,0);
+  const lossR=Math.abs(rVals.filter(v=>v<0).reduce((s,v)=>s+v,0));
 
   if(tradeCnt>0){
     document.getElementById('sumBar').style.display='flex';
@@ -207,6 +209,9 @@ function renderMonth(){
     const totalREl=document.getElementById('sumTotalR');
     totalREl.textContent=rVals.length>0?(totalR>=0?'+':'')+totalR.toFixed(2)+'R':'—';
     totalREl.style.color=totalR>0?G:totalR<0?R:'var(--muted)';
+    // Win R / Loss R
+    document.getElementById('sumWinR').textContent=rVals.length>0?'+'+winR.toFixed(2)+'R':'—';
+    document.getElementById('sumLossR').textContent=rVals.length>0?'-'+lossR.toFixed(2)+'R':'—';
     document.getElementById('sumBest').textContent=bestDay!==null?fP(bestDay):'—';
     document.getElementById('sumWorst').textContent=worstDay!==null?fP(worstDay):'—';
   } else {
@@ -271,6 +276,9 @@ function renderPrevMonths(){
     const rT=trades.filter(t=>t.r!==undefined&&t.r!==''&&t.r!==null&&!isNaN(parseFloat(t.r)));
     const tR=rT.reduce((s,t)=>s+parseFloat(t.r),0);
     const aR=rT.length>0?tR/rT.length:null;
+    const rVals=rT.map(t=>parseFloat(t.r));
+    const winRm=rVals.filter(v=>v>0).reduce((s,v)=>s+v,0);
+    const lossRm=Math.abs(rVals.filter(v=>v<0).reduce((s,v)=>s+v,0));
 
     const row=document.createElement('div');
     row.className='pm-row'+(isCurrent?' is-current':'');
@@ -294,6 +302,8 @@ function renderPrevMonths(){
     statsEl.appendChild(mkStat('Trades',trades.length,''));
     statsEl.appendChild(mkStat('Win Rate',wr!==null?wr.toFixed(0)+'%':'—',wr!==null?(wr>=50?G:R):''));
     statsEl.appendChild(mkStat('Avg R',aR!==null?(aR>=0?'+':'')+aR.toFixed(2)+'R':'—',aR!==null?(aR>0?G:aR<0?R:'var(--muted)'):''));
+    statsEl.appendChild(mkStat('Win R',rT.length>0?'+'+winRm.toFixed(2)+'R':'—',G));
+    statsEl.appendChild(mkStat('Loss R',rT.length>0?'-'+lossRm.toFixed(2)+'R':'—',R));
     statsEl.appendChild(mkStat('Total R',rT.length>0?(tR>=0?'+':'')+tR.toFixed(2)+'R':'—',tR>0?G:tR<0?R:'var(--muted)'));
     statsEl.appendChild(mkStat('PNL',fP(totalPnl)||'—',totalPnl>0?G:totalPnl<0?R:''));
 
@@ -307,8 +317,7 @@ function renderPrevMonths(){
 }
 
 function showDayModal(dayNum,dateStr,trades){
-  const d=new Date(dateStr+'T12:00:00');
-  document.getElementById('dmTitle').textContent=d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('dmTitle').textContent=fmtDate(dateStr);
   const dayPnl=trades.filter(t=>t.pnl!==''&&!isNaN(parseFloat(t.pnl))).reduce((s,t)=>s+parseFloat(t.pnl),0);
   const body=document.getElementById('dmBody');body.innerHTML='';
 
