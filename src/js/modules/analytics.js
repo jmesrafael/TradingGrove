@@ -1153,7 +1153,8 @@ function _anaHideLoading(){
   if(!isPro){
     const adSlot=document.getElementById('adSlot1');
     if(adSlot)adSlot.style.display='block';
-    try{(adsbygoogle=window.adsbygoogle||[]).push({});}catch(e){}
+    // TODO: replace ca-pub-XXXXXXXXXXXXXXXX with real AdSense publisher ID to enable ads
+    // try{(adsbygoogle=window.adsbygoogle||[]).push({});}catch(e){}
   }
 
   function getFiltered(){return filterByRange(allTrades,activeRange);}

@@ -263,6 +263,14 @@ header{display:flex;align-items:center;justify-content:space-between;padding:11p
   overflow:hidden;
 }
 
+/* ── Subscription / journal-lock banners ── */
+.sub-banner{display:none;margin:12px 16px 0;padding:12px 18px;border-radius:var(--radius-lg,12px);align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13px;flex-shrink:0}
+.sub-banner.show{display:flex}
+.sub-banner.expiring{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);color:#fbbf24}
+.sub-banner.expired{background:rgba(255,95,109,.08);border:1px solid rgba(255,95,109,.3);color:var(--red,#ff5f6d)}
+.sub-banner-btn{background:var(--accent);color:#0b0f0c;border:none;border-radius:7px;padding:6px 14px;font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity .2s}
+.sub-banner-btn:hover{opacity:.85}
+
 /* ── Tab content / iframes ── */
 .tab-content{display:none;flex:1;min-height:0;overflow:hidden;position:relative}
 .tab-content.active{display:flex;flex-direction:column}

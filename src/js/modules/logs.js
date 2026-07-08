@@ -1,10 +1,25 @@
+let journalLocked=false;
 window.addEventListener('message',e=>{
   if(e.data?.type==='tz_settings_updated')reloadSettings();
   if(e.data?.type==='tz_plan'&&e.data.isPro!==undefined)userIsPro=e.data.isPro;
+  if(e.data?.type==='tz_plan'&&e.data.locked!==undefined)journalLocked=e.data.locked;
   if(e.data?.type==='tz_flush_request')flushAll();
   if(e.data?.type==='tz_analytics_toggle'){analyticsOn=!!e.data.on;localStorage.setItem('tl_analytics_on',analyticsOn);applyAnalyticsState();updateAnalytics();}
   if(e.data?.type==='tz_presession_summary'){sessionStorage.setItem('tz_ps_summary',JSON.stringify(e.data));checkPresessionNudge();}
 });
+
+// Trade writes are blocked when this journal is read-only (Pro downgraded past
+// grace and this isn't the one kept-active journal). Wrapping the shared CRUD
+// helpers here is the single choke point for every write path in this iframe.
+(function _guardTradeWrites(){
+  const _updateTrade=updateTrade,_createTrade=createTrade,_deleteTrade=deleteTrade,_addTradeImage=addTradeImage,_deleteTradeImage=deleteTradeImage;
+  function blocked(){if(typeof showToast==='function')showToast('This journal is read-only — subscription expired. Renew Pro to edit.','fa-solid fa-lock','red');return Promise.reject(new Error('journal_locked'));}
+  updateTrade=(...a)=>journalLocked?blocked():_updateTrade(...a);
+  createTrade=(...a)=>journalLocked?blocked():_createTrade(...a);
+  deleteTrade=(...a)=>journalLocked?blocked():_deleteTrade(...a);
+  addTradeImage=(...a)=>journalLocked?blocked():_addTradeImage(...a);
+  deleteTradeImage=(...a)=>journalLocked?blocked():_deleteTradeImage(...a);
+})();
 function getActiveIntent(){return null;} // legacy hook — pre-session intents removed in checklist refactor
 // One-time-per-reset-cycle nudge: shows when the user lands on Logs after the
 // active checklist set has reset and they haven't been prompted yet for that
@@ -289,6 +304,7 @@ function fmt12(timeStr){if(!timeStr)return'';const[h,m]=timeStr.split(':').map(N
     currentUser=user;
     if(!currentUser||!jid){showToast('Session expired.','fa-solid fa-circle-exclamation','red');_hideLoading();return;}
     try{userIsPro=parent?._userIsPro||false;}catch(e){}
+    try{journalLocked=parent?._journalLocked||false;}catch(e){}
     try{
       const _p=await getProfile(currentUser.id);if(_p){currentProfile=_p;userIsPro=_p.plan==='pro';}
     }catch(e){

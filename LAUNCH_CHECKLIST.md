@@ -1,7 +1,7 @@
 # TradingGrove — Pre-Launch Checklist
 
 **Status:** Ready for final verification before go-live  
-**Last Updated:** 2026-05-15
+**Last Updated:** 2026-05-17
 
 ---
 
@@ -19,8 +19,8 @@ These MUST be complete and verified before deploying to production.
   - [ ] Tested with PayPal test subscriber
   - [ ] Verified referrer gets +30 days Pro credit
 
-- [ ] **Test functions removed** — `_testRewardModal()` no longer accessible
-  - [x] Code removed from `profile.js` & `subscription.js`
+- [x] **Test functions removed** — `_testRewardModal()` no longer accessible
+  - [x] Code removed from `profile.js` & `subscription.js` (2026-05-17)
   - [ ] Build/deploy to staging
   - [ ] Verify `window._testRewardModal` is undefined in browser console
 
@@ -84,15 +84,18 @@ Complete these before accepting paying customers.
   - [ ] Covers data collection, third-party services (Stripe/PayPal), retention
 
 - [ ] **Trade Pagination** — Performance issue with large journals
-  - [ ] Implement `.range(offset, limit)` in `getTrades()`
-  - [ ] Add "Load More" UI button or infinite scroll
+  - [x] `getTradesPage(journalId, {limit, offset})` helper added in `supabase-client.js` (2026-05-17)
+  - [x] `getTrades()` safety-capped at 2000 rows (2026-05-17)
+  - [ ] Refactor `logs.js` to use `getTradesPage` with "Load More" UI
   - [ ] Test with 500+ trades
   - [ ] Verify Supabase read quota doesn't spike
 
-- [ ] **Rate Limiting on Payment Functions** — Prevent subscription spam
-  - [ ] Add per-user cooldown check (e.g., 60 sec minimum between attempts)
-  - [ ] Test with rapid clicks on upgrade button
-  - [ ] Verify error toast shown on rate limit hit
+- [x] **Rate Limiting on Payment Functions** — Prevent subscription spam
+  - [x] 60s cooldown added to `create-paypal-subscription` via `profiles.last_checkout_attempt` (2026-05-17)
+  - [x] Migration `2026-05-17_rate_limiting_column.sql` added
+  - [ ] Deploy migration: `supabase db push`
+  - [ ] Deploy function: `supabase functions deploy create-paypal-subscription --no-verify-jwt`
+  - [ ] Test with rapid clicks on upgrade button (expect 429)
 
 ---
 
@@ -253,8 +256,9 @@ Once all ✅ above are complete:
 
 ## Notes
 
-- All code changes have been merged (PayPal URLs, referral bug, test functions removed)
+- All code changes merged: PayPal URLs, referral bug fix, test functions removed, payment rate limiting, ad placeholder push() calls disabled, `robots.txt` + `sitemap.xml` created, homepage `og:image` added
 - `.env.example` created for developer reference
+- See [TODO.md](TODO.md) for the consolidated remaining-action list
 - Next step: Verify PayPal production configuration in Supabase secrets
 - Then: Complete QA testing checklist
 - Finally: Deploy to production

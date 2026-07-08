@@ -2,9 +2,26 @@
 // Loaded by /src/pages/notes.html. Depends on globals from supabase-client.js,
 // theme.js, and external libs (JSZip, html2pdf).
 // ─── message bus ───────────────────────────────────────────────────────────
+let journalLocked = false;
 window.addEventListener('message', e => {
   if (e.data?.type === 'tz_plan' && e.data.isPro !== undefined) userIsPro = e.data.isPro;
+  if (e.data?.type === 'tz_plan' && e.data.locked !== undefined) journalLocked = e.data.locked;
 });
+
+// Trade + note writes are blocked when this journal is read-only (Pro downgraded
+// past grace and this isn't the one kept-active journal).
+(function _guardWrites(){
+  const _updateTrade=updateTrade,_addTradeImage=addTradeImage,_deleteTradeImage=deleteTradeImage;
+  const _insertCustomNote=insertCustomNote,_updateCustomNote=updateCustomNote,_deleteCustomNote=deleteCustomNote,_uploadCustomNoteImage=uploadCustomNoteImage;
+  function blocked(){if(typeof showToast==='function')showToast('This journal is read-only — subscription expired. Renew Pro to edit.','fa-solid fa-lock','r');return Promise.reject(new Error('journal_locked'));}
+  updateTrade=(...a)=>journalLocked?blocked():_updateTrade(...a);
+  addTradeImage=(...a)=>journalLocked?blocked():_addTradeImage(...a);
+  deleteTradeImage=(...a)=>journalLocked?blocked():_deleteTradeImage(...a);
+  insertCustomNote=(...a)=>journalLocked?blocked():_insertCustomNote(...a);
+  updateCustomNote=(...a)=>journalLocked?blocked():_updateCustomNote(...a);
+  deleteCustomNote=(...a)=>journalLocked?blocked():_deleteCustomNote(...a);
+  uploadCustomNoteImage=(...a)=>journalLocked?blocked():_uploadCustomNoteImage(...a);
+})();
 
 // ─── journal id ────────────────────────────────────────────────────────────
 const jid = sessionStorage.getItem('tz_current_journal')
@@ -45,6 +62,7 @@ function validateImg(file){if(!ALLOWED_IMG.includes(file.type)){showToast('Only 
       return;
     }
     try{userIsPro=parent?._userIsPro||false;}catch(e){}
+    try{journalLocked=parent?._journalLocked||false;}catch(e){}
     try{
       const {data:{user}}=await db.auth.getUser();
       currentUser=user;
@@ -57,7 +75,7 @@ function validateImg(file){if(!ALLOWED_IMG.includes(file.type)){showToast('Only 
       _notesHideLoading();
       return;
     }
-    if(!userIsPro){document.getElementById('notesAdSlot').classList.add('visible');try{(adsbygoogle=window.adsbygoogle||[]).push({});}catch(e){}}
+    if(!userIsPro){document.getElementById('notesAdSlot').classList.add('visible');/* TODO: replace ca-pub-XXXXXXXXXXXXXXXX with real AdSense publisher ID to enable ads */}
 
     try{
       settings=await getJournalSettings(jid);

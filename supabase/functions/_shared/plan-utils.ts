@@ -48,6 +48,13 @@ export async function upgradePlan(
     plan_type: planType,
     subscription_expires_at: subscriptionExpiresAt.toISOString(),
     payment_gateway: gateway,
+    // Renewal restores everything automatically: clear any downgrade state so
+    // every journal unlocks immediately and a future lapse re-shows a fresh
+    // downgrade summary. The user's stored color_theme/font_theme are left
+    // untouched — they were never overwritten while downgraded, so Pro theme
+    // application resumes on its own via applyProfileTheme().
+    downgrade_ack_at: null,
+    free_active_journal_id: null,
   };
 
   if (gateway === "stripe") {

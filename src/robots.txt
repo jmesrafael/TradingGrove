@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+Allow: /pricing
+Allow: /calculator
+Allow: /help
+Allow: /terms
+Allow: /privacy
+Allow: /refund
+
+Disallow: /auth
+Disallow: /dashboard
+Disallow: /journal
+Disallow: /logs
+Disallow: /analytics
+Disallow: /calendar
+Disallow: /notes
+Disallow: /profile
+Disallow: /subscription
+Disallow: /payment-method
+Disallow: /presession
+Disallow: /confirm
+Disallow: /reset-password
+
+Sitemap: https://tradinggrove.com/sitemap.xml

@@ -85,11 +85,31 @@ Deno.serve(async (req) => {
 
     // ── Profile check ─────────────────────────────────────────
     const profRes = await fetch(
-      `${supabaseUrl}/rest/v1/profiles?id=eq.${userId}&select=plan,subscription_expires_at,plan_type,queued_subscription`,
+      `${supabaseUrl}/rest/v1/profiles?id=eq.${userId}&select=plan,subscription_expires_at,plan_type,queued_subscription,last_checkout_attempt`,
       { headers: { "Authorization": `Bearer ${serviceKey}`, "apikey": serviceKey } }
     );
     const profRows = await profRes.json();
     const profile  = Array.isArray(profRows) ? profRows[0] : null;
+
+    // ── Rate limiting (60-second cooldown per user) ───────────
+    const COOLDOWN_MS = 60_000;
+    if (profile?.last_checkout_attempt) {
+      const lastAttempt = new Date(profile.last_checkout_attempt).getTime();
+      if (Date.now() - lastAttempt < COOLDOWN_MS) {
+        return fail("Please wait before trying again.", 429);
+      }
+    }
+    // Record this attempt timestamp
+    await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${userId}`, {
+      method: "PATCH",
+      headers: {
+        "Authorization": `Bearer ${serviceKey}`,
+        "apikey": serviceKey,
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal",
+      },
+      body: JSON.stringify({ last_checkout_attempt: new Date().toISOString() }),
+    });
 
     const isLifetime = profile?.plan_type === "lifetime";
     const isActive   = profile?.subscription_expires_at && new Date(profile.subscription_expires_at) > new Date();

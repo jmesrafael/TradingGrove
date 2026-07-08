@@ -22,12 +22,14 @@ One row per authenticated user. Created by a Postgres trigger on `auth.users` in
 | `referral_code` | text | This user's shareable code |
 | `referred_by` | uuid (FK → profiles.id) | Who referred this user |
 | `referral_count` | integer | Successful paid referrals (default: 0) |
+| `queued_subscription` | jsonb | Pending upgrade to activate when current sub expires `{plan_type, payment_gateway, subscription_id, starts_at}` |
+| `last_checkout_attempt` | timestamptz | Last subscription-creation attempt; used by 60s rate limiter |
 | `color_theme` | text | UI theme preference (default: `dark`) |
 | `font_theme` | text | Font preference (default: `default`) |
 | `created_at` | timestamptz | Account creation timestamp |
 | `updated_at` | timestamptz | Last update timestamp |
 
-**Subscription field protection:** all of `plan`, `plan_type`, `stripe_*`, `subscription_expires_at`, and `referral_count` are **silently reverted** by a Postgres trigger if updated by a non-`service_role` caller. Only edge functions (which use the service-role key) can change billing state. See [`2026-04-30_profiles_rls_subscription_protection.sql`](../supabase/migrations/2026-04-30_profiles_rls_subscription_protection.sql).
+**Subscription field protection:** all of `plan`, `plan_type`, `stripe_*`, `paypal_subscription_id`, `subscription_expires_at`, `referred_by`, `referral_code`, and `referral_count` are **silently reverted** by a Postgres trigger if updated by a non-`service_role` caller. Only edge functions (which use the service-role key) can change billing state. See [`2026-04-30_profiles_rls_subscription_protection.sql`](../supabase/migrations/2026-04-30_profiles_rls_subscription_protection.sql) and the PayPal extension in [`2026-05-12_paypal_integration.sql`](../supabase/migrations/2026-05-12_paypal_integration.sql).
 
 ### `journals`
 
@@ -258,7 +260,9 @@ Located in [`supabase/migrations/`](../supabase/migrations/), filenames `YYYY-MM
 | `2026-04-26_presession_mood_options.sql` | Pre-session mood option list |
 | `2026-04-30_profiles_rls_subscription_protection.sql` | RLS + trigger to protect billing fields |
 | `2026-05-06_cleanup_unused_trade_columns.sql` | Drop unused columns from `trades` |
-| `2026-05-12_paypal_integration.sql` | Add `payment_gateway` column, PayPal indexes, update subscription protection trigger |
+| `2026-05-12_paypal_integration.sql` | Add `payment_gateway` + `paypal_subscription_id` columns, PayPal indexes, update subscription protection trigger |
+| `20260512120000_queued_subscriptions.sql` | Add `queued_subscription` jsonb column for upgrade stacking |
+| `2026-05-17_rate_limiting_column.sql` | Add `last_checkout_attempt` for payment rate limiting (60s cooldown) |
 
 Apply with:
 

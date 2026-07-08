@@ -149,6 +149,15 @@
   <!-- ══════════ MAIN CONTENT ══════════ -->
   <div class="main-content">
 
+    <div class="sub-banner" id="subBanner">
+      <span id="subBannerText"></span>
+      <button class="sub-banner-btn" onclick="location.href='/subscription'"><i class="fa-solid fa-arrow-up" style="margin-right:5px"></i>Renew Pro</button>
+    </div>
+    <div class="sub-banner show expired" id="journalLockBanner" style="display:none">
+      <span id="journalLockBannerText"><i class="fa-solid fa-lock" style="margin-right:8px"></i>This journal is read-only because your subscription has expired. Renew Pro to continue editing it.</span>
+      <button class="sub-banner-btn" onclick="location.href='/subscription'"><i class="fa-solid fa-arrow-up" style="margin-right:5px"></i>Renew Pro</button>
+    </div>
+
     <!-- Tab: Logs -->
     <div class="tab-content active" id="tab-logs">
       <div class="tab-loader hidden" id="loader-logs"><div class="tab-loader-spin"></div><span class="tab-loader-label">Loading…</span></div>

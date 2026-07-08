@@ -357,6 +357,44 @@
   </div>
 </div>
 
+<!-- Choose Active Journal Modal (shown once when Pro downgrades with >1 journal) -->
+<div class="overlay" id="chooseJournalOverlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3><i class="fa-solid fa-book-open" style="color:var(--accent2);margin-right:8px"></i>Choose your active journal</h3>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6">Your Pro subscription has expired. The Free plan allows one active journal — pick which one stays fully editable. <strong>Nothing is deleted</strong>; the rest become read-only until you renew.</p>
+      <div id="chooseJournalList" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-primary" id="chooseJournalBtn" onclick="confirmChooseJournal()"><i class="fa-solid fa-check"></i> Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Downgrade Summary Modal (shown once after downgrade is enforced) -->
+<div class="overlay" id="downgradeSummaryOverlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3><i class="fa-solid fa-circle-info" style="color:var(--red,#ff5f6d);margin-right:8px"></i>Your Pro subscription has expired</h3>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6">Here's what changed on your account:</p>
+      <ul style="font-size:13px;color:var(--text);line-height:1.9;padding-left:18px;margin-bottom:14px">
+        <li>Any Pro theme has been reverted to the default theme.</li>
+        <li>One journal remains fully editable; extra journals are now read-only.</li>
+        <li>Pro-only features (unlimited journals, advanced analytics, export/import, PIN protection) are disabled.</li>
+        <li><strong>No data has been deleted.</strong> Everything is restored automatically the moment you renew.</li>
+      </ul>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeDowngradeSummary()">Got it</button>
+      <button class="btn-primary" onclick="location.href='/subscription'"><i class="fa-solid fa-rocket"></i> Renew Pro</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"><i id="toastIcon" class="fa-solid fa-circle-check"></i><span id="toastMsg"></span></div>
 
 <script src="/js/modules/dashboard.js"></script>

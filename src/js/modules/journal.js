@@ -76,7 +76,7 @@ _applySidebarState(false);
 const TABS=['logs','presession','calendar','notes','analytics','settings'];
 let activeTab='logs', journalId = sessionStorage.getItem('tz_current_journal')
              || localStorage.getItem('tz_current_journal');
-let journalObj=null, settings=null, currentUser=null, userIsPro=false, isDirty=false, _settingsReady=false;
+let journalObj=null, settings=null, currentUser=null, userIsPro=false, isDirty=false, _settingsReady=false, journalLocked=false, currentProfile=null;
 let exportScope='full', importMode='replace', importPayload=null;
 let _lastRemovedTag=null, _lastRemovedKey=null, _undoTimer=null;
 
@@ -94,15 +94,16 @@ let _bnbLastCsvText = '';
     getJournals(currentUser.id),
     getJournalSettings(journalId)
   ]);
-  userIsPro = getSubscriptionStatus(profile).isPro;
+  currentProfile = profile;
+  const _sub = getSubscriptionStatus(profile);
+  userIsPro = _sub.isPro;
   window._userIsPro = userIsPro;
   document.getElementById('hUserName').textContent = profile?.name || currentUser.email;
   const _badge = document.getElementById('hPlanBadge');
   if (userIsPro) {
-    const _sub = getSubscriptionStatus(profile);
-    if (_sub.expired) {
-      _badge.textContent = 'Pro Expired';
-      _badge.className = 'plan-badge badge-free';
+    if (_sub.inGrace) {
+      _badge.textContent = 'Grace period';
+      _badge.className = 'plan-badge badge-expiring';
     } else if (_sub.expiring) {
       _badge.textContent = `Expires in ${_sub.daysLeft}d`;
       _badge.className = 'plan-badge badge-expiring';
@@ -110,11 +111,18 @@ let _bnbLastCsvText = '';
       _badge.textContent = 'Pro';
       _badge.className = 'plan-badge badge-pro';
     }
+  } else if (_sub.downgraded) {
+    _badge.textContent = 'Pro Expired';
+    _badge.className = 'plan-badge badge-free';
   }
   journalObj = journals.find(j => j.id === journalId);
   if (!journalObj) { location.href = '/dashboard'; return; }
   settings = settingsData;
-  bcast({type:'tz_plan',isPro:userIsPro});
+  journalLocked = isJournalLocked(journalObj, profile);
+  renderSubBanner(_sub);
+  renderJournalLockBanner();
+  window._journalLocked = journalLocked;
+  bcast({type:'tz_plan',isPro:userIsPro,locked:journalLocked});
   if(userIsPro&&profile?.pro_expires_at){
     const exp=new Date(profile.pro_expires_at);
     document.getElementById('proDurationRow').style.display='block';
@@ -137,6 +145,27 @@ let _bnbLastCsvText = '';
   dllLoadSettings();
   _dllCheckFromDB();
 })();
+
+function renderSubBanner(s){
+  const banner=document.getElementById('subBanner'),text=document.getElementById('subBannerText');
+  if(!banner||!text)return;
+  if(s.downgraded){banner.className='sub-banner';return;} // journal-lock banner covers the downgraded case
+  if(s.inGrace){text.innerHTML=`<i class="fa-solid fa-triangle-exclamation" style="margin-right:8px"></i><strong>Your subscription expired.</strong> ${s.graceDaysLeft} day${s.graceDaysLeft===1?'':'s'} left before Free limits apply. Renew now.`;banner.className='sub-banner show expiring';}
+  else if(s.expiring){text.innerHTML=`<i class="fa-solid fa-clock" style="margin-right:8px"></i><strong>${s.label}</strong> — Renew now to avoid losing Pro features.`;banner.className='sub-banner show expiring';}
+  else{banner.className='sub-banner';}
+}
+function renderJournalLockBanner(){
+  const el=document.getElementById('journalLockBanner');
+  if(!el)return;
+  el.style.display=journalLocked?'':'none';
+}
+// Guard for write operations on a locked (read-only) journal. Shows an explanatory
+// toast and returns false when blocked; callers should bail out immediately.
+function requireUnlocked(){
+  if(!journalLocked)return true;
+  showToast('This journal is read-only — your subscription expired. Renew Pro to edit it.','fa-solid fa-lock','red');
+  return false;
+}
 
 function _preloadTabs(){
   [{id:'presessionFrame',src:'/presession'},
@@ -249,8 +278,9 @@ function renderPinSection(){
 }
 function showPinForm(){document.getElementById('pinForm').classList.add('show');document.getElementById('pinNew').focus();markDirty();}
 function onPinInput(){markDirty();const p=document.getElementById('pinNew').value,c=document.getElementById('pinConfirm').value;document.getElementById('pinMismatch').style.display=(c.length>0&&p!==c)?'block':'none';}
-async function removePin(){if(!confirm('Remove the PIN?'))return;try{await updateJournal(journalId,{pin_hash:null});journalObj.pin_hash=null;renderPinSection();showToast('PIN removed.','fa-solid fa-lock-open','green');}catch(e){showToast('Error: '+e.message,'fa-solid fa-circle-exclamation','red');}}
+async function removePin(){if(!requireUnlocked())return;if(!confirm('Remove the PIN?'))return;try{await updateJournal(journalId,{pin_hash:null});journalObj.pin_hash=null;renderPinSection();showToast('PIN removed.','fa-solid fa-lock-open','green');}catch(e){showToast('Error: '+e.message,'fa-solid fa-circle-exclamation','red');}}
 async function saveJournalSettings(){
+  if(!requireUnlocked())return;
   const name=document.getElementById('js-name').value.trim();
   const capital=document.getElementById('js-capital').value.trim();
   const pinNew=document.getElementById('pinNew').value.trim();
@@ -268,11 +298,12 @@ async function saveJournalSettings(){
   }
   catch(e){showToast('Save failed: '+e.message,'fa-solid fa-circle-exclamation','red');}
 }
-async function toggleFlag(field){const cur=journalObj[field]!==false;journalObj[field]=!cur;document.getElementById(field==='show_pnl'?'showPnlToggle':'showCapToggle').classList.toggle('on',!cur);await updateJournal(journalId,{[field]:!cur});showToast('Display setting updated.','fa-solid fa-circle-check','green');}
+async function toggleFlag(field){if(!requireUnlocked())return;const cur=journalObj[field]!==false;journalObj[field]=!cur;document.getElementById(field==='show_pnl'?'showPnlToggle':'showCapToggle').classList.toggle('on',!cur);await updateJournal(journalId,{[field]:!cur});showToast('Display setting updated.','fa-solid fa-circle-check','green');}
 function renderTagLists(){renderTagList('strategies','stratList');renderTagList('timeframes','tfList');renderTagList('pairs','pairList');}
 function renderTagList(key,listId){const list=settings?.[key]||[];document.getElementById(listId).innerHTML=list.map(t=>`<span class="stag">${esc(t)}<button class="rm" onclick="removeTag('${key}','${esc(t)}')"><i class="fa-solid fa-xmark" style="font-size:9px"></i></button></span>`).join('');}
-async function addTag(key,inputId){const inp=document.getElementById(inputId);let val=inp.value.trim();if(!val)return;if(key==='pairs')val=val.toUpperCase();const list=settings[key]||[];if(!list.find(x=>x.toLowerCase()===val.toLowerCase())){settings[key]=[...list,val];await updateJournalSettings(journalId,{[key]:settings[key]});renderTagLists();bcast({type:'tz_settings_updated'});showToast(`Tag "${val}" added.`,'fa-solid fa-circle-check','green');}inp.value='';}
+async function addTag(key,inputId){if(!requireUnlocked())return;const inp=document.getElementById(inputId);let val=inp.value.trim();if(!val)return;if(key==='pairs')val=val.toUpperCase();const list=settings[key]||[];if(!list.find(x=>x.toLowerCase()===val.toLowerCase())){settings[key]=[...list,val];await updateJournalSettings(journalId,{[key]:settings[key]});renderTagLists();bcast({type:'tz_settings_updated'});showToast(`Tag "${val}" added.`,'fa-solid fa-circle-check','green');}inp.value='';}
 async function removeTag(key,val){
+  if(!requireUnlocked())return;
   _lastRemovedTag=val;_lastRemovedKey=key;settings[key]=(settings[key]||[]).filter(t=>t!==val);await updateJournalSettings(journalId,{[key]:settings[key]});renderTagLists();clearTimeout(_undoTimer);
   const t=document.getElementById('toast');document.getElementById('toastIcon').className='fa-solid fa-trash';document.getElementById('toastMsg').innerHTML=`Tag "<strong>${esc(val)}</strong>" removed. <button onclick="undoTagRemove()" style="background:var(--accent2);color:#0b0f0c;border:none;border-radius:5px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;margin-left:8px">Undo</button>`;t.className='show toast-red';
   _undoTimer=setTimeout(()=>{t.classList.remove('show','toast-red');_lastRemovedTag=null;_lastRemovedKey=null;},3500);
@@ -282,13 +313,14 @@ function renderMoodGrid(){
   const moods=settings?.moods||[],colors=settings?.mood_colors||{};
   document.getElementById('moodGrid').innerHTML=moods.length?moods.map(m=>{const col=colors[m]||'#8fa39a';const[r,g,b]=[col.slice(1,3),col.slice(3,5),col.slice(5,7)].map(x=>parseInt(x,16));const colorEl=userIsPro?`<input type="color" class="mtag-color" value="${col}" style="background:${col}" oninput="updateMoodColor('${esc(m)}',this.value)" title="Change color">`:`<span class="mtag-dot" style="background:${col}"></span>`;return`<div class="mtag" style="background:rgba(${r},${g},${b},.15);color:${col};border-color:rgba(${r},${g},${b},.35)">${colorEl}<span>${esc(m)}</span><button class="mtag-rm" onclick="removeMoodTag('${esc(m)}')"><i class="fa-solid fa-xmark" style="font-size:9px"></i></button></div>`;}).join(''):'<span style="font-size:12px;color:var(--muted)">No moods yet.</span>';
 }
-async function addMoodTag(){const inp=document.getElementById('moodInput'),col=document.getElementById('moodColor').value,val=inp.value.trim();if(!val)return;const moods=settings.moods||[];if(!moods.find(m=>m.toLowerCase()===val.toLowerCase())){settings.moods=[...moods,val];settings.mood_colors={...settings.mood_colors,[val]:col};await updateJournalSettings(journalId,{moods:settings.moods,mood_colors:settings.mood_colors});renderMoodGrid();bcast({type:'tz_settings_updated'});showToast(`Mood "${val}" added.`,'fa-solid fa-circle-check','green');}inp.value='';document.getElementById('moodColor').value='#8fa39a';}
+async function addMoodTag(){if(!requireUnlocked())return;const inp=document.getElementById('moodInput'),col=document.getElementById('moodColor').value,val=inp.value.trim();if(!val)return;const moods=settings.moods||[];if(!moods.find(m=>m.toLowerCase()===val.toLowerCase())){settings.moods=[...moods,val];settings.mood_colors={...settings.mood_colors,[val]:col};await updateJournalSettings(journalId,{moods:settings.moods,mood_colors:settings.mood_colors});renderMoodGrid();bcast({type:'tz_settings_updated'});showToast(`Mood "${val}" added.`,'fa-solid fa-circle-check','green');}inp.value='';document.getElementById('moodColor').value='#8fa39a';}
 async function removeMoodTag(val){
+  if(!requireUnlocked())return;
   _lastRemovedTag=val;_lastRemovedKey='moods';settings.moods=settings.moods.filter(m=>m!==val);const c={...settings.mood_colors};delete c[val];settings.mood_colors=c;await updateJournalSettings(journalId,{moods:settings.moods,mood_colors:settings.mood_colors});renderMoodGrid();bcast({type:'tz_settings_updated'});clearTimeout(_undoTimer);
   const t=document.getElementById('toast');document.getElementById('toastIcon').className='fa-solid fa-trash';document.getElementById('toastMsg').innerHTML=`Mood "<strong>${esc(val)}</strong>" removed. <button onclick="undoTagRemove()" style="background:var(--accent2);color:#0b0f0c;border:none;border-radius:5px;padding:3px 9px;font-size:11px;font-weight:700;cursor:pointer;margin-left:8px">Undo</button>`;t.className='show toast-red';
   _undoTimer=setTimeout(()=>{t.classList.remove('show','toast-red');_lastRemovedTag=null;_lastRemovedKey=null;},3500);
 }
-async function updateMoodColor(mood,color){settings.mood_colors={...settings.mood_colors,[mood]:color};await updateJournalSettings(journalId,{mood_colors:settings.mood_colors});renderMoodGrid();bcast({type:'tz_settings_updated'});}
+async function updateMoodColor(mood,color){if(!requireUnlocked())return;settings.mood_colors={...settings.mood_colors,[mood]:color};await updateJournalSettings(journalId,{mood_colors:settings.mood_colors});renderMoodGrid();bcast({type:'tz_settings_updated'});}
 function renderExportImport(){
   const el=document.getElementById('exportImportContent');
   if(!userIsPro){el.innerHTML=`<div class="pro-lock-box"><i class="fa-solid fa-lock lock-icon"></i><h4>Pro Feature</h4><p>Back up as <strong>.json</strong> (with images) or export as <strong>.csv</strong> for Excel.</p><button class="btn-upgrade" onclick="location.href='/subscription'"><i class="fa-solid fa-arrow-up"></i> Upgrade to Pro</button></div>`;return;}
@@ -457,6 +489,7 @@ async function uploadImagesForTrade(tradeId, tradeData) {
 }
 
 async function confirmImport(){
+  if(!requireUnlocked())return;
   if(!importPayload)return;
   const cb=document.getElementById('importConfirmBtn'),cancel=document.getElementById('importCancelBtn');
   cb.disabled=true;cancel.disabled=true;document.getElementById('importProgress').classList.add('show');
@@ -508,7 +541,7 @@ async function confirmImport(){
   }
 }
 
-function openDelJournal(){document.getElementById('delJournalName').textContent=journalObj?.name||'this journal';document.getElementById('delConfirmInput').value='';checkDel();document.getElementById('delOverlay').classList.add('open');setTimeout(()=>document.getElementById('delConfirmInput').focus(),120);}
+function openDelJournal(){if(!requireUnlocked())return;document.getElementById('delJournalName').textContent=journalObj?.name||'this journal';document.getElementById('delConfirmInput').value='';checkDel();document.getElementById('delOverlay').classList.add('open');setTimeout(()=>document.getElementById('delConfirmInput').focus(),120);}
 function closeDelJournal(){document.getElementById('delOverlay').classList.remove('open');}
 function checkDel(){const exp=(journalObj?.name||'').trim().toLowerCase(),typ=document.getElementById('delConfirmInput').value.trim().toLowerCase(),ok=typ===exp&&exp!=='';const btn=document.getElementById('delConfirmBtn');btn.disabled=!ok;btn.style.opacity=ok?'1':'.4';btn.style.cursor=ok?'pointer':'not-allowed';}
 async function executeDelete(){try{await deleteJournal(journalId);sessionStorage.removeItem('tz_current_journal');location.href='/dashboard';}catch(e){showToast('Error: '+e.message,'fa-solid fa-circle-exclamation','red');}}
@@ -731,6 +764,7 @@ function bnbRenderPreview(){
 }
 
 async function bnbRunImport(){
+  if(!requireUnlocked())return;
   if(!_bnbReadyRows||_bnbReadyRows.length===0)return;
   const total=_bnbReadyRows.length;
   const btn=document.getElementById('bnbImportBtn');

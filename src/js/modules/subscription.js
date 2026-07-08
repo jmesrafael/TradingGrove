@@ -327,22 +327,27 @@ function showToast(msg, icon, type) {
   // Apply the user's saved theme before anything else renders
   applyProfileTheme(currentProfile);
 
-  const isPro     = currentProfile?.plan === 'pro';
   const subStatus = getSubscriptionStatus(currentProfile);
-  const planType  = currentProfile?.plan_type || 'none';
+  // A profile that was ever Pro (even if fully downgraded past grace) still shows the
+  // Pro plan-strip header + subscription period; only the CTA button state differs.
+  const wasEverPro = currentProfile?.plan === 'pro';
+  const planType   = currentProfile?.plan_type || 'none';
 
   const psIcon = document.getElementById('psIcon');
   const psVal  = document.getElementById('psVal');
   const psMeta = document.getElementById('psMeta');
 
-  if (isPro) {
+  if (wasEverPro) {
     psIcon.className = 'ps-icon pro';
     psIcon.innerHTML = '<i class="fa-solid fa-star"></i>';
     psVal.textContent = 'Pro Plan';
     psVal.className   = 'ps-val pro';
 
-    if (subStatus.expired) {
+    if (subStatus.downgraded) {
       psMeta.textContent = 'Your subscription has expired';
+      psMeta.className   = 'ps-meta danger';
+    } else if (subStatus.inGrace) {
+      psMeta.textContent = subStatus.label;
       psMeta.className   = 'ps-meta danger';
     } else if (subStatus.expiring) {
       psMeta.textContent = subStatus.label;
@@ -372,25 +377,43 @@ function showToast(msg, icon, type) {
       const totalDays = planType === 'yearly' ? 365 : planType === 'monthly' ? 30 : ((subStatus.daysLeft ?? 0) > 60 ? 365 : 30);
       const daysLeft  = subStatus.daysLeft ?? 0;
       const pct       = Math.max(0, Math.min(100, (daysLeft / totalDays) * 100));
-      const fillColor = subStatus.expired ? 'var(--red,#ff5f6d)' : subStatus.expiring ? 'var(--amber,#f59e0b)' : 'var(--accent2)';
+      const isBad     = subStatus.downgraded || subStatus.inGrace;
+      const fillColor = isBad ? 'var(--red,#ff5f6d)' : subStatus.expiring ? 'var(--amber,#f59e0b)' : 'var(--accent2)';
       document.getElementById('daysBarFill').style.width      = pct + '%';
       document.getElementById('daysBarFill').style.background = fillColor;
-      document.getElementById('daysBarLeft').textContent      = subStatus.expired ? 'Expired' : daysLeft + ' days remaining';
-      document.getElementById('daysBarLeft').style.color      = subStatus.expired ? 'var(--red,#ff5f6d)' : subStatus.expiring ? 'var(--amber,#f59e0b)' : '';
+      document.getElementById('daysBarLeft').textContent      = subStatus.downgraded ? 'Expired' : isBad ? 'In grace period' : daysLeft + ' days remaining';
+      document.getElementById('daysBarLeft').style.color      = isBad ? 'var(--red,#ff5f6d)' : subStatus.expiring ? 'var(--amber,#f59e0b)' : '';
       document.getElementById('daysBarRight').textContent     = subStatus.label;
       document.getElementById('daysBarWrap').style.display    = 'block';
     }
 
-    const proBtn = document.getElementById('proPlanBtn');
-    proBtn.disabled  = true;
-    proBtn.className = 'plan-btn current';
-    proBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Your Current Plan';
-    document.querySelector('.cta-nudge').style.display = 'none';
-    document.getElementById('billingToggle').style.display = 'none';
-
+    const proBtn  = document.getElementById('proPlanBtn');
     const freeBtn = document.getElementById('freePlanBtn');
-    freeBtn.disabled    = true;
-    freeBtn.textContent = 'Free Plan';
+
+    if (subStatus.downgraded) {
+      // Pro has fully lapsed (past grace) — treat Free as the active plan and let
+      // the user re-subscribe. This is the fix for the "still says Your Current
+      // Plan after expiry" bug.
+      setPlan('monthly');
+      proBtn.disabled  = false;
+      proBtn.className = 'plan-btn cta';
+      proBtn.innerHTML = '<i class="fa-solid fa-rocket"></i> <span id="proBtnText">Renew Pro</span>';
+      document.querySelector('.cta-nudge').style.display = '';
+      document.getElementById('billingToggle').style.display = '';
+
+      freeBtn.disabled    = true;
+      freeBtn.textContent = 'Current Plan';
+    } else {
+      // Active Pro, or within the grace period — Pro stays the current plan.
+      proBtn.disabled  = true;
+      proBtn.className = 'plan-btn current';
+      proBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Your Current Plan';
+      document.querySelector('.cta-nudge').style.display = 'none';
+      document.getElementById('billingToggle').style.display = 'none';
+
+      freeBtn.disabled    = true;
+      freeBtn.textContent = 'Free Plan';
+    }
 
   } else {
     setPlan('monthly');
@@ -399,7 +422,6 @@ function showToast(msg, icon, type) {
   }
 
     // ── Fire the Pro celebration modal on successful upgrade ──
-  const sp = new URLSearchParams(window.location.search);
   if (sp.get('upgraded') === '1') {
     setTimeout(() => _openRewardModal(), 700);
   }
@@ -426,4 +448,4 @@ window.handleOverlayClick = handleOverlayClick;
 window.pgwPayWithPayPal = pgwPayWithPayPal;
 window.openBillingPortal = openBillingPortal;
 window.closeRewardModal = closeRewardModal;
-window._testRewardModal = _testRewardModal;
+

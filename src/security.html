@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradingGrove | Security</title>
+<meta name="description" content="How TradingGrove protects your trade data: row-level security, encrypted storage, signed image uploads, and a no-AI-training pledge.">
+<meta property="og:title" content="TradingGrove Security & Trust">
+<meta property="og:description" content="How we protect your trade data — Row-Level Security, encryption, signed image uploads, and a strict no-data-sale pledge.">
+<meta property="og:url" content="https://tradinggrove.com/security">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://tradinggrove.com/assets/og-home.png">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
+<link rel="stylesheet" href="/styles/security.css">
+</head>
+<body>
+
+<div class="bg-orb bg-orb1"></div>
+<div class="bg-orb bg-orb2"></div>
+
+<div class="page-loader" id="pageLoader">
+  <div>
+    <div class="pl-logo">Trading<span>Grove</span></div>
+    <div class="pl-spin"></div>
+  </div>
+</div>
+
+<header>
+  <a href="/" class="logo">Trading<span>Grove</span></a>
+  <a href="/dashboard" class="btn-ghost"><i class="fa-solid fa-chevron-left"></i> Back</a>
+</header>
+
+<main>
+
+  <!-- Hero -->
+  <div class="doc-hero">
+    <div class="doc-eyebrow"><i class="fa-solid fa-shield-halved"></i> Trust</div>
+    <h1>Security &amp; <span>Trust</span></h1>
+    <div class="doc-meta">
+      <div class="doc-meta-item"><i class="fa-solid fa-rotate"></i> Last reviewed: May 2026</div>
+      <div class="doc-meta-item"><i class="fa-solid fa-lock"></i> All connections TLS 1.2+</div>
+    </div>
+  </div>
+
+  <!-- Commit banner -->
+  <div class="commit-banner">
+    <div class="commit-icon">🔐</div>
+    <div>
+      <div class="commit-title">Your trades are private — by architecture</div>
+      <div class="commit-text">
+        TradingGrove is built so that even the database cannot return another user's data to you.
+        <strong>Row-Level Security</strong> is enabled on every table holding user data, and our backend
+        is the only thing that ever holds elevated credentials. The controls below are technical, not
+        marketing — every one of them is enforced in code.
+      </div>
+    </div>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc-card">
+    <div class="toc-title"><i class="fa-solid fa-list"></i> Table of Contents</div>
+    <ul class="toc-list">
+      <li><a href="#s1"><i class="fa-solid fa-chevron-right"></i> 1. Data Protection</a></li>
+      <li><a href="#s2"><i class="fa-solid fa-chevron-right"></i> 2. Authentication</a></li>
+      <li><a href="#s3"><i class="fa-solid fa-chevron-right"></i> 3. Trade Screenshots</a></li>
+      <li><a href="#s4"><i class="fa-solid fa-chevron-right"></i> 4. Payments</a></li>
+      <li><a href="#s5"><i class="fa-solid fa-chevron-right"></i> 5. What We Never Do</a></li>
+      <li><a href="#s6"><i class="fa-solid fa-chevron-right"></i> 6. Account Deletion</a></li>
+      <li><a href="#s7"><i class="fa-solid fa-chevron-right"></i> 7. Reporting a Vulnerability</a></li>
+    </ul>
+  </div>
+
+  <!-- Sections -->
+
+  <div class="doc-section" id="s1" style="animation-delay:.1s">
+    <div class="section-hdr">
+      <span class="section-num">01</span>
+      <h2>Data Protection</h2>
+    </div>
+    <p class="doc-p">All TradingGrove data is stored in <strong>Supabase</strong> (managed PostgreSQL). Every user-data table — journals, trades, notes, pre-session checklists, referrals — has <strong>Row-Level Security (RLS)</strong> enabled. RLS policies are enforced at the database level, meaning even a misconfigured frontend cannot query another user's data.</p>
+    <ul class="doc-ul">
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Encryption at rest</strong> — Postgres data is encrypted on disk by our infrastructure provider</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Encryption in transit</strong> — All connections to TradingGrove and Supabase use TLS 1.2 or higher</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Subscription field protection</strong> — Billing fields (plan, expiry, payment IDs, referral count) are guarded by a database trigger that silently reverts any modification attempted by a non-service-role caller. Even a stolen user session cannot grant itself Pro.</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Service-role isolation</strong> — Elevated database credentials live only inside our serverless edge functions; they are never sent to the browser</span></li>
+    </ul>
+  </div>
+
+  <div class="doc-section" id="s2" style="animation-delay:.12s">
+    <div class="section-hdr">
+      <span class="section-num">02</span>
+      <h2>Authentication</h2>
+    </div>
+    <p class="doc-p">Authentication is handled by <strong>Supabase Auth</strong>, which issues short-lived JWT session tokens and refresh tokens. We support email/password sign-up and Google OAuth.</p>
+    <ul class="doc-ul">
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Email verification required</strong> — New accounts must confirm their email before signup completes</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Password requirements</strong> — Minimum 8 characters with uppercase, number, and special character</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Password hashing</strong> — Bcrypt-class hashing; we never see or store plaintext passwords</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Session tokens</strong> — Short-lived JWTs that the backend re-validates on every authenticated request</span></li>
+    </ul>
+  </div>
+
+  <div class="doc-section" id="s3" style="animation-delay:.14s">
+    <div class="section-hdr">
+      <span class="section-num">03</span>
+      <h2>Trade Screenshots</h2>
+    </div>
+    <p class="doc-p">Trade screenshots are stored in <strong>Cloudflare R2</strong> (S3-compatible object storage), separately from your trade metadata in Postgres. Uploads use a per-trade signed-URL flow rather than passing files through our servers.</p>
+    <ul class="doc-ul">
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Per-user namespacing</strong> — Every object key is prefixed <code>trades/{user_id}/{trade_id}/</code>, so paths are not cross-user reachable even at the storage layer</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Signed PUT URLs</strong> — Upload URLs are generated by an authenticated edge function and expire in 5 minutes</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>MIME-type whitelist</strong> — Only PNG, JPG, JPEG, and WebP files are accepted; everything else is rejected at the backend</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Filename sanitisation</strong> — Path-traversal sequences (<code>../</code>) and unsafe characters are stripped before signing</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Collision-proof keys</strong> — Each object key includes a timestamp plus 8 random bytes</span></li>
+    </ul>
+  </div>
+
+  <div class="doc-section" id="s4" style="animation-delay:.16s">
+    <div class="section-hdr">
+      <span class="section-num">04</span>
+      <h2>Payments</h2>
+    </div>
+    <p class="doc-p">All payment processing is handled by <strong>PayPal</strong>. We never see, store, or process your card number, bank details, or any other payment instrument data — those flow directly between you and PayPal.</p>
+    <ul class="doc-ul">
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>PCI compliance offloaded</strong> — PayPal handles all card-data scope</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Webhook signature verification</strong> — Every billing event from PayPal is verified against PayPal's own signature-verification endpoint before we act on it</span></li>
+      <li><i class="fa-solid fa-circle-dot"></i><span><strong>Rate limiting</strong> — Subscription-creation requests are limited to one every 60 seconds per account to block spam and accidental double-charges</span></li>
+    </ul>
+  </div>
+
+  <div class="doc-section" id="s5" style="animation-delay:.18s">
+    <div class="section-hdr">
+      <span class="section-num">05</span>
+      <h2>What We Never Do</h2>
+    </div>
+    <div class="inline-box never">
+      <strong>These commitments are enforced in code and policy — not aspirational.</strong>
+    </div>
+    <ul class="doc-ul" style="margin-top:14px">
+      <li><i class="fa-solid fa-xmark" style="color:var(--red,#ff5f6d)"></i><span><strong>We never sell your personal data</strong> — to anyone, ever, under any circumstances</span></li>
+      <li><i class="fa-solid fa-xmark" style="color:var(--red,#ff5f6d)"></i><span><strong>We never train AI or machine-learning models on your journal data</strong></span></li>
+      <li><i class="fa-solid fa-xmark" style="color:var(--red,#ff5f6d)"></i><span><strong>We never use your trade content for behavioural ad targeting</strong></span></li>
+      <li><i class="fa-solid fa-xmark" style="color:var(--red,#ff5f6d)"></i><span><strong>We never share your trades with brokers or third-party analytics</strong></span></li>
+      <li><i class="fa-solid fa-xmark" style="color:var(--red,#ff5f6d)"></i><span><strong>We never access your calculator inputs</strong> — they live in your browser's localStorage only and never reach our servers</span></li>
+    </ul>
+  </div>
+
+  <div class="doc-section" id="s6" style="animation-delay:.2s">
+    <div class="section-hdr">
+      <span class="section-num">06</span>
+      <h2>Account Deletion</h2>
+    </div>
+    <p class="doc-p">When you delete your account from your profile page, our <code>delete-account</code> edge function performs a full cascading delete: trade images → trades → journal settings → notes → journals → referrals → profile → auth user. Data is permanently erased, not soft-deleted.</p>
+    <p class="doc-p">Email addresses may be retained for a brief fraud-prevention window and then purged. Billing records held by PayPal are retained according to their own financial-regulation obligations.</p>
+  </div>
+
+  <div class="doc-section" id="s7" style="animation-delay:.22s">
+    <div class="section-hdr">
+      <span class="section-num">07</span>
+      <h2>Reporting a Vulnerability</h2>
+    </div>
+    <p class="doc-p">If you believe you've found a security issue in TradingGrove, please email <a href="mailto:support@tradinggrove.com">support@tradinggrove.com</a> with the subject line <strong>"Security disclosure"</strong>. Include reproduction steps and, where applicable, a proof-of-concept.</p>
+    <p class="doc-p">We do not currently run a paid bug-bounty programme, but we acknowledge every responsibly-disclosed issue and credit the reporter (with permission) once the issue is resolved. Please give us a reasonable window to fix before public disclosure.</p>
+    <div class="inline-box info">
+      <strong>Out of scope:</strong> denial-of-service tests, social engineering of TradingGrove staff, and attacks against third-party providers (Supabase, PayPal, Cloudflare) — report those directly to the vendor.
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo">Trading<span>Grove</span></div>
+      <p class="footer-tagline">A trading journal that helps you understand your own trading.</p>
+      <div class="footer-badges">
+        <span class="footer-badge"><i class="fa-solid fa-cloud"></i> Cloud-Powered</span>
+        <span class="footer-badge"><i class="fa-solid fa-lock"></i> Secure</span>
+        <span class="footer-badge"><i class="fa-solid fa-database"></i> Your Data</span>
+      </div>
+    </div>
+    <div class="footer-links-group">
+      <div class="footer-col">
+        <div class="footer-col-title">Product</div>
+        <a href="/#features">Features</a>
+        <a href="/#pricing">Pricing</a>
+        <a href="/#compare">Compare</a>
+        <a href="/#how">How It Works</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Free Tools</div>
+        <a href="/#crypto-calculator">Crypto Calculator</a>
+        <a href="/#forex-calculator">Forex Calculator</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Company</div>
+        <a href="/about">About</a>
+        <a href="/security">Security</a>
+        <a href="/blog">Blog</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Account</div>
+        <a href="/auth">Sign Up Free</a>
+        <a href="/auth">Log In</a>
+        <a href="/subscription">Upgrade to Pro</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Legal</div>
+        <a href="/terms">Terms of Service</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/refund">Refund Policy</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 TradingGrove. Secure cloud-powered trading journal.</span>
+    <span>Free forever for 1 journal &nbsp;·&nbsp; Pro at $15/mo</span>
+  </div>
+</footer>
+
+<script>
+(async () => {
+  const loader = document.getElementById('pageLoader');
+  loader.classList.add('gone');
+  setTimeout(() => { if (loader) loader.style.display = 'none'; }, 400);
+})();
+</script>
+</body>
+</html>

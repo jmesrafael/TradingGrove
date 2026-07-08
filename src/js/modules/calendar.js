@@ -89,7 +89,8 @@ function isMonthLocked(y,m){if(userIsPro)return false;const lastDay=new Date(y,m
     if(!userIsPro){
       document.getElementById('calAdSlot').style.display='block';
       document.getElementById('calUpgradeNudge').style.display='flex';
-      try{(adsbygoogle=window.adsbygoogle||[]).push({});}catch(e){}
+      // TODO: replace ca-pub-XXXXXXXXXXXXXXXX with real AdSense publisher ID to enable ads
+      // try{(adsbygoogle=window.adsbygoogle||[]).push({});}catch(e){}
     }
     document.body.style.visibility='visible';
     _calHideLoading();

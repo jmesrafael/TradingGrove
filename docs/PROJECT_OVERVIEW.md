@@ -49,16 +49,18 @@ TradingGrove is a professional trading journal and risk management platform for 
 |-------|-----------|
 | Frontend | Vanilla HTML, CSS, JavaScript (no framework) |
 | Auth & Database | Supabase (PostgreSQL + row-level security) |
-| Storage | Supabase Storage (trade screenshots) |
-| Payments | Stripe (monthly $15/mo · annual $10/mo billed $120/yr) |
+| Storage | Cloudflare R2 (trade screenshots, S3-compatible) |
+| Payments | PayPal (active) — Stripe code present but disabled for PayPal-only launch |
+| Pricing | Monthly $15/mo · Annual $10/mo billed $120/yr |
 | Hosting | Vercel |
-| Edge Functions | Supabase Deno functions (checkout, webhooks, referrals) |
+| Edge Functions | Supabase Deno functions (PayPal checkout, webhooks, referrals, R2 signing, account deletion) |
 
 ## Business Model
 
 - **Free tier:** Calculators (unlimited) + 1 journal — drives adoption
-- **Pro tier:** Full journal features — $15/mo or $120/yr
+- **Pro tier:** Full journal features — $15/mo or $120/yr (billed via PayPal)
 - **Revenue:** Subscriptions + potential affiliate/broker partnerships
+- **Referral incentive:** +30 days Pro for every paid referral, no cap
 
 ## Supported Markets
 

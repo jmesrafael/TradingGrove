@@ -148,8 +148,22 @@ async function getTrades(journalId) {
     .from('trades')
     .select(TRADES_COLUMNS)
     .eq('journal_id', journalId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(2000); // safety cap — replace logs.js with getTradesPage() for journals >2000 trades
   if (error) console.error('[supabase] getTrades error:', error);
+  return data || [];
+}
+
+// Paginated variant for the logs table view. Use offset/limit for "Load More" UX.
+// analytics, calendar, and journal exports should continue using getTrades().
+async function getTradesPage(journalId, { limit = 100, offset = 0 } = {}) {
+  const { data, error } = await db
+    .from('trades')
+    .select(TRADES_COLUMNS)
+    .eq('journal_id', journalId)
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+  if (error) console.error('[supabase] getTradesPage error:', error);
   return data || [];
 }
 
@@ -217,12 +231,16 @@ async function getReferralCount(userId) {
 
 // ── Subscription helpers ──────────────────────────────────
 
+// Days of continued Pro access after expiry before Free limits are enforced.
+// Keep in sync with the grace interval in the RLS migration (effective_is_pro / is_journal_locked).
+const GRACE_DAYS = 3;
+
 function getSubscriptionStatus(profile) {
   const isPro = profile?.plan === 'pro';
 
   if (!isPro) return {
-    isPro: false, expired: false, expiring: false,
-    daysLeft: null, label: 'Free', planType: 'none'
+    isPro: false, expired: false, expiring: false, inGrace: false, downgraded: false,
+    daysLeft: null, graceDaysLeft: null, label: 'Free', planType: 'none'
   };
 
   const planType = profile?.plan_type || 'none';
@@ -230,18 +248,18 @@ function getSubscriptionStatus(profile) {
   // Only grant lifetime when explicitly set — never infer it from a missing expiry
   if (planType === 'lifetime') {
     return {
-      isPro: true, expired: false, expiring: false,
-      daysLeft: null, label: 'Lifetime', planType: 'lifetime'
+      isPro: true, expired: false, expiring: false, inGrace: false, downgraded: false,
+      daysLeft: null, graceDaysLeft: null, label: 'Lifetime', planType: 'lifetime'
     };
   }
 
   const expiresAt = profile?.subscription_expires_at || profile?.pro_expires_at;
 
-  // plan=pro with no expiry date is an invalid/unsynced state — treat as expired
+  // plan=pro with no expiry date is an invalid/unsynced state — treat as fully downgraded (no grace)
   if (!expiresAt) {
     return {
-      isPro: false, expired: true, expiring: false,
-      daysLeft: null, label: 'Expired', planType
+      isPro: false, expired: true, expiring: false, inGrace: false, downgraded: true,
+      daysLeft: null, graceDaysLeft: null, label: 'Expired', planType
     };
   }
 
@@ -252,25 +270,54 @@ function getSubscriptionStatus(profile) {
   const expired  = daysLeft <= 0;
   const expiring = !expired && daysLeft <= 7;
 
+  // Grace period: still "expired" but within GRACE_DAYS of the expiry date — Pro stays on.
+  const daysPastExpiry = expired ? -daysLeft : 0;
+  const inGrace        = expired && daysPastExpiry < GRACE_DAYS;
+  const downgraded     = expired && !inGrace;
+  const graceDaysLeft  = inGrace ? (GRACE_DAYS - daysPastExpiry) : null;
+
   let label;
-  if (expired) {
+  if (downgraded) {
     label = `Expired ${expires.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+  } else if (inGrace) {
+    label = `Expired — ${graceDaysLeft} day${graceDaysLeft === 1 ? '' : 's'} grace left`;
   } else if (expiring) {
     label = `Expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`;
   } else {
     label = `Renews ${expires.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
   }
 
-  // isPro is false when expired — feature gates check isPro, not the expired flag
-  return { isPro: !expired, expired, expiring, daysLeft, label, planType };
+  // isPro stays true during the grace period; it only goes false once fully downgraded.
+  // Feature gates check isPro — journal/theme locking should check `downgraded` specifically.
+  return { isPro: !downgraded, expired, expiring, inGrace, downgraded, daysLeft, graceDaysLeft, label, planType };
+}
+
+// True when `journal` should be read-only because the owner's Pro plan has
+// fully lapsed (past grace) and this isn't the one journal they kept active.
+// Only locks once a choice has actually been made (free_active_journal_id set) —
+// otherwise a user with a single journal who was never asked to choose would
+// have their only journal incorrectly locked.
+function isJournalLocked(journal, profile) {
+  const s = getSubscriptionStatus(profile);
+  return s.downgraded && !!profile?.free_active_journal_id && journal?.id !== profile.free_active_journal_id;
 }
 
 
 // ── Theme / font helpers ──────────────────────────────────
 
 function applyProfileTheme(profile) {
-  const theme = profile?.color_theme || localStorage.getItem('tl_theme') || 'dark';
-  const font  = profile?.font_theme  || localStorage.getItem('tl_font')  || 'default';
+  let theme = profile?.color_theme || localStorage.getItem('tl_theme') || 'dark';
+  let font  = profile?.font_theme  || localStorage.getItem('tl_font')  || 'default';
+
+  // A downgraded user keeps their Pro theme/font stored on the profile (so it can be
+  // auto-restored on renewal) but must not have it applied while on the Free plan.
+  if (window.TZ && getSubscriptionStatus(profile).downgraded) {
+    const themeMeta = TZ.themeList?.find(t => t.id === theme);
+    const fontMeta  = TZ.fontList?.find(f => f.id === font);
+    if (themeMeta?.pro) theme = 'dark';
+    if (fontMeta?.pro)  font  = 'default';
+  }
+
   if (window.TZ) {
     TZ.setTheme(theme);
     TZ.setFont(font);

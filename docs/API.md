@@ -11,6 +11,8 @@ Content-Type:  application/json
 
 ## `POST /functions/v1/create-checkout`
 
+**⚠️ Currently disabled at the UI level — PayPal-only launch.** Code remains deployed but not called from the frontend.
+
 Creates a Stripe Checkout session for upgrading to Pro. Reuses existing Stripe customer if the profile already has one. Sets `metadata.supabase_user_id` and `client_reference_id` so the webhook can resolve the user even if a Stripe email differs.
 
 **Request body**
@@ -30,6 +32,67 @@ Creates a Stripe Checkout session for upgrading to Pro. Reuses existing Stripe c
 **Errors:** 401 (no auth header / invalid token) · 400 (already on active Pro plan) · 500 (Stripe API failure)
 
 **Caller:** [`pricing.js:38`](../src/js/modules/pricing.js#L38), [`subscription.js:43`](../src/js/modules/subscription.js#L43)
+
+---
+
+## `POST /functions/v1/create-paypal-subscription`
+
+Creates a PayPal billing subscription for upgrading to Pro and returns the approval URL the user must visit. If the user already has an active Pro subscription, the new subscription is **queued** in `profiles.queued_subscription` and activated automatically when the current one expires (subscription stacking).
+
+**Rate limited:** 60 seconds per user. Tracked via `profiles.last_checkout_attempt`. Returns `429` if invoked too soon after a prior attempt.
+
+**Request body**
+```json
+{ "plan": "monthly" }
+// or
+{ "plan": "annual" }   // "yearly" also accepted
+```
+
+**Response (200)**
+```json
+{ "url": "https://www.paypal.com/checkoutnow?token=..." }
+```
+
+**Errors:** 400 (already has a queued subscription) · 401 (no auth header / invalid token) · 429 (rate limited) · 500 (PayPal API failure or missing secret)
+
+**Caller:** [`payment-method.js`](../src/js/modules/payment-method.js), [`subscription.js`](../src/js/modules/subscription.js)
+
+---
+
+## `POST /functions/v1/paypal-webhook`
+
+**PayPal-only.** Receives PayPal billing events. Verifies signature by POSTing the headers + body to PayPal's `/v1/notifications/verify-webhook-signature` endpoint using `PAYPAL_WEBHOOK_ID`.
+
+**Handled events:**
+
+| Event | Behaviour |
+|---|---|
+| `BILLING.SUBSCRIPTION.ACTIVATED` | Upgrades user to Pro. Sets `subscription_expires_at` based on plan type. Triggers referral reward if user was referred. |
+| `BILLING.SUBSCRIPTION.UPDATED` | Syncs plan/expiry from PayPal's view. |
+| `BILLING.SUBSCRIPTION.CANCELLED` / `BILLING.SUBSCRIPTION.EXPIRED` | Downgrades user to Free at expiry; activates any queued subscription. |
+| `BILLING.SUBSCRIPTION.PAYMENT.FAILED` | Logged only — PayPal handles retries. |
+| `PAYMENT.SALE.COMPLETED` | Renewal — extends `subscription_expires_at`. |
+
+**Response (200)** `{ "received": true }`
+
+**Errors:** 400 (signature verification failed) · 500 (DB error)
+
+---
+
+## `POST /functions/v1/paypal-setup-plans`
+
+**One-time helper.** Creates the PayPal Product and Monthly/Annual billing plans via the REST API using the same credentials that will create subscriptions. Required because plans created via the PayPal Dashboard belong to a different internal account than the API credentials, which causes `404 INVALID_RESOURCE_ID` on subscription creation.
+
+Run once per environment (sandbox + live), then copy the returned plan IDs into `PAYPAL_MONTHLY_PLAN_ID` / `PAYPAL_ANNUAL_PLAN_ID` secrets.
+
+**Response (200)**
+```json
+{
+  "product_id":  "PROD-...",
+  "monthly_id":  "P-...",
+  "annual_id":   "P-..."
+}
+```
 
 ---
 

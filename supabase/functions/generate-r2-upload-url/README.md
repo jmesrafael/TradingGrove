@@ -110,88 +110,50 @@ Example error response:
 
 ## Frontend Integration Example
 
-### TypeScript / React
+The TradingGrove frontend is vanilla JS. The full upload pipeline lives in [`src/js/lib/supabase-client.js`](../../../src/js/lib/supabase-client.js) — see `addTradeImage()`. Simplified pattern:
 
-```typescript
-import { useSupabaseClient } from "@supabase/auth-helpers-react";
+```js
+async function uploadTradeScreenshot(file, tradeId) {
+  // 1. Get the current session token
+  const { data: { session } } = await db.auth.getSession();
+  if (!session?.access_token) throw new Error('Not authenticated');
 
-interface R2UploadResponse {
-  upload_url: string;
-  public_url: string;
-  key: string;
-}
+  // 2. Request a signed PUT URL from the edge function
+  const signRes = await fetch(`${SUPABASE_URL}/functions/v1/generate-r2-upload-url`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      file_name: file.name,
+      file_type: file.type,
+      trade_id: tradeId,
+    }),
+  });
+  if (!signRes.ok) throw new Error('Failed to get signed URL');
+  const { upload_url, public_url, key } = await signRes.json();
 
-export async function generateR2UploadUrl(
-  supabase: ReturnType<typeof useSupabaseClient>,
-  fileName: string,
-  fileType: string,
-  tradeId: string
-): Promise<R2UploadResponse> {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.access_token) {
-    throw new Error("Not authenticated");
-  }
+  // 3. PUT the file directly to R2
+  const putRes = await fetch(upload_url, {
+    method: 'PUT',
+    headers: { 'Content-Type': file.type },
+    body: file,
+  });
+  if (!putRes.ok) throw new Error('R2 upload failed');
 
-  const response = await fetch(
-    `${process.env.REACT_APP_SUPABASE_URL}/functions/v1/generate-r2-upload-url`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        file_name: fileName,
-        file_type: fileType,
-        trade_id: tradeId,
-      }),
-    }
-  );
+  // 4. Persist the public URL in trade_images table
+  const { error } = await db.from('trade_images').insert({
+    trade_id: tradeId,
+    user_id: (await db.auth.getUser()).data.user.id,
+    url: public_url,
+    storage_url: key,
+    size_bytes: file.size,
+    mime_type: file.type,
+  });
+  if (error) throw error;
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`Upload URL generation failed: ${error.error}`);
-  }
-
-  return response.json();
-}
-
-// Usage in component
-async function handleImageUpload(file: File, tradeId: string) {
-  try {
-    // 1. Get signed URL from Edge Function
-    const { upload_url, public_url } = await generateR2UploadUrl(
-      supabase,
-      file.name,
-      file.type,
-      tradeId
-    );
-
-    // 2. Upload directly to R2 using signed URL
-    const uploadResponse = await fetch(upload_url, {
-      method: "PUT",
-      headers: {
-        "Content-Type": file.type,
-      },
-      body: file,
-    });
-
-    if (!uploadResponse.ok) {
-      throw new Error("Upload to R2 failed");
-    }
-
-    // 3. Store public_url in Supabase DB
-    const { error } = await supabase
-      .from("trades")
-      .update({ image_url: public_url })
-      .eq("id", tradeId);
-
-    if (error) throw error;
-
-    console.log("Upload successful:", public_url);
-  } catch (error) {
-    console.error("Upload error:", error);
-  }
+  return public_url;
 }
 ```
 

@@ -54,7 +54,14 @@ function toggleFontDropdown(){if(_themeDropOpen)closeThemeDropdown();const dd=do
 function closeFontDropdown(){_fontDropOpen=false;document.getElementById('fontDropdown')?.classList.remove('open');document.getElementById('fontTrigger')?.classList.remove('open');}
 
 // ── Sub banner ───────────────────────────────────────────────────────────────
-function renderSubBanner(s){const banner=document.getElementById('subBanner'),text=document.getElementById('subBannerText');if(!banner||!text||!s.isPro)return;if(s.expired){text.innerHTML=`<i class="fa-solid fa-circle-xmark" style="margin-right:8px"></i><strong>Your Pro subscription has expired.</strong> Renew to keep access.`;banner.className='sub-banner show expired';}else if(s.expiring){text.innerHTML=`<i class="fa-solid fa-clock" style="margin-right:8px"></i><strong>${s.label}</strong> — Renew now to avoid losing Pro features.`;banner.className='sub-banner show expiring';}}
+function renderSubBanner(s){
+  const banner=document.getElementById('subBanner'),text=document.getElementById('subBannerText');
+  if(!banner||!text)return;
+  if(s.downgraded){text.innerHTML=`<i class="fa-solid fa-circle-xmark" style="margin-right:8px"></i><strong>Your Pro subscription expired.</strong> You're now on the Free plan — renew to restore everything instantly.`;banner.className='sub-banner show expired';}
+  else if(s.inGrace){text.innerHTML=`<i class="fa-solid fa-triangle-exclamation" style="margin-right:8px"></i><strong>Your subscription expired.</strong> ${s.graceDaysLeft} day${s.graceDaysLeft===1?'':'s'} left before Free limits apply. Renew now.`;banner.className='sub-banner show expiring';}
+  else if(s.expiring){text.innerHTML=`<i class="fa-solid fa-clock" style="margin-right:8px"></i><strong>${s.label}</strong> — Renew now to avoid losing Pro features.`;banner.className='sub-banner show expiring';}
+  else{banner.className='sub-banner';}
+}
 
 // ── Boot ─────────────────────────────────────────────────────────────────────
 (async()=>{
@@ -75,15 +82,18 @@ function renderSubBanner(s){const banner=document.getElementById('subBanner'),te
   const badge=document.getElementById('planBadge');
   const sub=getSubscriptionStatus(currentProfile);
   if(isPro){
-    if(sub.expiring){badge.textContent=`Expires in ${sub.daysLeft}d`;badge.className='plan-badge badge-expiring';}
-    else if(sub.expired){badge.textContent='Pro Expired';badge.className='plan-badge badge-free';}
+    if(sub.inGrace){badge.textContent='Grace period';badge.className='plan-badge badge-expiring';}
+    else if(sub.expiring){badge.textContent=`Expires in ${sub.daysLeft}d`;badge.className='plan-badge badge-expiring';}
     else{badge.textContent='Pro';badge.className='plan-badge badge-pro';}
-    renderSubBanner(sub);
-    // Show Billing button for Pro users
+    // Show Billing button for anyone who was ever Pro (billing history / cancel)
     document.getElementById('menuBillingBtn').style.display='flex';
   }else{
+    badge.textContent=sub.downgraded?'Pro Expired':'Free';
+    badge.className='plan-badge badge-free';
     document.getElementById('upgradeNudge').classList.add('visible');
+    if(currentProfile?.plan==='pro')document.getElementById('menuBillingBtn').style.display='flex';
   }
+  renderSubBanner(sub);
 
   // Theme/font triggers
   const currentTheme=localStorage.getItem('tl_theme')||'dark';
@@ -99,8 +109,49 @@ function renderSubBanner(s){const banner=document.getElementById('subBanner'),te
   }catch(e){console.warn('[dashboard] Failed to load referral count:',e);}
 
   await loadJournals();
+  maybeHandleDowngrade(sub);
   if(window.TZ)TZ.hideLoader();else hidePageLoader();
 })();
+
+// ── Downgrade flow (grace expired → Free) ─────────────────────────────────────
+function maybeHandleDowngrade(sub){
+  if(!sub.downgraded)return;
+  // Multiple journals but none chosen yet (or the chosen one no longer exists) — ask which stays active.
+  const chosenExists=currentProfile?.free_active_journal_id&&journals.some(j=>j.id===currentProfile.free_active_journal_id);
+  if(journals.length>1&&!chosenExists){openChooseJournalModal();return;}
+  // Otherwise, if the one-time downgrade summary hasn't been shown, show it now.
+  if(!currentProfile?.downgrade_ack_at)openDowngradeSummary();
+}
+
+function openChooseJournalModal(){
+  const wrap=document.getElementById('chooseJournalList');
+  const preselect=sessionStorage.getItem('tz_current_journal')||localStorage.getItem('tz_current_journal');
+  wrap.innerHTML=journals.map(j=>`<label class="choose-journal-row">
+    <input type="radio" name="chooseJournal" value="${j.id}"${j.id===preselect?' checked':''}>
+    <span>${esc(j.name)}</span>
+  </label>`).join('');
+  if(!wrap.querySelector('input:checked')){const first=wrap.querySelector('input');if(first)first.checked=true;}
+  document.getElementById('chooseJournalOverlay').classList.add('open');
+}
+async function confirmChooseJournal(){
+  const sel=document.querySelector('#chooseJournalList input:checked');
+  if(!sel){showToast('Pick a journal to keep active','fa-solid fa-circle-exclamation','red');return;}
+  const btn=document.getElementById('chooseJournalBtn');btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i> Saving…';
+  try{
+    currentProfile=await updateProfile(currentUser.id,{free_active_journal_id:sel.value});
+    document.getElementById('chooseJournalOverlay').classList.remove('open');
+    renderJournals();
+    if(!currentProfile?.downgrade_ack_at)openDowngradeSummary();
+  }catch(e){showToast('Error: '+e.message,'fa-solid fa-circle-exclamation','red');}
+  finally{btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-check"></i> Confirm';}
+}
+
+function openDowngradeSummary(){document.getElementById('downgradeSummaryOverlay').classList.add('open');}
+async function closeDowngradeSummary(){
+  document.getElementById('downgradeSummaryOverlay').classList.remove('open');
+  if(currentProfile?.downgrade_ack_at)return;
+  try{currentProfile=await updateProfile(currentUser.id,{downgrade_ack_at:new Date().toISOString()});}catch(e){}
+}
 
 // ── Journals ─────────────────────────────────────────────────────────────────
 async function loadJournals(){
@@ -118,10 +169,12 @@ function renderJournals(){
     const cap=(j.show_capital!==false)&&j.capital?`<div class="cap"><i class="fa-solid fa-wallet" style="font-size:10px"></i>$${Number(j.capital).toLocaleString()}</div>`:'';
     const pnl=pnlMap[j.id];let pnlHtml='';
     if((j.show_pnl!==false)&&pnl!=null){const cls=pnl>=0?'pnl-pos':'pnl-neg';const fmt=(pnl>=0?'+':'-')+'$'+Math.abs(pnl).toFixed(2);pnlHtml=`<div class="pnl-row"><span class="pnl-lbl">PNL</span><span class="pnl-val ${cls}">${fmt}</span></div>`;}
-    return`<div class="jcard" data-id="${j.id}" style="animation-delay:${i*.06}s">
+    const locked=isJournalLocked(j,currentProfile);
+    const lockedBadge=locked?`<span class="journal-locked-badge" title="Read-only — subscription expired"><i class="fa-solid fa-lock"></i> Locked</span>`:'';
+    return`<div class="jcard${locked?' jcard-locked':''}" data-id="${j.id}" style="animation-delay:${i*.06}s">
       <i class="fa-solid fa-grip-dots-vertical drag-handle" title="Drag to reorder"></i>
       <div class="jcard-body">
-        <div><div class="jcard-top"><h3>${esc(j.name)}</h3>${pin}</div>${cap}${pnlHtml}</div>
+        <div><div class="jcard-top"><h3>${esc(j.name)}</h3>${pin}${lockedBadge}</div>${cap}${pnlHtml}</div>
         <button class="open-btn" onclick="goJournal('${j.id}')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Journal</button>
       </div>
     </div>`;
@@ -302,4 +355,4 @@ function showToast(msg,icon='fa-solid fa-circle-check',type=''){const t=document
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 
 // Inline handlers in HTML call these by global name.
-Object.assign(window, { checkDelAcc, closeCreate, closeDelAccount, closeReferModal, closeSettings, copyModalCode, copyModalUrl, dismissWelcome, doCreate, executeDeleteAccount, goJournal, logout, openCreate, openReferModal, openSettings, switchRefTab, toggleFontDropdown, toggleMenu, toggleThemeDropdown });
+Object.assign(window, { checkDelAcc, closeCreate, closeDelAccount, closeReferModal, closeSettings, copyModalCode, copyModalUrl, dismissWelcome, doCreate, executeDeleteAccount, goJournal, logout, openCreate, openReferModal, openSettings, switchRefTab, toggleFontDropdown, toggleMenu, toggleThemeDropdown, confirmChooseJournal, closeDowngradeSummary });

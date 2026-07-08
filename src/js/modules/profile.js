@@ -525,4 +525,3 @@ window.checkDelAccProfile = checkDelAccProfile;
 window.executeDeleteAccount = executeDeleteAccount;
 window.logout = logout;
 window.closeRewardModal = closeRewardModal;
-window._testRewardModal = _testRewardModal;
