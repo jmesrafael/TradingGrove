@@ -133,57 +133,9 @@ async function pgwPayWithPayPal() {
 }
 
 // ── Manage billing portal ─────────────────────────────────
-async function openBillingPortal() {
-  const btn = document.getElementById('manageBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Loading…';
-  try {
-    // PayPal subscribers manage their subscription directly on paypal.com
-    if (currentProfile?.paypal_subscription_id && !currentProfile?.stripe_customer_id) {
-      window.open('https://www.paypal.com/myaccount/autopay/', '_blank');
-      return;
-    }
-
-    const { data: { session } } = await db.auth.getSession();
-    if (!session) throw new Error('Not authenticated');
-
-    const res = await fetch(SUPABASE_URL + '/functions/v1/billing-portal', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + session.access_token,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        return_url: window.location.origin + '/subscription',
-        customer_id: session.user?.id
-      }),
-    });
-
-    if (!res.ok) {
-      const errData = await res.json();
-      throw new Error(errData.error || `HTTP ${res.status}`);
-    }
-
-    const data = await res.json();
-
-    if (data.message) {
-      showToast(data.message, 'fa-solid fa-gift', 'green');
-      if (data.url && data.url.includes('#')) {
-        setTimeout(() => { window.location.href = data.url; }, 1500);
-      }
-      return;
-    }
-
-    if (!data.url) throw new Error(data.error || 'No billing portal URL returned');
-    window.location.href = data.url;
-
-  } catch (err) {
-    console.error('Billing portal error:', err);
-    showToast('Error: ' + err.message, 'fa-solid fa-circle-exclamation', 'r');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-gear"></i> Manage Billing';
-  }
+// PayPal is the only supported gateway — subscribers manage billing directly on paypal.com.
+function openBillingPortal() {
+  window.open('https://www.paypal.com/myaccount/autopay/', '_blank');
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -315,14 +267,28 @@ function showToast(msg, icon, type) {
     const user = await requireAuth();
     if (!user) return;
 
-  // Auto-refresh after PayPal payment redirect to show updated Pro status
+  // After a PayPal redirect (?upgraded=1 / ?cancelled=1), capture the flags once
+  // and strip the query string immediately — before any async work — so a page
+  // refresh (or the reward modal's own DOM churn) can never re-trigger this branch.
   const sp = new URLSearchParams(window.location.search);
-  if (sp.get('upgraded') === '1') {
-    // Wait a moment for webhook to process, then refresh
-    setTimeout(() => location.reload(), 1500);
+  const justUpgraded  = sp.get('upgraded') === '1';
+  const justCancelled = sp.get('cancelled') === '1';
+  if (justUpgraded || justCancelled) {
+    window.history.replaceState({}, '', window.location.pathname);
   }
 
   currentProfile = await getProfile(user.id);
+
+  // The PayPal webhook may not have processed yet when we land back here —
+  // poll the (cache-busted) profile for a few seconds until it reflects Pro,
+  // instead of blindly reloading the page (which caused the old infinite loop).
+  if (justUpgraded) {
+    for (let attempt = 0; attempt < 5 && currentProfile?.plan !== 'pro'; attempt++) {
+      await new Promise(r => setTimeout(r, 1200));
+      _cacheInvalidate('profile:' + user.id);
+      currentProfile = await getProfile(user.id);
+    }
+  }
 
   // Apply the user's saved theme before anything else renders
   applyProfileTheme(currentProfile);
@@ -421,11 +387,12 @@ function showToast(msg, icon, type) {
     document.getElementById('freePlanBtn').textContent = 'Current Plan';
   }
 
-    // ── Fire the Pro celebration modal on successful upgrade ──
-  if (sp.get('upgraded') === '1') {
+    // ── Fire the Pro celebration modal on successful upgrade (once — the URL is
+    //    already stripped above, so a refresh won't re-enter this branch) ──
+  if (justUpgraded) {
     setTimeout(() => _openRewardModal(), 700);
   }
-  if (sp.get('cancelled') === '1') {
+  if (justCancelled) {
     setTimeout(() => showToast('Checkout cancelled — still on Free plan.', 'fa-solid fa-circle-info', ''), 600);
   }
   } finally {

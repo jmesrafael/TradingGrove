@@ -13,7 +13,7 @@ function setPlan(plan) {
   const btn = document.getElementById('proPlanBtn');
   if (btn && !btn.disabled) {
     document.getElementById('proBtnText').textContent =
-      plan === 'annual' ? 'Upgrade to Pro — $10/mo billed $120/yr' : 'Upgrade to Pro — $15/mo';
+      plan === 'annual' ? 'Upgrade to Pro · $10/mo billed $120/yr' : 'Upgrade to Pro · $15/mo';
   }
 }
 
@@ -24,35 +24,11 @@ function toggleFaq(btn) {
   if (!open) item.classList.add('open');
 }
 
+// PayPal is the only supported gateway — send the user to /subscription to
+// pick a plan and check out there, rather than starting a Stripe checkout here.
 async function upgradeToPro() {
-  const btn = document.getElementById('proPlanBtn');
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Redirecting to checkout…</span>';
-
-  try {
-    const { data: { session } } = await db.auth.getSession();
-    if (!session) { location.href = '/auth'; return; }
-
-    const lookupKey = selectedPlan === 'annual' ? 'tradinggrove_pro_annual' : 'tradinggrove_pro_monthly';
-
-    const res = await fetch(SUPABASE_URL + '/functions/v1/create-checkout', {
-      method:  'POST',
-      headers: { 'Authorization': 'Bearer ' + session.access_token, 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ lookup_key: lookupKey }),
-    });
-    const data = await res.json();
-
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      throw new Error(data.error || 'Could not create checkout session.');
-    }
-  } catch (err) {
-    const btn2 = document.getElementById('proPlanBtn');
-    btn2.disabled = false;
-    btn2.innerHTML = '<i class="fa-solid fa-rocket"></i><span id="proBtnText">' +
-      (selectedPlan === 'annual' ? 'Upgrade to Pro — $10/mo billed $120/yr' : 'Upgrade to Pro — $15/mo') + '</span>';
-  }
+  const { data: { session } } = await db.auth.getSession();
+  location.href = session ? '/subscription' : '/auth';
 }
 
 (async () => {

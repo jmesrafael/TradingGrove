@@ -54,10 +54,19 @@ function _calcForex(){const pair=document.getElementById('cPair').value||'EURUSD
 function _forexClear(){['fOutRiskAmt','fOutRiskPct','fOutLots','fOutLotType','fOutUnits','fOutPipVal','fOutPipValSub','fOutSlPips','fOutPipSize'].forEach(k=>_sv(k,'0'));const slInfoEl=document.getElementById('fSlInfo');if(slInfoEl)slInfoEl.style.display='none';document.getElementById('fPnlSec').style.display='none';_updateRR(null);}
 document.addEventListener('DOMContentLoaded',()=>{document.getElementById('cAcctCurrency')?.addEventListener('change',()=>{const acctCcy=document.getElementById('cAcctCurrency').value,pre=document.getElementById('fBalancePre');if(pre)pre.textContent=CURRENCY_SYMBOLS[acctCcy]||'$';if(fRiskMode==='usd'){const suf=document.getElementById('fRiskSuf');if(suf)suf.textContent=CURRENCY_SYMBOLS[acctCcy]||'$';}cCalc();});});
 
-const PAGES={calculator:{title:'Free Crypto & Forex Risk Calculator | TradingGrove',file:'pages/calculator.html'},'crypto-calculator':{title:'Free Crypto Position Size Calculator | TradingGrove',file:'pages/crypto-calculator.html'},'forex-calculator':{title:'Free Forex Lot Size Calculator | TradingGrove',file:'pages/forex-calculator.html'}};
-async function loadPage(pageName){const page=PAGES[pageName];if(!page){showHomePage();return;}try{const response=await fetch(page.file);if(!response.ok)throw new Error('Page not found');const html=await response.text();document.getElementById('pageTitle').textContent=page.title;document.getElementById('pageContent').querySelector('.pw').innerHTML=html;document.getElementById('homePage').style.display='none';document.getElementById('pageContent').style.display='block';if(pageName==='crypto-calculator'){cLoadDefaults();cCalc();}else if(pageName==='forex-calculator'){cLoadDefaults();setTimeout(()=>{fSetRiskMode(fRiskMode);cCalc();},100);}else if(pageName==='calculator'){cLoadDefaults();cCalc();if(window.location.hash.includes('forex'))setTimeout(()=>cSetAsset('forex'),100);}window.scrollTo(0,0);}catch(error){console.error('Error loading page:',error);showHomePage();}}
+const PAGES={calculator:{title:'Free Crypto & Forex Risk Calculator | TradingGrove',file:'pages/calculator.html'},'crypto-calculator':{title:'Free Crypto Position Size Calculator | TradingGrove',file:'pages/crypto-calculator.html'}};
+async function loadPage(pageName){const page=PAGES[pageName];if(!page){showHomePage();return;}try{const response=await fetch(page.file);if(!response.ok)throw new Error('Page not found');const html=await response.text();document.getElementById('pageTitle').textContent=page.title;document.getElementById('pageContent').querySelector('.pw').innerHTML=html;document.getElementById('homePage').style.display='none';document.getElementById('pageContent').style.display='block';if(pageName==='crypto-calculator'){cLoadDefaults();cCalc();}else if(pageName==='calculator'){cLoadDefaults();cCalc();if(window.location.hash.includes('forex'))setTimeout(()=>cSetAsset('forex'),100);}window.scrollTo(0,0);}catch(error){console.error('Error loading page:',error);showHomePage();}}
 function showHomePage(){document.getElementById('pageTitle').textContent='TradingGrove | A trading journal that helps you understand your own trading.';document.getElementById('homePage').style.display='block';document.getElementById('pageContent').style.display='none';window.scrollTo(0,0);}
-window.addEventListener('hashchange',()=>{const hash=window.location.hash.slice(1);const pageName=hash.split('#')[0];if(pageName&&PAGES[pageName])loadPage(pageName);else showHomePage();});
+window.addEventListener('hashchange',()=>{
+  const hash=window.location.hash.slice(1);
+  const pageName=hash.split('#')[0];
+  if(pageName&&PAGES[pageName]){loadPage(pageName);return;}
+  // Not a calculator sub-page hash (e.g. an in-page section anchor like #features).
+  // Only reset to the home view when actually leaving a sub-page — otherwise let
+  // the browser's native smooth-scroll handle the anchor without forcing scrollTo(0,0).
+  const onSubPage=document.getElementById('pageContent').style.display==='block';
+  if(onSubPage)showHomePage();
+});
 window.addEventListener('load',()=>{const hash=window.location.hash.slice(1);const pageName=hash.split('#')[0];if(pageName&&PAGES[pageName])loadPage(pageName);});
 
 // Inline handlers in HTML call these by global name.

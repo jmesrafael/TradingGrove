@@ -404,7 +404,7 @@ const { data: newRow } = await db
         user_id: (await db.auth.getUser()).data.user?.id,
         strategies: ['Scalp', 'Breakout', 'FVG'],
         timeframes:  ['1h', '4h', '1D'],
-        pairs:       ['EURUSD', 'BTCUSDT', 'XAUUSD'],
+        pairs:       ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'],
         moods:       ['Confident', 'Neutral', 'Anxious'],
         mood_colors: {
           'Confident': '#19c37d',

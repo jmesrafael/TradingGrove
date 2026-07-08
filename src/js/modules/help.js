@@ -20,7 +20,7 @@ const FAQ=[
     category:'Getting Started',icon:'fa-solid fa-rocket',color:'cat-teal',
     items:[
       {q:'What is TradingGrove?',a:'TradingGrove is a trading journal app that helps you track trades, analyze performance, and build better habits. You can log every trade with details like entry, exit, PnL, strategy, mood, and screenshots.',tags:['journal','start','what']},
-      {q:'How do I create my first journal?',a:'From the Dashboard, click <strong>+ New Journal</strong>. Give it a name (e.g. "Forex", "Crypto"), set an optional starting capital, and click Create. You can make multiple journals to separate different markets or strategies.',tags:['journal','create','start']},
+      {q:'How do I create my first journal?',a:'From the Dashboard, click <strong>+ New Journal</strong>. Give it a name (e.g. "Spot", "Futures"), set an optional starting capital, and click Create. You can make multiple journals to separate different markets or strategies.',tags:['journal','create','start']},
       {q:'Can I use TradingGrove on mobile?',a:'Yes! TradingGrove is fully responsive and works in any modern mobile browser. For the best experience, open it in Chrome or Safari on your phone.',tags:['mobile','app','phone']},
       {q:'Is my data safe?',a:'Your data is stored securely using Supabase with row-level security. Only you can access your journals and trades. We never sell your data. See our <a href="/privacy">Privacy Policy</a> for full details.',tags:['security','safe','data','privacy']},
     ]
