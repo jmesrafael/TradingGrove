@@ -260,6 +260,7 @@ function populateSettings(){
   document.getElementById('js-capital').value=journalObj.capital||'';
   document.getElementById('showPnlToggle').classList.toggle('on',journalObj.show_pnl!==false);
   document.getElementById('showCapToggle').classList.toggle('on',journalObj.show_capital!==false);
+  document.getElementById('showEqToggle').classList.toggle('on',journalObj.show_equity!==false);
   const aOn=localStorage.getItem('tl_analytics_on')!=='false';
   const sw=document.getElementById('analyticsToggleSwitch');if(sw)sw.classList.toggle('on',aOn);
   renderPinSection();renderTagLists();renderMoodGrid();renderExportImport();dllPopulateSettings();clearDirty();
@@ -297,7 +298,7 @@ async function saveJournalSettings(){
   }
   catch(e){showToast('Save failed: '+e.message,'fa-solid fa-circle-exclamation','red');}
 }
-async function toggleFlag(field){if(!requireUnlocked())return;const cur=journalObj[field]!==false;journalObj[field]=!cur;document.getElementById(field==='show_pnl'?'showPnlToggle':'showCapToggle').classList.toggle('on',!cur);await updateJournal(journalId,{[field]:!cur});showToast('Display setting updated.','fa-solid fa-circle-check','green');}
+async function toggleFlag(field){if(!requireUnlocked())return;const cur=journalObj[field]!==false;journalObj[field]=!cur;const toggleId={show_pnl:'showPnlToggle',show_capital:'showCapToggle',show_equity:'showEqToggle'}[field];document.getElementById(toggleId).classList.toggle('on',!cur);await updateJournal(journalId,{[field]:!cur});showToast('Display setting updated.','fa-solid fa-circle-check','green');}
 function renderTagLists(){renderTagList('strategies','stratList');renderTagList('timeframes','tfList');renderTagList('pairs','pairList');}
 function renderTagList(key,listId){const list=settings?.[key]||[];document.getElementById(listId).innerHTML=list.map(t=>`<span class="stag"><span class="stag-lbl" ondblclick="startRenameTag('${key}','${esc(t)}',this)">${esc(t)}</span><button class="ren" title="Rename" onclick="startRenameTag('${key}','${esc(t)}',this.previousElementSibling)"><i class="fa-solid fa-pen" style="font-size:8px"></i></button><button class="rm" onclick="removeTag('${key}','${esc(t)}')"><i class="fa-solid fa-xmark" style="font-size:9px"></i></button></span>`).join('');}
 function startRenameTag(key,oldVal,labelEl){

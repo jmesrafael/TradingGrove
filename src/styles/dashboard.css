@@ -121,10 +121,12 @@ main{padding:32px;max-width:1140px;margin:0 auto}
 .choose-journal-row input{accent-color:var(--accent2)}
 .jcard .cap{font-size:13px;color:var(--text);font-weight:600;display:flex;align-items:center;gap:4px;margin-top:3px;flex-shrink:0}
 .pnl-row{display:flex;align-items:baseline;gap:5px;margin-top:4px;flex-shrink:0}
-.jcard-metrics-row{display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
-.jcard-metrics-col{min-width:0}
-.jcard-eq{width:88px;height:34px;flex-shrink:0}
-@media(max-width:480px){.jcard-eq{width:64px;height:28px}}
+.jcard-metrics-row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.jcard-metrics-col{min-width:0;flex:1}
+/* Fixed-size positioned container is what keeps Chart.js responsive mode from
+   expanding the canvas to fill the whole card. */
+.jcard-eq-wrap{position:relative;width:112px;height:46px;flex-shrink:0;pointer-events:none;opacity:.9}
+@media(max-width:480px){.jcard-eq-wrap{width:82px;height:38px}}
 .pnl-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
 .pnl-val{font-family:var(--font-mono,'Space Grotesk',sans-serif);font-size:17px;font-weight:700}
 .pnl-pos{color:var(--accent)}

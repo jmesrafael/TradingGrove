@@ -173,13 +173,13 @@ function renderJournals(){
     if((j.show_pnl!==false)&&pnl!=null){const cls=pnl>=0?'pnl-pos':'pnl-neg';const fmt=(pnl>=0?'+':'-')+'$'+Math.abs(pnl).toFixed(2);pnlHtml=`<div class="pnl-row"><span class="pnl-lbl">PNL</span><span class="pnl-val ${cls}">${fmt}</span></div>`;}
     const locked=isJournalLocked(j,currentProfile);
     const lockedBadge=locked?`<span class="journal-locked-badge" title="Read-only — subscription expired"><i class="fa-solid fa-lock"></i> Locked</span>`:'';
-    const hasEq=(pnlSeries[j.id]||[]).length>=2;
-    const eqCanvas=hasEq?`<canvas class="jcard-eq" id="eq_${j.id}"></canvas>`:'';
+    const hasEq=(j.show_equity!==false)&&(pnlSeries[j.id]||[]).length>=2;
+    const eqBlock=hasEq?`<div class="jcard-eq-wrap"><canvas id="eq_${j.id}"></canvas></div>`:'';
     return`<div class="jcard${locked?' jcard-locked':''}" data-id="${j.id}" style="animation-delay:${i*.06}s">
       <i class="fa-solid fa-grip-dots-vertical drag-handle" title="Drag to reorder"></i>
       <div class="jcard-body">
         <div><div class="jcard-top"><h3>${esc(j.name)}</h3>${pin}${lockedBadge}</div>
-          <div class="jcard-metrics-row"><div class="jcard-metrics-col">${cap}${pnlHtml}</div>${eqCanvas}</div>
+          <div class="jcard-metrics-row"><div class="jcard-metrics-col">${cap}${pnlHtml}</div>${eqBlock}</div>
         </div>
         <button class="open-btn" onclick="goJournal('${j.id}')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Journal</button>
       </div>
