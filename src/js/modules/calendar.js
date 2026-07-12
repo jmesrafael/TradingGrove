@@ -184,7 +184,6 @@ function renderMonth(){
   const tradeWR=pnlTrades.length>0?winTradeCount/pnlTrades.length*100:null;
   const rVals=allMonthTrades.filter(t=>t.r!==undefined&&t.r!==''&&t.r!==null&&!isNaN(parseFloat(t.r))).map(t=>parseFloat(t.r));
   const totalR=rVals.reduce((s,v)=>s+v,0);
-  const avgR=rVals.length>0?totalR/rVals.length:null;
   const winR=rVals.filter(v=>v>0).reduce((s,v)=>s+v,0);
   const lossR=Math.abs(rVals.filter(v=>v<0).reduce((s,v)=>s+v,0));
 
@@ -201,10 +200,6 @@ function renderMonth(){
     const wrEl=document.getElementById('sumWR');
     wrEl.textContent=tradeWR!==null?tradeWR.toFixed(0)+'%':'—';
     wrEl.style.color=tradeWR!==null?(tradeWR>=50?G:R):'';
-    // Avg R
-    const avgREl=document.getElementById('sumAvgR');
-    avgREl.textContent=avgR!==null?(avgR>=0?'+':'')+avgR.toFixed(2)+'R':'—';
-    avgREl.style.color=avgR!==null?(avgR>0?G:avgR<0?R:'var(--muted)'):'';
     // Total R
     const totalREl=document.getElementById('sumTotalR');
     totalREl.textContent=rVals.length>0?(totalR>=0?'+':'')+totalR.toFixed(2)+'R':'—';
