@@ -6,9 +6,9 @@ WEBSITE PURPOSE & MISSION
 ================================================================================
 TradingGrove is a professional trading platform designed to help traders master risk
 management and maintain consistent trading discipline. The platform combines free
-calculators with a comprehensive trading journal, enabling traders to calculate
-position sizes precisely before each trade and log results to discover patterns
-and strategies that work.
+position-sizing calculators with a full cloud-synced trading journal, enabling
+traders to calculate position sizes precisely before each trade, log every result,
+and use built-in analytics to discover which patterns and strategies actually work.
 
 Target Users:
 - Cryptocurrency traders (Bitcoin, Altcoins, major digital assets)
@@ -19,113 +19,91 @@ Core Philosophy:
 Position sizing and risk management are the foundation of sustainable trading.
 Most traders fail because they don't calculate risk before trading, leading to
 over-leverage and blown accounts. TradingGrove eliminates guesswork and emotions
-by providing exact calculations instantly.
+by providing exact calculations instantly, then closes the loop with a journal
+that proves (with data) whether the trader is actually following their plan.
 
 
 MAIN FEATURES & FUNCTIONALITY
 ================================================================================
 
-1. CRYPTO POSITION SIZE CALCULATOR
------------------------------------
+1. POSITION CALCULATOR (Crypto / Forex toggle)
+------------------------------------------------
 Purpose: Calculate exact position size, leverage requirements, and risk metrics
-for cryptocurrency trades.
+for crypto and forex trades from one combined tool. A dedicated standalone
+Crypto Calculator page is also available.
 
-Key Inputs:
-- Account Capital: Your total trading account balance in USD
-- Risk Per Trade: Amount willing to lose per trade (% or fixed USD)
+Crypto Mode - Key Inputs:
+- Account Capital: Total trading account balance in USD
+- Risk Per Trade: % of account or fixed USD amount (toggle)
 - Entry Price: Exact price at which you enter the trade
-- Stop Loss: Distance from entry (price mode or % mode)
-- Take Profit: Price target or % distance from entry
-- Leverage: 1x to 500x (controls margin requirement)
+- Stop Loss: Price or % distance from entry (toggle)
+- Take Profit: Price or % distance from entry (toggle)
+- Leverage: 1x to 500x
 
-Key Outputs:
-- Risk (Max Loss): Exact dollar amount you'll lose if stopped out
+Crypto Mode - Key Outputs:
+- Risk (Max Loss): Exact dollar amount lost if stopped out
 - Target Profit: Exact profit if take profit is hit
-- Capital Required (Margin): How much capital needed to hold position
-- Risk/Reward Ratio: Ratio of potential loss to profit
-- Leverage Display: Shows actual position control with chosen leverage
+- Capital Required (Margin): Capital needed to hold the position
+- Risk/Reward Meter: Poor / Average / Good / Great (3R+) rating, not just a raw ratio
 
-Real-Time Results:
-- Calculations update instantly as you adjust inputs
-- No signup required - completely free
-- Results save to browser localStorage for quick access next session
+Forex Mode - Key Inputs:
+- Currency Pair: Majors, minors/crosses, metals (XAU/XAG), and indices (US30, NAS100)
+- Account Currency: 8 supported account currencies
+- Account Balance, Risk % or fixed $ (toggle)
+- Entry Price, Stop Loss and Take Profit in pips or exact price (toggle)
 
-Advantages Over Manual Calculation:
-- Zero math errors
-- Handles leverage automatically
-- Shows exact margin requirement upfront
-- Displays R:R ratio instantly
-- Saves defaults for repeated calculations
-- Speed: Get results in seconds instead of minutes
+Forex Mode - Key Outputs:
+- Money at Risk, Lot Size, Units, Pip Value, Target Profit
 
-
-2. FOREX LOT SIZE CALCULATOR
-----------------------------
-Purpose: Calculate exact lot size, pip value, and risk metrics for forex pairs
-across all major, minor, and exotic pairs.
-
-Key Inputs:
-- Currency Pair: Select from 30+ major and minor forex pairs
-- Account Currency: Base currency of your trading account
-- Account Balance: Total account balance in account currency
-- Risk Per Trade: % of account or fixed dollar amount
-- Entry Price: Exact entry level on the chart
-- Stop Loss: Pips distance or exact price level
-- Take Profit: Pips distance or exact price level
-
-Key Outputs:
-- Money at Risk: Dollar amount lost if stopped out
-- Lot Size: Micro (1K), Mini (10K), or Standard (100K) lot type
-- Units: Exact number of units for the calculated lot size
-- Pip Value: Dollar value per pip for chosen pair and lot size
-- Target Profit: Exact profit if take profit level is hit
-- Pip Value (Total): Total pip value for your full position
-- Risk/Reward Ratio: Statistical edge calculator
-
-Advanced Features:
-- Automatic pip detection for all pairs (EUR/USD = 0.0001 pip, USD/JPY = 0.01)
-- Handles cross pairs and exotic currencies
-- Shows SL distance in pips for reference
-- Displays contract specifications per pair
-- P&L section reveals both risk and reward sides
-
-Advantages Over Manual Calculation:
-- Eliminates pip value errors (most common mistake)
-- Automatic conversion for all account currencies
-- Handles pair-specific pip decimals
-- Shows cleanest lot size option
-- Instantly reveals if position is viable for account size
+Shared Features:
+- Real-time recalculation as inputs change
+- No signup required, free and unlimited
+- "Set Default" saves risk settings for next session
+- Zero math errors, instant margin/pip-value visibility
 
 
-3. TRADING JOURNAL SYSTEM
--------------------------
-Purpose: Log every trade to identify patterns, profitable strategies, and
-areas of improvement. Data-driven trading replaces gut feeling.
+2. TRADING JOURNAL (fully built, cloud-synced)
+------------------------------------------------
+Purpose: Log every trade, plan sessions before trading, and let built-in
+analytics reveal what's actually working. This is a complete SPA-style app
+(not a "coming soon" feature) reached via /journal, with a sidebar covering:
 
-Planned Features (coming soon):
-- Trade entry logging (pair, entry price, lot size, R:R)
-- Trade exit logging (exit price, profit/loss, date)
-- Strategy tagging (scalp, swing, news trade, etc.)
-- Win/loss tracking
-- Win rate calculation
-- Average winner/loser analysis
-- Expectancy calculation
-- Monthly performance reports
-- Drawdown tracking
-- Strategy performance breakdown
+- Logs: Trade entry/edit with date & time, pair, position (long/short),
+  strategy tags, timeframe tags, PnL, R-factor, confidence rating (1-10),
+  mood tags, free-text notes, pinning, and optional screenshot attachments
+  (Pro tier, stored in Cloudflare R2 via presigned uploads)
+- Pre-Session: Pre-trade checklist, mood/bias capture, and trade "intents"
+  that can later be linked to the trades actually taken
+- Calendar: Day-by-day view of trading activity and results
+- Notes: Freeform custom notes tied to the journal
+- Analytics: Win rate, profit factor, win/loss streaks, average
+  winner/average loser, rolling win rate (last 20 trades), and breakdowns
+  by timeframe, hour, mood, and confidence, plus auto-generated insight
+  text (e.g., outlier-loss detection, confidence-calibration checks)
+- Settings: Per-journal configuration, including optional PIN protection
+  and an equity display toggle
+
+Multiple Journals:
+- 1 journal on the Free plan, unlimited journals on Pro
+- Each journal can be independently PIN-protected
 
 How It Helps:
-- Reveals which setups actually work
-- Identifies emotional trade patterns
-- Shows real profitability (not screen captures)
-- Highlights best performing pairs/strategies
-- Enables course corrections based on data
-- Builds accountability and discipline
+- Reveals which setups actually work, backed by real analytics (not guesses)
+- Identifies emotional trade patterns via mood/confidence tracking
+- Shows real profitability across every logged trade
+- Highlights best performing pairs, timeframes, and strategies
+- Enables course corrections based on data, not gut feel
+- Builds accountability and discipline through pre-session planning
 
 
-4. EDUCATIONAL RESOURCES
-------------------------
-Risk Management Fundamentals Tips:
+3. EDUCATIONAL & CONTENT PAGES
+------------------------------------------------
+- About page
+- Blog (live posts, e.g. "Welcome to TradingGrove")
+- Help / FAQ page
+- Privacy Policy, Terms of Service, Refund Policy, Security page
+
+Risk Management Fundamentals (still core teaching points):
 - Risk 1-2% per trade (professional standard)
 - Aim for 2:1 reward-to-risk minimum
 - Leverage cuts both ways
@@ -133,39 +111,42 @@ Risk Management Fundamentals Tips:
 - Protect capital first
 - Track every trade
 
-FAQ & Knowledge Base:
-Comprehensive answers to:
-- Why pre-calculating position size is critical
-- How leverage affects position sizing
-- Pip value variations by pair
-- Lot size selection (micro vs mini vs standard)
-- Percentage vs fixed dollar risk modes
-- How to achieve sustainable profitability
-
 
 TECHNICAL SPECIFICATIONS
 ================================================================================
 
+Stack:
+- Vanilla HTML/CSS/JS front end (no React/Vue framework) - hand-rolled DOM
+  manipulation, per-page JS modules in src/js/modules/
+- Build step (build.js) flattens src/ into public/ for deployment
+- Hosted on Vercel
+
+Backend & Data:
+- Supabase (Postgres + Row Level Security on every user table)
+- Core tables: profiles, journals, journal_settings, trades, trade_images,
+  custom_notes, pre_sessions, presession_checklist_sets/items/state,
+  trade_intents, referrals
+- Trade screenshots stored in Cloudflare R2 via a Supabase Edge Function
+  issuing presigned upload URLs
+- Additional edge functions: stripe-webhook, paypal-webhook, create-checkout,
+  create-paypal-subscription, billing-portal, apply-referral,
+  grant-referral-reward, delete-account
+- Cloud sync is now standard - data lives in Supabase, not just browser
+  localStorage (calculators still use localStorage for saved defaults)
+
+Authentication:
+- Supabase Auth: email/password plus Google OAuth
+- Password reset and email confirmation flows
+
 Supported Markets:
 CRYPTO:
-- All major cryptocurrencies (Bitcoin, Ethereum, etc.)
 - Any crypto/USD pair
 - Leverage support: 1x to 500x
-- Both margin and spot trading calculations
 
 FOREX:
-- EUR/USD, GBP/USD, AUD/USD, NZDUSD, USD/CAD, USD/CHF, USD/JPY (Majors)
-- All cross pairs (EUR/GBP, GBP/JPY, AUD/NZD, etc.)
-- Exotic pairs (XAUUSD/Gold, XAGUSD/Silver)
-- Indices (US30/Dow, NAS100/Nasdaq)
-- Account currencies: USD, EUR, GBP, JPY, CHF, AUD, CAD, NZD
+- Majors, minors/crosses, metals (XAU/XAG), indices (US30, NAS100)
+- Account currencies: 8 supported (USD, EUR, GBP, JPY, CHF, AUD, CAD, NZD)
 - Automatic pip detection per pair
-
-Browser Storage:
-- Defaults saved locally (defaults, previous calculations)
-- No cloud sync required
-- Instant loading of saved values
-- Privacy: All data stays on user's device
 
 
 USER INTERFACE & EXPERIENCE
@@ -173,29 +154,20 @@ USER INTERFACE & EXPERIENCE
 
 Design Philosophy:
 - Clean, professional interface
-- No account creation required for calculators
+- No account creation required for calculators; account required for the journal
 - Real-time calculation on input change
-- Mobile responsive
-- Dark theme for extended trading hours
-- Clear visual hierarchy
+- Mobile responsive with dedicated mobile navigation (hamburger/slide-in sidebar)
+- Dark theme by default, with a light theme toggle saved per profile
+- Fonts: Outfit (headings) + Inter (body); Space Grotesk on pricing page
+- Font Awesome 6.5.1 icon set
 
 Navigation:
-- Main homepage with hero section
-- Crypto calculator page
-- Forex calculator page
-- Tips section on each calculator
-- FAQ section
-- Trading journal entry point
-- Pricing information
-- CTA to Start Journaling
-
-Accessibility:
-- Question mark (?) tooltips on every field
-- Descriptive placeholders
-- Clear input labels
-- Real-time error prevention
-- Non-technical language
-- Outfit font throughout (professional, modern)
+- Landing page (hero, feature overview)
+- Position Calculator (crypto/forex toggle) + standalone Crypto Calculator
+- Journal app (Logs, Pre-Session, Calendar, Notes, Analytics, Settings)
+- Dashboard
+- Pricing / Subscription / Payment Method / Profile pages
+- About, Blog, Help/FAQ, Privacy, Terms, Refund, Security pages
 
 
 HOW IT HELPS TRADERS
@@ -207,7 +179,7 @@ HOW IT HELPS TRADERS
 
 2. ENFORCES DISCIPLINE
    Before: Emotional position sizing, revenge trading, account blow-ups
-   After: Pre-calculated sizes, consistent risk, emotion-free entries
+   After: Pre-calculated sizes, consistent risk, pre-session planning, emotion-free entries
 
 3. PREVENTS OVER-LEVERAGE
    Before: "I have $10k, so I can trade 10 BTC"
@@ -215,7 +187,8 @@ HOW IT HELPS TRADERS
 
 4. REVEALS TRUE PROFITABILITY
    Before: "I'm up $500 this week" (includes emotional decisions)
-   After: Journal shows real win%, expectancy, and which strategies work
+   After: Journal analytics show real win rate, profit factor, streaks, and which
+   strategies/timeframes/moods actually correlate with success
 
 5. SCALES ACCOUNT SAFELY
    Before: Risk same $ as account grows from $1k to $100k (reckless)
@@ -227,31 +200,38 @@ HOW IT HELPS TRADERS
 
 7. BUILDS CONFIDENCE
    Before: Entering trades with unknown risk
-   After: Knowing exact max loss before clicking buy
+   After: Knowing exact max loss before clicking buy, and having a full
+   trade history and analytics to lean on
 
 
 BUSINESS MODEL
 ================================================================================
 
-Free Services:
-- Crypto position size calculator (unlimited)
+Free Tier:
+- Crypto position calculator (unlimited)
 - Forex lot size calculator (unlimited)
-- Risk management education
-- FAQ knowledge base
-- Basic trading journal (free tier)
+- 1 trading journal with basic analytics
+- Risk management education, blog, FAQ
 
-Premium Services (Future):
-- Advanced journal features (strategy analytics, expectancy)
-- Trade statistics dashboard
-- Performance reports
-- Community features
-- API access for bots
+Pro Tier (live pricing):
+- Pro Monthly: $15/mo
+- Pro Annual: $120/yr ("Save $60")
+- Unlimited journals
+- Full analytics suite (streaks, breakdowns, insights)
+- Screenshot attachments on trades (Cloudflare R2 storage)
+- PIN-protected journals
+
+Payments:
+- PayPal is the live payment gateway (Stripe integration code exists in the
+  codebase but is currently disabled)
+- Billing portal, checkout, and subscription-management edge functions in place
+- Referral program: unique referral codes, referral counts, and rewards
+  tracked per profile
 
 Revenue Streams:
-- Freemium model (free calculators drive adoption)
-- Premium journaling subscriptions
-- Affiliate partnerships with brokers
-- White-label solutions for trading schools
+- Freemium model (free calculators drive adoption, free journal tier converts users)
+- Pro subscriptions (monthly/annual)
+- Referral-driven growth
 
 
 TARGET MARKET
@@ -277,54 +257,37 @@ Experience: Beginner to expert
 COMPETITIVE ADVANTAGES
 ================================================================================
 
-1. Free, no login required
-2. Real-time calculations
-3. Handles leverage automatically
-4. Automatic pip detection for all forex pairs
-5. Local storage (privacy, no data collection)
-6. Educational focus (teaches best practices)
-7. Combined calculator + journal ecosystem
-8. Mobile responsive
-9. Professional UI/UX
-10. Supports all account currencies
-
-
-KEY METRICS & IMPACT
-================================================================================
-
-What TradingGrove Measures:
-- Position size accuracy
-- Risk per trade (% of account)
-- Risk/Reward ratios achieved
-- Trade win rates
-- Monthly profitability
-- Strategy performance
-- Drawdown recovery
-- Account consistency
-
-Impact on Trader Success:
-- 87% of traders fail due to poor risk management
-- TradingGrove users who follow discipline: consistent profitability
-- Journal users vs. non-journal: 3x higher win rate
-- Traders using calculators: 10x fewer blown accounts
+1. Free, unlimited calculators with no login required
+2. Real-time calculations with an intuitive R:R meter
+3. Handles leverage automatically (up to 500x)
+4. Automatic pip detection for all forex pairs, metals, and indices
+5. Full cloud-synced journal with real analytics (not just a spreadsheet)
+6. Pre-session planning tools that link intent to actual executed trades
+7. Educational focus (teaches best practices throughout)
+8. Combined calculator + journal ecosystem in one account
+9. Mobile responsive, dark-theme-first professional UI/UX
+10. Supports all major account currencies and a referral growth loop
 
 
 FUTURE ROADMAP
 ================================================================================
 
-Phase 1 (Current):
-✓ Free calculators (crypto & forex)
-✓ Risk management education
-✓ Mobile responsive design
+Shipped:
+✓ Free crypto & forex calculators (500x leverage, full pair/metal/index coverage)
+✓ Full cloud-synced trading journal (Logs, Pre-Session, Calendar, Notes, Analytics)
+✓ Supabase auth (email/password + Google OAuth)
+✓ Pro subscription tier via PayPal (Monthly/Annual)
+✓ Referral program
+✓ Screenshot attachments via Cloudflare R2 (Pro)
+✓ PIN-protected journals (Pro)
+✓ Mobile responsive design, dark/light theme
 
-Phase 2 (In Development):
-- Advanced trading journal with analytics
-- Strategy performance breakdown
-- Win/loss statistics
-- Expectancy calculations
-- Monthly reports
+In Progress / Near-Term:
+- Stripe re-enablement alongside PayPal
+- Deeper analytics (expectancy, drawdown tracking, monthly reports)
+- Continued downgrade-enforcement and account-lifecycle polish
 
-Phase 3 (Planned):
+Planned:
 - Community features (strategy sharing)
 - Performance leaderboards
 - API for trading bots
@@ -332,7 +295,7 @@ Phase 3 (Planned):
 - Broker API connections
 - Mobile app (iOS/Android)
 
-Phase 4 (Vision):
+Vision:
 - AI-powered trade analysis
 - Predictive analytics
 - Automated risk monitoring
@@ -346,13 +309,13 @@ CALL TO ACTION
 For Traders:
 1. Use the free calculator before EVERY trade
 2. Save your default risk settings
-3. Start journaling trades immediately
-4. Review journal weekly to find patterns
-5. Adjust only what data shows isn't working
+3. Create an account and start journaling trades immediately
+4. Run a pre-session checklist before you trade
+5. Review journal analytics weekly to find patterns
+6. Adjust only what data shows isn't working
 
 For Trading Educators:
-- White-label the calculators
-- Integrate into your education platform
+- Integrate calculators and journaling into your education platform
 - Teach consistent risk management
 - See student success rates increase
 
@@ -367,8 +330,10 @@ CONCLUSION
 ================================================================================
 
 TradingGrove is the bridge between knowing you should calculate position sizes
-and actually doing it before every trade. It removes friction from the most
-important pre-trade decision: how much to risk.
+and actually doing it before every trade - and between logging trades and
+actually learning from them. It removes friction from the most important
+pre-trade decision (how much to risk) and closes the loop with a real,
+cloud-synced journal and analytics engine.
 
 The platform serves one purpose with relentless focus:
 Help traders survive, profit consistently, and build generational wealth through

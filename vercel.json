@@ -24,6 +24,8 @@
     { "source": "/refund",          "destination": "/refund.html" },
     { "source": "/profile",          "destination": "/profile.html" },
     { "source": "/payment-method",   "destination": "/payment-method.html" },
+    { "source": "/faq",              "destination": "/faq.html" },
+    { "source": "/features",         "destination": "/features.html" },
     { "source": "/about",            "destination": "/about.html" },
     { "source": "/security",         "destination": "/security.html" },
     { "source": "/blog",             "destination": "/blog.html" }
