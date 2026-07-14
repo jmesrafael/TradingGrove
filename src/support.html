@@ -1,0 +1,88 @@
+<!-- support.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradingGrove | Support</title>
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<script src="/favicon.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/lib/theme.js"></script>
+<script src="/js/lib/supabase-client.js"></script>
+<script src="/js/lib/track.js" defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
+<link rel="stylesheet" href="/styles/profile.css">
+<link rel="stylesheet" href="/styles/support.css">
+</head>
+<body>
+<div id="pageLoader"></div>
+
+<header>
+  <a href="/" class="logo">Trading<span>Grove</span></a>
+  <div class="hright">
+    <button class="btn-ghost" onclick="location.href='/dashboard'"><i class="fa-solid fa-arrow-left"></i> Dashboard</button>
+    <button class="btn-ghost" onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+  </div>
+</header>
+
+<main>
+  <div class="page-hdr">
+    <h1><i class="fa-solid fa-headset" style="color:var(--accent2);margin-right:10px"></i>Support</h1>
+    <p>Found a bug, missing a feature, or just have thoughts about TradingGrove? Tell us here. We read everything.</p>
+  </div>
+
+  <div class="section-grid">
+
+    <!-- New message -->
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-hdr-left">
+          <div class="card-hdr-icon icon-teal"><i class="fa-solid fa-paper-plane"></i></div>
+          <span class="card-title">Send us a message</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="field">
+          <label>Subject <span class="char-count" id="subjectCount">0 / 200</span></label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-tag ico"></i>
+            <input type="text" class="plain" id="supSubject" placeholder="e.g. Bug in the trade calendar" maxlength="200">
+          </div>
+        </div>
+        <div class="field" style="margin-top:14px">
+          <label>Message <span class="char-count" id="messageCount">0 / 5000</span></label>
+          <textarea id="supMessage" class="sup-textarea" placeholder="What happened, what did you expect, or what would make TradingGrove better for you?" maxlength="5000" rows="7"></textarea>
+        </div>
+        <div class="save-row" style="margin-top:16px">
+          <button class="btn-save" id="supSendBtn" onclick="sendSupportMessage()"><i class="fa-solid fa-paper-plane"></i> Send Message</button>
+          <span class="save-msg" id="supSendMsg"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Previous messages -->
+    <div class="card">
+      <div class="card-hdr">
+        <div class="card-hdr-left">
+          <div class="card-hdr-icon icon-teal"><i class="fa-solid fa-clock-rotate-left"></i></div>
+          <span class="card-title">Your previous messages</span>
+        </div>
+      </div>
+      <div class="card-body" id="supHistory">
+        <div class="sup-empty">Loading…</div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script src="/js/modules/support.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "tradinggrove-admin",
+  "private": true,
+  "description": "Local-only superadmin panel. Never deploy. build.js only copies src/, so this folder cannot reach production.",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "aws4fetch": "^1.0.20"
+  }
+}

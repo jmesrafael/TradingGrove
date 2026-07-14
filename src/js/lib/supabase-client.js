@@ -523,6 +523,7 @@ async function createTrade(userId, journalId, fields) {
     .select('*')
     .single();
   if (error) throw error;
+  window.tgTrack?.('trade_added');
   return data;
 }
 
@@ -610,6 +611,7 @@ async function addTradeImage(userId, tradeId, input) {
     const r2Result = await tryR2Upload(userId, tradeId, blob, fileName);
     if (r2Result.success) {
       console.log('%c✅ IMAGE SAVED TO R2', 'color: #19c37d; font-weight: bold; font-size: 14px');
+      window.tgTrack?.('image_uploaded', { store: 'r2', kb: sizeKB });
       return r2Result.data;
     }
 
@@ -618,6 +620,7 @@ async function addTradeImage(userId, tradeId, input) {
 
     const supabaseResult = await uploadToSupabaseStorage(userId, tradeId, blob, fileName);
     console.log('%c✅ IMAGE SAVED TO SUPABASE (FALLBACK)', 'color: #ff9500; font-weight: bold; font-size: 14px');
+    window.tgTrack?.('image_uploaded', { store: 'supabase', kb: sizeKB });
     return supabaseResult;
 
   } catch (error) {

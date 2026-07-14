@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradingGrove Admin | Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin.css">
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">Trading<span>Grove</span></div>
+    <div class="login-sub">Superadmin · local only</div>
+    <form id="loginForm">
+      <label for="u">Username</label>
+      <input id="u" type="text" autocomplete="username" autofocus>
+      <label for="p">Password</label>
+      <input id="p" type="password" autocomplete="current-password">
+      <button class="login-btn" type="submit">Log In</button>
+      <div class="login-err" id="err"></div>
+    </form>
+    <div class="login-note">This panel runs on 127.0.0.1 with the service role key from admin/.env. It is never deployed: build.js only ships src/.</div>
+  </div>
+</div>
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const err = document.getElementById('err');
+  err.textContent = '';
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: document.getElementById('u').value, password: document.getElementById('p').value })
+    });
+    if (res.ok) { location.href = '/'; return; }
+    const body = await res.json().catch(() => ({}));
+    err.textContent = body.error || 'Login failed';
+  } catch {
+    err.textContent = 'Server not reachable';
+  }
+});
+</script>
+</body>
+</html>

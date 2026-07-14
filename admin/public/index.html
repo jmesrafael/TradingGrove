@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradingGrove Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/admin.css">
+</head>
+<body>
+<div class="shell">
+
+  <aside class="side">
+    <div class="side-logo">Trading<span>Grove</span></div>
+    <div class="side-tag">Superadmin · local</div>
+    <button class="nav-btn active" data-view="users">👥 <span class="nav-lbl">Users</span></button>
+    <button class="nav-btn" data-view="analytics">📈 <span class="nav-lbl">Analytics</span></button>
+    <button class="nav-btn" data-view="reports">📨 <span class="nav-lbl">Reports</span><span class="cnt" id="newCnt" style="display:none">0</span></button>
+    <div class="side-foot">
+      <div class="mock-badge" id="mockBadge" style="display:none">MOCK DATA</div>
+      <button class="logout-btn" onclick="logout()">Log out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- USERS -->
+    <section class="view active" id="view-users">
+      <div class="view-hdr">
+        <div><h1>Users</h1><p id="usersSub">Loading…</p></div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <input class="search" id="userSearch" placeholder="Search email, name, plan…">
+          <button class="btn" onclick="loadUsers(true)">Refresh</button>
+        </div>
+      </div>
+      <div class="tiles" id="userTiles"></div>
+      <div class="card"><div class="tw" style="max-height:65vh;overflow-y:auto"><table id="usersTable">
+        <thead><tr>
+          <th>Email</th><th>Name</th><th>Plan</th><th>Type</th><th>Expires</th><th>Gateway</th>
+          <th class="num">Journals</th><th class="num">Trades</th><th class="num">Images</th>
+          <th>Storage</th><th>Joined</th><th>Last seen</th><th></th>
+        </tr></thead>
+        <tbody id="usersBody"><tr><td colspan="13" class="empty">Loading users…</td></tr></tbody>
+      </table></div></div>
+    </section>
+
+    <!-- ANALYTICS -->
+    <section class="view" id="view-analytics">
+      <div class="view-hdr">
+        <div><h1>Analytics</h1><p>Page visits and key actions from the app (app_events table)</p></div>
+        <select class="btn" id="daysSel" onchange="loadAnalytics()">
+          <option value="7">Last 7 days</option>
+          <option value="30" selected>Last 30 days</option>
+          <option value="90">Last 90 days</option>
+        </select>
+      </div>
+      <div id="analyticsWrap"><div class="empty">Loading…</div></div>
+    </section>
+
+    <!-- REPORTS -->
+    <section class="view" id="view-reports">
+      <div class="view-hdr">
+        <div><h1>Reports</h1><p>Support messages sent from the app's Support page</p></div>
+        <button class="btn" onclick="loadReports()">Refresh</button>
+      </div>
+      <div id="reportsWrap"><div class="empty">Loading…</div></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- grant modal -->
+<div class="modal-back" id="grantModal">
+  <div class="modal">
+    <h3>Grant Pro</h3>
+    <div class="m-sub" id="grantWho"></div>
+    <label>Validity (days)</label>
+    <input type="number" id="grantDays" min="1" max="3650" value="30">
+    <div class="grant-presets">
+      <button class="btn" onclick="setDays(7)">7d</button>
+      <button class="btn" onclick="setDays(30)">30d</button>
+      <button class="btn" onclick="setDays(90)">90d</button>
+      <button class="btn" onclick="setDays(365)">365d</button>
+    </div>
+    <label class="chk"><input type="checkbox" id="grantLifetime"> Lifetime (never expires)</label>
+    <div class="m-sub" style="margin:10px 0 0">Days stack on the current expiry, the same way paid renewals do.</div>
+    <div class="m-msg" id="grantMsg"></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeGrant()">Cancel</button>
+      <button class="btn primary" id="grantGo" onclick="doGrant()">Grant Pro</button>
+    </div>
+  </div>
+</div>
+
+<div id="tip"></div>
+<script src="/admin.js"></script>
+</body>
+</html>

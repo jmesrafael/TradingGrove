@@ -248,6 +248,7 @@ async function downloadAnalyticsPdf(){
   if(!page||!page.innerHTML.trim()||btn.disabled)return;
   const orig=btn.innerHTML;
   btn.disabled=true;
+  window.tgTrack?.('export_used',{type:'analytics_pdf'});
   btn.innerHTML='<i class="fa-solid fa-spinner" style="animation:spin 1s linear infinite"></i> Downloading…';
   try{
     const filename=`tradinggrove-analytics-${new Date().toISOString().split('T')[0]}.pdf`;

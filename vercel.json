@@ -19,6 +19,7 @@
     { "source": "/reset-password",  "destination": "/reset-password.html" },
     { "source": "/pricing",         "destination": "/pricing.html" },
     { "source": "/help",            "destination": "/help.html" },
+    { "source": "/support",         "destination": "/support.html" },
     { "source": "/terms",           "destination": "/terms.html" },
     { "source": "/privacy",         "destination": "/privacy.html" },
     { "source": "/refund",          "destination": "/refund.html" },

@@ -18,6 +18,8 @@ supabase/.env
 .env.development
 .env.production
 .env.*.local
+# Local superadmin service-role key - never commit
+admin/.env
 
 # ── Node / Package managers ───────────────────────────────
 node_modules/
