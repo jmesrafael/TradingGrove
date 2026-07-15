@@ -37,7 +37,7 @@ const cfg = {
     accountId: ENV.R2_ACCOUNT_ID || '',
     accessKeyId: ENV.R2_ACCESS_KEY_ID || '',
     secretAccessKey: ENV.R2_SECRET_ACCESS_KEY || '',
-    bucket: ENV.R2_BUCKET_NAME || 'trade-images',
+    bucket: ENV.R2_BUCKET_NAME || 'tradezona-images',
   },
 };
 const r2Configured = !!(cfg.r2.accountId && cfg.r2.accessKeyId && cfg.r2.secretAccessKey);
@@ -341,6 +341,25 @@ async function apiAnalytics(days) {
   return { days, totalEvents: events.length, dauToday, wau, eventsToday, visitsByPage, byType, daily, topUsers };
 }
 
+// ── Referrals ────────────────────────────────────────────────
+// Reward is a fixed 30 days of Pro per rewarded referral, mirroring
+// grantReferralReward() in supabase/functions/_shared/referral-utils.ts.
+const REFERRAL_REWARD_DAYS = 30;
+
+async function apiReferrals() {
+  if (cfg.mock) return mockData.referrals;
+  let edges;
+  try {
+    edges = await restAll('referrals?select=id,referrer_id,referred_user_id,status,reward_granted,created_at&order=created_at.desc', 1000, 20000);
+  } catch (e) {
+    if (e.code === '42P01' || /does not exist/i.test(e.message)) {
+      return { edges: [], rewardDays: REFERRAL_REWARD_DAYS, missingTable: true, message: 'referrals table not found (this is fine if you have not shipped referrals yet).' };
+    }
+    throw e;
+  }
+  return { edges, rewardDays: REFERRAL_REWARD_DAYS };
+}
+
 // ── Reports ──────────────────────────────────────────────────
 async function apiReports() {
   if (cfg.mock) return mockData.reports;
@@ -387,10 +406,21 @@ async function apiReportStatus(id, status) {
 // ── Mock fixtures (MOCK=1) ───────────────────────────────────
 const mockData = {
   users: [
-    { id: 'u1', email: 'sofia@example.com', name: 'Sofia T.', created_at: '2026-03-02T10:00:00Z', last_sign_in_at: '2026-07-13T21:14:00Z', plan: 'pro', plan_type: 'yearly', subscription_expires_at: '2027-03-02T10:00:00Z', payment_gateway: 'paypal', referral_count: 2, queued: false, journals: 3, trades: 412, images: 260, status: { label: 'pro', daysLeft: 231 } },
-    { id: 'u2', email: 'renz@example.com', name: 'Renz C.', created_at: '2026-05-18T08:30:00Z', last_sign_in_at: '2026-07-14T02:40:00Z', plan: 'pro', plan_type: 'monthly', subscription_expires_at: '2026-07-19T08:30:00Z', payment_gateway: 'paypal', referral_count: 0, queued: false, journals: 1, trades: 96, images: 41, status: { label: 'expiring', daysLeft: 5 } },
+    { id: 'u1', email: 'sofia@example.com', name: 'Sofia T.', created_at: '2026-03-02T10:00:00Z', last_sign_in_at: '2026-07-13T21:14:00Z', plan: 'pro', plan_type: 'yearly', subscription_expires_at: '2027-03-02T10:00:00Z', payment_gateway: 'paypal', referral_count: 3, queued: false, journals: 3, trades: 412, images: 260, status: { label: 'pro', daysLeft: 231 } },
+    { id: 'u2', email: 'renz@example.com', name: 'Renz C.', created_at: '2026-05-18T08:30:00Z', last_sign_in_at: '2026-07-14T02:40:00Z', plan: 'pro', plan_type: 'monthly', subscription_expires_at: '2026-07-19T08:30:00Z', payment_gateway: 'paypal', referral_count: 1, queued: false, journals: 1, trades: 96, images: 41, status: { label: 'expiring', daysLeft: 5 } },
     { id: 'u3', email: 'kian@example.com', name: 'Kian M.', created_at: '2026-06-25T15:00:00Z', last_sign_in_at: '2026-07-12T11:05:00Z', plan: 'free', plan_type: 'none', subscription_expires_at: null, payment_gateway: null, referral_count: 0, queued: false, journals: 1, trades: 23, images: 6, status: { label: 'free', daysLeft: null } },
+    { id: 'u4', email: 'ana@example.com', name: 'Ana P.', created_at: '2026-06-30T09:00:00Z', last_sign_in_at: '2026-07-10T08:00:00Z', plan: 'free', plan_type: 'none', subscription_expires_at: null, payment_gateway: null, referral_count: 0, queued: false, journals: 1, trades: 12, images: 3, status: { label: 'free', daysLeft: null } },
+    { id: 'u5', email: 'miguel@example.com', name: 'Miguel R.', created_at: '2026-07-08T14:00:00Z', last_sign_in_at: '2026-07-13T17:20:00Z', plan: 'free', plan_type: 'none', subscription_expires_at: null, payment_gateway: null, referral_count: 0, queued: false, journals: 1, trades: 4, images: 0, status: { label: 'free', daysLeft: null } },
   ],
+  referrals: {
+    rewardDays: 30,
+    edges: [
+      { id: 'r1', referrer_id: 'u1', referred_user_id: 'u2', status: 'rewarded', reward_granted: true, created_at: '2026-05-18T08:30:00Z' },
+      { id: 'r2', referrer_id: 'u1', referred_user_id: 'u3', status: 'pending', reward_granted: false, created_at: '2026-06-25T15:00:00Z' },
+      { id: 'r3', referrer_id: 'u1', referred_user_id: 'u4', status: 'rewarded', reward_granted: true, created_at: '2026-06-30T09:00:00Z' },
+      { id: 'r4', referrer_id: 'u2', referred_user_id: 'u5', status: 'pending', reward_granted: false, created_at: '2026-07-08T14:00:00Z' },
+    ],
+  },
   storage: { r2: { configured: false, bytes: 0, objects: 0 }, supabase: { bytes: 18874368, objects: 41 }, inlineLegacyImages: 2, totalBytes: 18874368, r2Configured: false },
   analytics: {
     days: 30, totalEvents: 1418, dauToday: 2, wau: 3, eventsToday: 37,
@@ -468,6 +498,7 @@ const server = http.createServer(async (req, res) => {
       if ((m = p.match(/^\/api\/users\/([\w-]+)\/storage$/)) && req.method === 'GET') {
         return sendJson(res, 200, await apiStorage(m[1]));
       }
+      if (p === '/api/referrals' && req.method === 'GET') return sendJson(res, 200, await apiReferrals());
       if (p === '/api/analytics' && req.method === 'GET') {
         const days = Math.min(Math.max(Number(url.searchParams.get('days')) || 30, 1), 365);
         return sendJson(res, 200, await apiAnalytics(days));

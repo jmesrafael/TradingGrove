@@ -2,6 +2,11 @@
 
 let USERS = [];
 let grantTarget = null;
+let REF = null; // { edges, rewardDays } once loaded
+let sortKey = 'created_at';
+let sortDir = 'desc';
+let activeChip = 'all';
+let focusedClusterId = null; // referrer (root) user id currently focused in the network view
 
 // ── plumbing ─────────────────────────────────────────────────
 async function api(path, opts = {}) {
@@ -37,44 +42,167 @@ function hideTip() { tip.style.display = 'none'; }
 document.addEventListener('mousemove', e => { if (tip.style.display === 'block') moveTip(e); });
 
 // ── nav ──────────────────────────────────────────────────────
-document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => {
+function goToView(view) {
+  const btn = document.querySelector(`.nav-btn[data-view="${view}"]`);
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b === btn));
-  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + btn.dataset.view));
-  if (btn.dataset.view === 'analytics') loadAnalytics();
-  if (btn.dataset.view === 'reports') loadReports();
-}));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + view));
+  if (view === 'analytics') loadAnalytics();
+  if (view === 'reports') loadReports();
+  if (view === 'referrals' && !REF) loadReferrals();
+}
+document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => goToView(btn.dataset.view)));
 
 // ── users ────────────────────────────────────────────────────
+// Single source of truth for "what does this plan status mean" - feeds
+// both the table badge and the referral-network node ring color, so the
+// two views always agree on what green/gold/red/gray mean.
+function statusMeta(status) {
+  const l = status?.label || 'free';
+  const map = {
+    'pro-lifetime': { text: 'Pro · Lifetime', ring: 'net-ring-good', badgeClass: 'pro-lifetime' },
+    pro: { text: 'Pro', ring: 'net-ring-good', badgeClass: 'pro' },
+    expiring: { text: `Pro · ${status?.daysLeft ?? '?'}d left`, ring: 'net-ring-warn', badgeClass: 'expiring' },
+    grace: { text: 'Grace', ring: 'net-ring-warn', badgeClass: 'grace' },
+    expired: { text: 'Expired', ring: 'net-ring-bad', badgeClass: 'expired' },
+    free: { text: 'Free', ring: 'net-ring-muted', badgeClass: 'free' },
+  };
+  return map[l] || { text: l, ring: 'net-ring-muted', badgeClass: l };
+}
 function badgeFor(u) {
-  const l = u.status?.label || (u.plan === 'pro' ? 'pro' : 'free');
-  const txt = { 'pro-lifetime': 'Pro · Lifetime', pro: 'Pro', expiring: `Pro · ${u.status.daysLeft}d left`, grace: 'Grace', expired: 'Expired', free: 'Free' }[l] || l;
-  return `<span class="badge ${l}">${esc(txt)}</span>`;
+  const m = statusMeta(u.status);
+  return `<span class="badge ${m.badgeClass}">${esc(m.text)}</span>`;
+}
+function initials(u) {
+  const src = (u.name || u.email || '?').trim();
+  const parts = src.split(/[\s@._-]+/).filter(Boolean);
+  return (parts.slice(0, 2).map(w => w[0]).join('') || '?').toUpperCase();
+}
+function copyEmail(e, email) {
+  navigator.clipboard?.writeText(email).catch(() => {});
+  showTip(e, 'Copied');
+  setTimeout(hideTip, 900);
+}
+function subLine(u) {
+  const parts = [];
+  if (u.plan_type === 'lifetime') {
+    parts.push('lifetime · never expires');
+  } else {
+    if (u.plan_type && u.plan_type !== 'none') parts.push(esc(u.plan_type));
+    if (u.subscription_expires_at) {
+      const days = u.status?.daysLeft;
+      parts.push(`ends ${fmtDate(u.subscription_expires_at)}${days != null ? ` (${days}d)` : ''}`);
+    }
+  }
+  if (u.payment_gateway) parts.push(esc(u.payment_gateway));
+  if (u.queued) parts.push('queued');
+  return parts.join(' · ');
+}
+
+// ── filter chips ──
+const CHIPS = [
+  { key: 'all', label: 'All', test: () => true },
+  { key: 'pro', label: 'Pro', test: s => s.label === 'pro' || s.label === 'pro-lifetime' },
+  { key: 'expiring', label: 'Expiring', test: s => s.label === 'expiring' },
+  { key: 'grace', label: 'Grace', test: s => s.label === 'grace' },
+  { key: 'expired', label: 'Expired', test: s => s.label === 'expired' },
+  { key: 'free', label: 'Free', test: s => s.label === 'free' },
+];
+function renderChips() {
+  const wrap = document.getElementById('userChips');
+  wrap.innerHTML = CHIPS.map(c => {
+    const n = USERS.filter(u => c.test(u.status || {})).length;
+    return `<button class="chip ${activeChip === c.key ? 'active' : ''}" onclick="setChip('${c.key}')">${c.label} <span class="chip-n">${n}</span></button>`;
+  }).join('');
+}
+function setChip(key) { activeChip = key; renderChips(); renderUsers(); }
+function passesFilters(u, q) {
+  const chip = CHIPS.find(c => c.key === activeChip) || CHIPS[0];
+  if (!chip.test(u.status || {})) return false;
+  if (!q) return true;
+  return [u.email, u.name, u.plan, u.plan_type, u.status?.label].join(' ').toLowerCase().includes(q);
+}
+
+// ── sorting ──
+function userSortValue(u, key) {
+  switch (key) {
+    case 'email': return (u.email || '').toLowerCase();
+    case 'expires': return u.plan_type === 'lifetime' ? Infinity : (u.subscription_expires_at ? new Date(u.subscription_expires_at).getTime() : -Infinity);
+    case 'journals': return u.journals || 0;
+    case 'trades': return u.trades || 0;
+    case 'images': return u.images || 0;
+    case 'referrals': return u.referral_count || 0;
+    case 'created_at': return new Date(u.created_at).getTime();
+    case 'last_sign_in_at': return u.last_sign_in_at ? new Date(u.last_sign_in_at).getTime() : -Infinity;
+    default: return 0;
+  }
+}
+function toggleSort(key) {
+  if (sortKey === key) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  else { sortKey = key; sortDir = key === 'email' ? 'asc' : 'desc'; }
+  renderUsers();
+}
+document.querySelectorAll('#usersTable thead th[data-sort]').forEach(th => th.addEventListener('click', () => toggleSort(th.dataset.sort)));
+function updateSortIndicators() {
+  document.querySelectorAll('#usersTable thead th[data-sort]').forEach(th => {
+    th.querySelector('.sort-ind').textContent = th.dataset.sort === sortKey ? (sortDir === 'asc' ? '▲' : '▼') : '';
+  });
 }
 
 function renderUsers() {
   const q = document.getElementById('userSearch').value.trim().toLowerCase();
-  const rows = USERS.filter(u => !q || [u.email, u.name, u.plan, u.plan_type, u.status?.label].join(' ').toLowerCase().includes(q));
+  let rows = USERS.filter(u => passesFilters(u, q));
+  rows = rows.slice().sort((a, b) => {
+    const av = userSortValue(a, sortKey), bv = userSortValue(b, sortKey);
+    const cmp = typeof av === 'string' ? av.localeCompare(bv) : (av < bv ? -1 : av > bv ? 1 : 0);
+    return sortDir === 'asc' ? cmp : -cmp;
+  });
   const body = document.getElementById('usersBody');
-  if (!rows.length) { body.innerHTML = '<tr><td colspan="13" class="empty">No users match.</td></tr>'; return; }
+  if (!rows.length) { body.innerHTML = '<tr><td colspan="10" class="empty">No users match.</td></tr>'; updateSortIndicators(); return; }
   body.innerHTML = rows.map(u => `
     <tr data-id="${u.id}">
-      <td class="email">${esc(u.email)}</td>
-      <td>${esc(u.name || '—')}</td>
-      <td>${badgeFor(u)}</td>
-      <td>${esc(u.plan_type)}${u.queued ? ' · queued' : ''}</td>
-      <td>${u.plan_type === 'lifetime' ? 'never' : fmtDate(u.subscription_expires_at)}</td>
-      <td>${esc(u.payment_gateway || '—')}</td>
+      <td>
+        <div class="u-cell">
+          <div class="u-avatar">${esc(initials(u))}</div>
+          <div class="u-info">
+            <div class="u-name">${esc(u.name || '(no name)')}</div>
+            <div class="u-email" onclick="copyEmail(event,'${esc(u.email)}')" title="Click to copy">${esc(u.email)}</div>
+          </div>
+        </div>
+      </td>
+      <td>
+        <div>${badgeFor(u)}</div>
+        <div class="sub-line">${subLine(u) || '&nbsp;'}</div>
+      </td>
       <td class="num">${u.journals}</td>
       <td class="num">${u.trades}</td>
       <td class="num">${u.images}</td>
-      <td class="storage-cell" id="st-${u.id}"><button class="btn" onclick="loadStorage('${u.id}')">Compute</button></td>
-      <td>${fmtDate(u.created_at)}</td>
-      <td>${fmtDate(u.last_sign_in_at)}</td>
+      <td class="num">${u.referral_count ? `<a href="javascript:void(0)" onclick="goToReferralsAndFocus('${u.id}')">${u.referral_count}</a>` : '<span class="muted-plain">0</span>'}</td>
+      <td class="num storage-cell" id="st-${u.id}"><button class="btn btn-sm" onclick="loadStorage('${u.id}')">Compute</button></td>
+      <td class="num date">${fmtDate(u.created_at)}</td>
+      <td class="num date">${fmtDate(u.last_sign_in_at)}</td>
       <td style="text-align:right;white-space:nowrap">
-        <button class="btn" onclick="openGrant('${u.id}')">Grant Pro</button>
-        ${u.plan === 'pro' ? `<button class="btn danger" onclick="revoke('${u.id}')">Revoke</button>` : ''}
+        <button class="btn btn-sm" onclick="openGrant('${u.id}')">Grant</button>
+        ${u.plan === 'pro' ? `<button class="btn btn-sm danger" onclick="revoke('${u.id}')">Revoke</button>` : ''}
       </td>
     </tr>`).join('');
+  updateSortIndicators();
+}
+
+function exportUsersCsv() {
+  const q = document.getElementById('userSearch').value.trim().toLowerCase();
+  const rows = USERS.filter(u => passesFilters(u, q));
+  const csvCell = v => { const s = String(v ?? ''); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+  const header = ['Email', 'Name', 'Plan', 'Type', 'Expires', 'Gateway', 'Journals', 'Trades', 'Images', 'Referrals', 'Joined', 'Last Seen'];
+  const lines = [header.map(csvCell).join(',')];
+  for (const u of rows) {
+    lines.push([u.email, u.name || '', u.plan, u.plan_type, u.plan_type === 'lifetime' ? 'never' : (u.subscription_expires_at || ''), u.payment_gateway || '', u.journals, u.trades, u.images, u.referral_count || 0, u.created_at || '', u.last_sign_in_at || ''].map(csvCell).join(','));
+  }
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tradinggrove-users.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(a.href);
 }
 
 function renderUserTiles() {
@@ -96,11 +224,12 @@ async function loadUsers(refresh) {
     const { users } = await api('/api/users' + (refresh ? '?refresh=1' : ''));
     USERS = users;
     renderUserTiles();
+    renderChips();
     renderUsers();
     sub.textContent = `${users.length} signed-up user${users.length === 1 ? '' : 's'}`;
   } catch (e) {
     sub.textContent = '';
-    document.getElementById('usersBody').innerHTML = `<tr><td colspan="13"><div class="err-box">Could not load users: ${esc(e.message)}<br>Check SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY in admin/.env, or run with MOCK=1.</div></td></tr>`;
+    document.getElementById('usersBody').innerHTML = `<tr><td colspan="10"><div class="err-box">Could not load users: ${esc(e.message)}<br>Check SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY in admin/.env, or run with MOCK=1.</div></td></tr>`;
   }
 }
 document.getElementById('userSearch').addEventListener('input', renderUsers);
@@ -159,6 +288,196 @@ async function revoke(id) {
   if (!confirm(`Revoke Pro from ${u.email}? They drop to the Free plan immediately (data is kept).`)) return;
   try { await api(`/api/users/${id}/revoke`, { method: 'POST' }); await loadUsers(true); }
   catch (e) { alert('Revoke failed: ' + e.message); }
+}
+
+// ── referrals ────────────────────────────────────────────────
+// Reward = 30 days of Pro per rewarded referral (server confirms via
+// REF.rewardDays, mirroring supabase/functions/_shared/referral-utils.ts).
+let REF_GRAPH = null;   // { nodes: Map(id -> {id,parentId,edge,children:[]}), roots: [id,...] }
+let REF_COORDS = null;  // Map(id -> {x,y,level,rootId})
+
+function userLookup(id) {
+  return USERS.find(u => u.id === id) || { id, email: '(deleted user)', name: '', status: { label: 'free' }, created_at: null };
+}
+function ringClass(status) { return statusMeta(status).ring; }
+
+function buildReferralGraph(edges) {
+  const nodes = new Map();
+  const ensure = id => { if (!nodes.has(id)) nodes.set(id, { id, parentId: null, edge: null, children: [] }); return nodes.get(id); };
+  for (const e of edges) {
+    const child = ensure(e.referred_user_id);
+    ensure(e.referrer_id);
+    child.parentId = e.referrer_id;
+    child.edge = e;
+    nodes.get(e.referrer_id).children.push(child.id);
+  }
+  let roots = [...nodes.values()].filter(n => n.parentId === null).map(n => n.id);
+  if (!roots.length && nodes.size) {
+    // Every node has a parent - only possible with a referral cycle (e.g. two
+    // users who each "referred" the other). Fall back to "anyone who referred
+    // someone" as a root; layoutGraph's visited-set still prevents duplicate
+    // placement, it just breaks the cycle at an arbitrary point instead of
+    // crashing with zero levels (which produced a negative SVG viewBox).
+    roots = [...nodes.values()].filter(n => n.children.length > 0).map(n => n.id);
+  }
+  return { nodes, roots };
+}
+
+// Layered (Sugiyama-style) layout: level = distance from the root referrer.
+// Same-cluster nodes stay contiguous within a level since DFS visits a
+// root's whole subtree before moving to the next root.
+function layoutGraph(graph) {
+  const levels = [];
+  const visited = new Set();
+  function place(id, level, rootId) {
+    if (visited.has(id)) return;
+    visited.add(id);
+    (levels[level] ||= []).push({ id, rootId });
+    for (const childId of graph.nodes.get(id).children) place(childId, level + 1, rootId);
+  }
+  graph.roots.forEach(rootId => place(rootId, 0, rootId));
+  return levels;
+}
+
+async function loadReferrals() {
+  const netWrap = document.getElementById('refNetworkWrap');
+  const listWrap = document.getElementById('refListWrap');
+  netWrap.innerHTML = '<div class="empty">Loading…</div>';
+  listWrap.innerHTML = '<div class="empty">Loading…</div>';
+  try { REF = await api('/api/referrals'); }
+  catch (e) { netWrap.innerHTML = `<div class="err-box">${esc(e.message)}</div>`; listWrap.innerHTML = ''; return; }
+  if (REF.missingTable) {
+    netWrap.innerHTML = `<div class="empty">${esc(REF.message)}</div>`;
+    listWrap.innerHTML = '';
+    document.getElementById('refTiles').innerHTML = '';
+    return;
+  }
+  if (!USERS.length) await loadUsers();
+  renderReferralTiles();
+  renderReferralNetwork();
+  renderReferrerList();
+}
+
+function renderReferralTiles() {
+  const edges = REF.edges;
+  const rewarded = edges.filter(e => e.reward_granted).length;
+  const pending = edges.length - rewarded;
+  const referrers = new Set(edges.map(e => e.referrer_id)).size;
+  const signups = new Set(edges.map(e => e.referred_user_id)).size;
+  const daysGranted = rewarded * (REF.rewardDays || 30);
+  document.getElementById('refTiles').innerHTML = `
+    <div class="tile"><div class="tile-lbl">Total referrals</div><div class="tile-val">${edges.length}</div></div>
+    <div class="tile"><div class="tile-lbl">Rewarded</div><div class="tile-val pos">${rewarded}</div></div>
+    <div class="tile"><div class="tile-lbl">Pending</div><div class="tile-val warn">${pending}</div></div>
+    <div class="tile"><div class="tile-lbl">Referrers</div><div class="tile-val">${referrers}</div></div>
+    <div class="tile"><div class="tile-lbl">Referred signups</div><div class="tile-val">${signups}</div></div>
+    <div class="tile"><div class="tile-lbl">Pro days granted</div><div class="tile-val pos">+${daysGranted}d</div></div>`;
+}
+
+function renderReferralNetwork() {
+  const wrap = document.getElementById('refNetworkWrap');
+  if (!REF.edges.length) { wrap.innerHTML = '<div class="empty">No referrals yet. They will appear here once users start referring each other.</div>'; return; }
+
+  REF_GRAPH = buildReferralGraph(REF.edges);
+  const levels = layoutGraph(REF_GRAPH);
+  const colW = 190, rowH = 72, marginX = 60, marginY = 46, r = 20;
+  REF_COORDS = new Map();
+  levels.forEach((levelNodes, li) => levelNodes.forEach((n, i) => {
+    REF_COORDS.set(n.id, { x: marginX + li * colW, y: marginY + i * rowH, level: li, rootId: n.rootId });
+  }));
+  const maxLevel = Math.max(0, levels.length - 1);
+  const maxRows = Math.max(1, ...levels.map(l => l.length));
+  const width = marginX * 2 + maxLevel * colW + r * 2;
+  const height = marginY * 2 + Math.max(0, maxRows - 1) * rowH + r * 2;
+
+  let edgesSvg = '', nodesSvg = '';
+  for (const [id, node] of REF_GRAPH.nodes) {
+    const c = REF_COORDS.get(id);
+    if (!c || !node.parentId || !REF_COORDS.has(node.parentId)) continue;
+    const p = REF_COORDS.get(node.parentId);
+    const granted = !!node.edge?.reward_granted;
+    edgesSvg += `<line class="net-edge ${granted ? 'granted' : 'pending'}" data-root="${p.rootId}"
+      x1="${p.x + r}" y1="${p.y}" x2="${c.x - r - 6}" y2="${c.y}"
+      onmouseenter="showTip(event,'<span class=t-lbl>${esc(fmtDate(node.edge?.created_at))}</span><strong>${granted ? 'Rewarded' : 'Pending'}</strong>')" onmouseleave="hideTip()"></line>`;
+  }
+  for (const [id, node] of REF_GRAPH.nodes) {
+    const c = REF_COORDS.get(id);
+    if (!c) continue;
+    const u = userLookup(id);
+    const meta = statusMeta(u.status);
+    const rewardedOut = node.children.filter(cid => REF_GRAPH.nodes.get(cid)?.edge?.reward_granted).length;
+    const earned = rewardedOut * (REF.rewardDays || 30);
+    const nodeR = node.children.length ? r + 2 : r - 2;
+    const label = (u.name || u.email || '').split(' ')[0] || u.email;
+    nodesSvg += `<g class="net-node" data-id="${id}" data-root="${c.rootId}"
+        onclick="onNetworkNodeClick(event,'${c.rootId}')"
+        onmouseenter="showTip(event,'<span class=t-lbl>${esc(u.email)}</span><strong>${esc(meta.text)}</strong>${earned ? `<br><span class=t-lbl>Earned</span><strong>+${earned}d Pro</strong>` : ''}')"
+        onmouseleave="hideTip()">
+      <circle class="${meta.ring}" cx="${c.x}" cy="${c.y}" r="${nodeR}"></circle>
+      <text class="net-init" x="${c.x}" y="${c.y + 4}" text-anchor="middle">${esc(initials(u))}</text>
+      ${earned ? `<g transform="translate(${c.x + nodeR - 2},${c.y - nodeR - 4})"><rect class="net-pill" x="-17" y="-8" width="34" height="15" rx="7.5"></rect><text class="net-pill-txt" x="0" y="3" text-anchor="middle">+${earned}d</text></g>` : ''}
+      <text class="net-lbl" x="${c.x}" y="${c.y + nodeR + 15}" text-anchor="middle">${esc(label)}</text>
+    </g>`;
+  }
+  wrap.innerHTML = `<svg class="net-svg" viewBox="0 0 ${width} ${height}" onclick="if(event.target===this) resetFocus()">${edgesSvg}${nodesSvg}</svg>
+  <div class="net-legend">
+    <span><i class="net-ring-good"></i>Pro (active)</span>
+    <span><i class="net-ring-warn"></i>Expiring / grace</span>
+    <span><i class="net-ring-bad"></i>Expired</span>
+    <span><i class="net-ring-muted"></i>Free</span>
+    <span class="net-legend-sep"></span>
+    <span><i class="net-edge-swatch granted"></i>Rewarded</span>
+    <span><i class="net-edge-swatch pending"></i>Pending</span>
+  </div>`;
+  if (focusedClusterId) applyFocusStyles();
+}
+
+function onNetworkNodeClick(e, rootId) { e.stopPropagation(); focusCluster(rootId); }
+function focusCluster(rootId) { focusedClusterId = rootId; applyFocusStyles(); }
+function resetFocus() { focusedClusterId = null; applyFocusStyles(); }
+function applyFocusStyles() {
+  const svg = document.querySelector('.net-svg');
+  if (!svg) return;
+  svg.querySelectorAll('.net-node, .net-edge').forEach(el => {
+    el.classList.toggle('dim', !!focusedClusterId && el.dataset.root !== focusedClusterId);
+  });
+}
+function findClusterRoot(userId) {
+  if (!REF_GRAPH) return userId;
+  let cur = REF_GRAPH.nodes.get(userId);
+  if (!cur) return userId;
+  while (cur.parentId && REF_GRAPH.nodes.has(cur.parentId)) cur = REF_GRAPH.nodes.get(cur.parentId);
+  return cur.id;
+}
+async function goToReferralsAndFocus(userId) {
+  goToView('referrals');
+  if (!REF) await loadReferrals();
+  focusCluster(findClusterRoot(userId));
+}
+
+function renderReferrerList() {
+  const wrap = document.getElementById('refListWrap');
+  const byReferrer = new Map();
+  for (const e of REF.edges) {
+    if (!byReferrer.has(e.referrer_id)) byReferrer.set(e.referrer_id, []);
+    byReferrer.get(e.referrer_id).push(e);
+  }
+  const rows = [...byReferrer.entries()].map(([id, edges]) => {
+    const u = userLookup(id);
+    const rewarded = edges.filter(e => e.reward_granted).length;
+    return { id, u, count: edges.length, rewarded, pending: edges.length - rewarded, earned: rewarded * (REF.rewardDays || 30) };
+  }).sort((a, b) => b.earned - a.earned || b.count - a.count);
+  if (!rows.length) { wrap.innerHTML = '<div class="empty">No referrers yet.</div>'; return; }
+  wrap.innerHTML = `<table><thead><tr><th>Referrer</th><th>Plan</th><th class="num">Referred</th><th class="num">Rewarded</th><th class="num">Pending</th><th class="num">Days earned</th></tr></thead><tbody>
+    ${rows.map(r => `<tr class="ref-row" onclick="focusCluster('${r.id}')">
+      <td><div class="u-name">${esc(r.u.name || r.u.email)}</div><div class="u-email">${esc(r.u.email)}</div></td>
+      <td>${badgeFor(r.u)}</td>
+      <td class="num">${r.count}</td>
+      <td class="num">${r.rewarded}</td>
+      <td class="num">${r.pending}</td>
+      <td class="num pos">+${r.earned}d</td>
+    </tr>`).join('')}
+  </tbody></table>`;
 }
 
 // ── analytics ────────────────────────────────────────────────

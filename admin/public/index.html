@@ -16,6 +16,7 @@
     <div class="side-logo">Trading<span>Grove</span></div>
     <div class="side-tag">Superadmin · local</div>
     <button class="nav-btn active" data-view="users">👥 <span class="nav-lbl">Users</span></button>
+    <button class="nav-btn" data-view="referrals">🔗 <span class="nav-lbl">Referrals</span></button>
     <button class="nav-btn" data-view="analytics">📈 <span class="nav-lbl">Analytics</span></button>
     <button class="nav-btn" data-view="reports">📨 <span class="nav-lbl">Reports</span><span class="cnt" id="newCnt" style="display:none">0</span></button>
     <div class="side-foot">
@@ -32,18 +33,46 @@
         <div><h1>Users</h1><p id="usersSub">Loading…</p></div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
           <input class="search" id="userSearch" placeholder="Search email, name, plan…">
+          <button class="btn" onclick="exportUsersCsv()"><i>⬇</i> Export CSV</button>
           <button class="btn" onclick="loadUsers(true)">Refresh</button>
         </div>
       </div>
       <div class="tiles" id="userTiles"></div>
-      <div class="card"><div class="tw" style="max-height:65vh;overflow-y:auto"><table id="usersTable">
+      <div class="chip-row" id="userChips"></div>
+      <div class="card"><div class="tw" style="max-height:68vh;overflow-y:auto"><table id="usersTable">
         <thead><tr>
-          <th>Email</th><th>Name</th><th>Plan</th><th>Type</th><th>Expires</th><th>Gateway</th>
-          <th class="num">Journals</th><th class="num">Trades</th><th class="num">Images</th>
-          <th>Storage</th><th>Joined</th><th>Last seen</th><th></th>
+          <th data-sort="email">User <span class="sort-ind"></span></th>
+          <th data-sort="expires">Subscription <span class="sort-ind"></span></th>
+          <th class="num" data-sort="journals">Journals <span class="sort-ind"></span></th>
+          <th class="num" data-sort="trades">Trades <span class="sort-ind"></span></th>
+          <th class="num" data-sort="images">Images <span class="sort-ind"></span></th>
+          <th class="num" data-sort="referrals">Referrals <span class="sort-ind"></span></th>
+          <th class="num">Storage</th>
+          <th class="num date" data-sort="created_at">Joined <span class="sort-ind"></span></th>
+          <th class="num date" data-sort="last_sign_in_at">Last seen <span class="sort-ind"></span></th>
+          <th></th>
         </tr></thead>
-        <tbody id="usersBody"><tr><td colspan="13" class="empty">Loading users…</td></tr></tbody>
+        <tbody id="usersBody"><tr><td colspan="10" class="empty">Loading users…</td></tr></tbody>
       </table></div></div>
+    </section>
+
+    <!-- REFERRALS -->
+    <section class="view" id="view-referrals">
+      <div class="view-hdr">
+        <div><h1>Referrals</h1><p>Who referred whom, and the Pro days earned</p></div>
+        <button class="btn" onclick="loadReferrals()">Refresh</button>
+      </div>
+      <div class="tiles" id="refTiles"></div>
+      <div class="ref-layout">
+        <div class="card">
+          <div class="card-hdr"><h3>Referral network</h3><span class="hint">click a node to focus its cluster</span></div>
+          <div class="card-body" id="refNetworkWrap"><div class="empty">Loading…</div></div>
+        </div>
+        <div class="card">
+          <div class="card-hdr"><h3>Referrers</h3></div>
+          <div class="tw" id="refListWrap"><div class="empty">Loading…</div></div>
+        </div>
+      </div>
     </section>
 
     <!-- ANALYTICS -->
