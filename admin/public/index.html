@@ -7,18 +7,22 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
 <link rel="stylesheet" href="/admin.css">
 </head>
 <body>
+<div id="topbar"></div>
 <div class="shell">
 
   <aside class="side">
     <div class="side-logo">Trading<span>Grove</span></div>
     <div class="side-tag">Superadmin · local</div>
-    <button class="nav-btn active" data-view="users">👥 <span class="nav-lbl">Users</span></button>
-    <button class="nav-btn" data-view="referrals">🔗 <span class="nav-lbl">Referrals</span></button>
-    <button class="nav-btn" data-view="analytics">📈 <span class="nav-lbl">Analytics</span></button>
-    <button class="nav-btn" data-view="reports">📨 <span class="nav-lbl">Reports</span><span class="cnt" id="newCnt" style="display:none">0</span></button>
+    <button class="nav-btn active" data-view="users"><i class="fa-solid fa-users"></i> <span class="nav-lbl">Users</span></button>
+    <button class="nav-btn" data-view="referrals"><i class="fa-solid fa-share-nodes"></i> <span class="nav-lbl">Referrals</span></button>
+    <button class="nav-btn" data-view="analytics"><i class="fa-solid fa-chart-line"></i> <span class="nav-lbl">Analytics</span></button>
+    <button class="nav-btn" data-view="reports"><i class="fa-solid fa-inbox"></i> <span class="nav-lbl">Reports</span><span class="cnt" id="newCnt" style="display:none">0</span></button>
     <div class="side-foot">
       <div class="mock-badge" id="mockBadge" style="display:none">MOCK DATA</div>
       <button class="logout-btn" onclick="logout()">Log out</button>
@@ -34,7 +38,7 @@
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
           <input class="search" id="userSearch" placeholder="Search email, name, plan…">
           <button class="btn" onclick="exportUsersCsv()"><i>⬇</i> Export CSV</button>
-          <button class="btn" onclick="loadUsers(true)">Refresh</button>
+          <button class="btn" onclick="loadUsers(true,this)">Refresh</button>
         </div>
       </div>
       <div class="tiles" id="userTiles"></div>
@@ -52,7 +56,7 @@
           <th class="num date" data-sort="last_sign_in_at">Last seen <span class="sort-ind"></span></th>
           <th></th>
         </tr></thead>
-        <tbody id="usersBody"><tr><td colspan="10" class="empty">Loading users…</td></tr></tbody>
+        <tbody id="usersBody"><tr><td colspan="10"><div class="loading-block"><span class="spin lg"></span><span>Loading users…</span></div></td></tr></tbody>
       </table></div></div>
     </section>
 
@@ -60,18 +64,16 @@
     <section class="view" id="view-referrals">
       <div class="view-hdr">
         <div><h1>Referrals</h1><p>Who referred whom, and the Pro days earned</p></div>
-        <button class="btn" onclick="loadReferrals()">Refresh</button>
+        <button class="btn" onclick="loadReferrals(this)">Refresh</button>
       </div>
       <div class="tiles" id="refTiles"></div>
-      <div class="ref-layout">
-        <div class="card">
-          <div class="card-hdr"><h3>Referral network</h3><span class="hint">click a node to focus its cluster</span></div>
-          <div class="card-body" id="refNetworkWrap"><div class="empty">Loading…</div></div>
-        </div>
-        <div class="card">
-          <div class="card-hdr"><h3>Referrers</h3></div>
-          <div class="tw" id="refListWrap"><div class="empty">Loading…</div></div>
-        </div>
+      <div class="card">
+        <div class="card-hdr"><h3>Referral network</h3><span class="hint">click a user to see their referral chain · drag empty space to pan · scroll to zoom</span></div>
+        <div class="card-body" id="refNetworkWrap"><div class="loading-block"><span class="spin lg"></span><span>Loading…</span></div></div>
+      </div>
+      <div class="card">
+        <div class="card-hdr"><h3>Referrers</h3></div>
+        <div class="tw" id="refListWrap"><div class="loading-block"><span class="spin lg"></span><span>Loading…</span></div></div>
       </div>
     </section>
 
@@ -85,16 +87,16 @@
           <option value="90">Last 90 days</option>
         </select>
       </div>
-      <div id="analyticsWrap"><div class="empty">Loading…</div></div>
+      <div id="analyticsWrap"><div class="loading-block"><span class="spin lg"></span><span>Loading…</span></div></div>
     </section>
 
     <!-- REPORTS -->
     <section class="view" id="view-reports">
       <div class="view-hdr">
         <div><h1>Reports</h1><p>Support messages sent from the app's Support page</p></div>
-        <button class="btn" onclick="loadReports()">Refresh</button>
+        <button class="btn" onclick="loadReports(this)">Refresh</button>
       </div>
-      <div id="reportsWrap"><div class="empty">Loading…</div></div>
+      <div id="reportsWrap"><div class="loading-block"><span class="spin lg"></span><span>Loading…</span></div></div>
     </section>
 
   </main>

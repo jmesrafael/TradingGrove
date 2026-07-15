@@ -6,15 +6,53 @@ let REF = null; // { edges, rewardDays } once loaded
 let sortKey = 'created_at';
 let sortDir = 'desc';
 let activeChip = 'all';
-let focusedClusterId = null; // referrer (root) user id currently focused in the network view
 
 // ── plumbing ─────────────────────────────────────────────────
+// Every request runs through api(), so counting in-flight ones here is enough
+// to drive the top progress bar for the whole admin - nothing has to opt in.
+let inFlight = 0;
+function setBusy(delta) {
+  inFlight = Math.max(0, inFlight + delta);
+  document.getElementById('topbar').classList.toggle('on', inFlight > 0);
+}
 async function api(path, opts = {}) {
-  const res = await fetch(path, { ...opts, headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) } });
-  if (res.status === 401) { location.href = '/'; throw new Error('session expired'); }
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
-  return body;
+  setBusy(1);
+  try {
+    const res = await fetch(path, { ...opts, headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) } });
+    if (res.status === 401) { location.href = '/'; throw new Error('session expired'); }
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+    return body;
+  } finally { setBusy(-1); }
+}
+
+// ── loading placeholders ──
+function loadingBlock(text = 'Loading…') {
+  return `<div class="loading-block"><span class="spin lg"></span><span>${esc(text)}</span></div>`;
+}
+function skelTiles(n) { return Array.from({ length: n }, () => '<div class="skel skel-tile"></div>').join(''); }
+function skelUserRows(n = 8) {
+  return Array.from({ length: n }, () => `
+    <tr class="skel-row">
+      <td><div class="u-cell"><span class="skel circle"></span>
+        <div class="u-info"><div class="skel" style="width:120px"></div><div class="skel" style="width:160px;height:8px;margin-top:6px"></div></div></div></td>
+      <td><div class="skel" style="width:70px;height:16px;border-radius:20px"></div><div class="skel" style="width:100px;height:8px;margin-top:5px"></div></td>
+      ${'<td class="num"><div class="skel" style="width:26px"></div></td>'.repeat(4)}
+      <td class="num"><div class="skel" style="width:60px"></div></td>
+      <td class="num"><div class="skel" style="width:54px"></div></td>
+      <td class="num"><div class="skel" style="width:54px"></div></td>
+      <td style="text-align:right"><div class="skel" style="width:46px;height:22px"></div></td>
+    </tr>`).join('');
+}
+// Swaps a button to a spinner for the duration of fn, so a click that kicks off
+// a slow fetch shows its own progress and can't be double-fired.
+async function withBtnBusy(btn, fn) {
+  if (!btn) return fn();
+  const html = btn.innerHTML;
+  btn.disabled = true; btn.classList.add('busy');
+  btn.innerHTML = `<span class="spin"></span>${btn.textContent.trim()}`;
+  try { return await fn(); }
+  finally { btn.disabled = false; btn.classList.remove('busy'); btn.innerHTML = html; }
 }
 function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function fmtDate(iso) { return iso ? new Date(iso).toLocaleDateString(undefined, { year: '2-digit', month: 'short', day: 'numeric' }) : '—'; }
@@ -182,7 +220,7 @@ function renderUsers() {
       <td class="num date">${fmtDate(u.last_sign_in_at)}</td>
       <td style="text-align:right;white-space:nowrap">
         <button class="btn btn-sm" onclick="openGrant('${u.id}')">Grant</button>
-        ${u.plan === 'pro' ? `<button class="btn btn-sm danger" onclick="revoke('${u.id}')">Revoke</button>` : ''}
+        ${u.plan === 'pro' ? `<button class="btn btn-sm danger" onclick="revoke('${u.id}',this)">Revoke</button>` : ''}
       </td>
     </tr>`).join('');
   updateSortIndicators();
@@ -217,11 +255,17 @@ function renderUserTiles() {
     <div class="tile"><div class="tile-lbl">New this week</div><div class="tile-val">${newWeek}</div></div>`;
 }
 
-async function loadUsers(refresh) {
+async function loadUsers(refresh, btn) {
   const sub = document.getElementById('usersSub');
-  sub.textContent = 'Loading…';
+  sub.innerHTML = '<span class="spin"></span> Loading users…';
+  // Only skeleton the table on a cold load - on refresh the existing rows stay
+  // readable and the top bar carries the "working on it" signal instead.
+  if (!USERS.length) {
+    document.getElementById('usersBody').innerHTML = skelUserRows();
+    document.getElementById('userTiles').innerHTML = skelTiles(4);
+  }
   try {
-    const { users } = await api('/api/users' + (refresh ? '?refresh=1' : ''));
+    const { users } = await (btn ? withBtnBusy(btn, () => api('/api/users' + (refresh ? '?refresh=1' : ''))) : api('/api/users' + (refresh ? '?refresh=1' : '')));
     USERS = users;
     renderUserTiles();
     renderChips();
@@ -229,6 +273,7 @@ async function loadUsers(refresh) {
     sub.textContent = `${users.length} signed-up user${users.length === 1 ? '' : 's'}`;
   } catch (e) {
     sub.textContent = '';
+    if (!USERS.length) document.getElementById('userTiles').innerHTML = '';
     document.getElementById('usersBody').innerHTML = `<tr><td colspan="10"><div class="err-box">Could not load users: ${esc(e.message)}<br>Check SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY in admin/.env, or run with MOCK=1.</div></td></tr>`;
   }
 }
@@ -236,7 +281,7 @@ document.getElementById('userSearch').addEventListener('input', renderUsers);
 
 async function loadStorage(id) {
   const cell = document.getElementById('st-' + id);
-  cell.textContent = '…';
+  cell.innerHTML = '<span class="spin"></span>';
   try {
     const s = await api(`/api/users/${id}/storage`);
     const parts = [`<strong style="color:var(--text)">${fmtBytes(s.totalBytes)}</strong>`];
@@ -270,7 +315,7 @@ async function doGrant() {
   const go = document.getElementById('grantGo');
   if (!lifetime && (!Number.isFinite(days) || days < 1)) { msg.className = 'm-msg err'; msg.textContent = 'Enter a valid number of days.'; return; }
   go.disabled = true;
-  msg.className = 'm-msg'; msg.textContent = 'Granting…';
+  msg.className = 'm-msg'; msg.innerHTML = '<span class="spin"></span> Granting…';
   try {
     const r = await api(`/api/users/${grantTarget.id}/grant`, { method: 'POST', body: JSON.stringify({ days, lifetime }) });
     msg.className = 'm-msg ok';
@@ -282,12 +327,16 @@ async function doGrant() {
   } finally { go.disabled = false; }
 }
 
-async function revoke(id) {
+async function revoke(id, btn) {
   const u = USERS.find(x => x.id === id);
   if (!u) return;
   if (!confirm(`Revoke Pro from ${u.email}? They drop to the Free plan immediately (data is kept).`)) return;
-  try { await api(`/api/users/${id}/revoke`, { method: 'POST' }); await loadUsers(true); }
-  catch (e) { alert('Revoke failed: ' + e.message); }
+  try {
+    // The button is inside a row that loadUsers() re-renders, so keep the busy
+    // state around the revoke call only and let the re-render clear it.
+    await withBtnBusy(btn, () => api(`/api/users/${id}/revoke`, { method: 'POST' }));
+    await loadUsers(true);
+  } catch (e) { alert('Revoke failed: ' + e.message); }
 }
 
 // ── referrals ────────────────────────────────────────────────
@@ -339,13 +388,19 @@ function layoutGraph(graph) {
   return levels;
 }
 
-async function loadReferrals() {
+async function loadReferrals(btn) {
   const netWrap = document.getElementById('refNetworkWrap');
   const listWrap = document.getElementById('refListWrap');
-  netWrap.innerHTML = '<div class="empty">Loading…</div>';
-  listWrap.innerHTML = '<div class="empty">Loading…</div>';
-  try { REF = await api('/api/referrals'); }
-  catch (e) { netWrap.innerHTML = `<div class="err-box">${esc(e.message)}</div>`; listWrap.innerHTML = ''; return; }
+  netWrap.innerHTML = loadingBlock('Building referral network…');
+  listWrap.innerHTML = loadingBlock();
+  if (!REF) document.getElementById('refTiles').innerHTML = skelTiles(6);
+  try { REF = await (btn ? withBtnBusy(btn, () => api('/api/referrals')) : api('/api/referrals')); }
+  catch (e) {
+    netWrap.innerHTML = `<div class="err-box">${esc(e.message)}</div>`;
+    listWrap.innerHTML = '';
+    document.getElementById('refTiles').innerHTML = '';
+    return;
+  }
   if (REF.missingTable) {
     netWrap.innerHTML = `<div class="empty">${esc(REF.message)}</div>`;
     listWrap.innerHTML = '';
@@ -374,85 +429,482 @@ function renderReferralTiles() {
     <div class="tile"><div class="tile-lbl">Pro days granted</div><div class="tile-val pos">+${daysGranted}d</div></div>`;
 }
 
-function renderReferralNetwork() {
+// ── network renderer ─────────────────────────────────────────
+// Radial "network intelligence" view. Hand-rolled SVG, zero libraries:
+//  - radial layout with subtree-weighted angular spans (no overlaps)
+//  - curved gradient edges + SMIL particles flowing along rewarded paths
+//  - glass nodes with tier sizing, pulse halos, focal ring, collapse/expand
+//  - zoom (wheel) + pan (drag) on a viewport group, FLIP relayout animation
+const NET = {
+  collapsed: new Set(), // node ids whose subtree is hidden
+  focalId: null,        // node id given the persistent "selected" treatment
+  selectedSet: null,    // Set of ids in the selected node's upstream+downstream chain
+  view: { tx: 0, ty: 0, k: 1 },
+  baseView: { tx: 0, ty: 0, k: 1 }, // the auto-fit view for the current layout; "Fit" resets to this
+  size: { w: 0, h: 0 },
+  ring: 108,       // adaptive radial spacing, set per-layout from visible node count
+  nodeScale: 1,    // adaptive node-radius scale, set per-layout from visible node count
+  reduced: matchMedia('(prefers-reduced-motion: reduce)').matches,
+};
+
+function countVisibleNodes() {
+  let n = 0;
+  for (const id of REF_GRAPH.nodes.keys()) if (netVisible(id)) n++;
+  return n;
+}
+
+function netVisible(id) {
+  // hidden if any ancestor is collapsed
+  let cur = REF_GRAPH.nodes.get(id);
+  const seen = new Set([id]);
+  while (cur?.parentId && !seen.has(cur.parentId)) {
+    if (NET.collapsed.has(cur.parentId)) return false;
+    seen.add(cur.parentId);
+    cur = REF_GRAPH.nodes.get(cur.parentId);
+  }
+  return true;
+}
+function subtreeLeafCount(id, seen = new Set()) {
+  if (seen.has(id)) return 0;
+  seen.add(id);
+  const n = REF_GRAPH.nodes.get(id);
+  const kids = (n?.children || []).filter(c => !NET.collapsed.has(id) && netVisible(c));
+  if (!kids.length || NET.collapsed.has(id)) return 1;
+  return Math.max(1, kids.reduce((s, c) => s + subtreeLeafCount(c, seen), 0));
+}
+function hiddenDescendants(id, seen = new Set()) {
+  if (seen.has(id)) return 0;
+  seen.add(id);
+  const n = REF_GRAPH.nodes.get(id);
+  return (n?.children || []).reduce((s, c) => s + 1 + hiddenDescendants(c, seen), 0);
+}
+
+// Radial layout: each root is a cluster center; children fan out in rings,
+// each child's angular span proportional to its (visible) subtree leaf count.
+// Both ring spacing and node size adapt to the visible node count, so a
+// 3-node tree sits close together and a 300-node tree gets breathing room
+// instead of the same fixed spacing either way.
+function layoutRadial() {
+  REF_COORDS = new Map();
+  const n = countVisibleNodes();
+  // sqrt-scaled: circumference (~ring) grows with sqrt(count) so a ring's
+  // siblings get roughly constant arc-spacing as the tree gets bushier.
+  const RING = NET.ring = Math.round(Math.min(260, Math.max(64, 58 + Math.sqrt(n) * 11)));
+  const PAD = Math.round(RING * 0.6);
+  NET.nodeScale = n <= 20 ? 1 : n <= 80 ? 0.88 : n <= 250 ? 0.76 : 0.62;
+  const clusters = [];
+  for (const rootId of REF_GRAPH.roots) {
+    if (REF_COORDS.has(rootId)) continue; // cycle fallback can list linked roots
+    let maxDepth = 0;
+    const placed = [];
+    function place(id, level, angle0, angle1, seen) {
+      if (seen.has(id) || REF_COORDS.has(id)) return;
+      seen.add(id);
+      maxDepth = Math.max(maxDepth, level);
+      const mid = (angle0 + angle1) / 2;
+      const r = level * RING;
+      placed.push({ id, level, angle: mid, r });
+      REF_COORDS.set(id, { level, rootId, angle: mid, radius: r, x: 0, y: 0 });
+      if (NET.collapsed.has(id)) return;
+      const kids = REF_GRAPH.nodes.get(id).children.filter(c => !seen.has(c) && !REF_COORDS.has(c));
+      if (!kids.length) return;
+      const weights = kids.map(c => subtreeLeafCount(c, new Set(seen)));
+      const total = weights.reduce((a, b) => a + b, 0) || 1;
+      // level-1 children of a root get the full circle; deeper levels stay in
+      // the parent's wedge so branches never cross
+      const span = level === 0 ? Math.PI * 2 : (angle1 - angle0);
+      const start = level === 0 ? -Math.PI / 2 : angle0;
+      let acc = 0;
+      kids.forEach((c, i) => {
+        const a0 = start + (acc / total) * span;
+        acc += weights[i];
+        const a1 = start + (acc / total) * span;
+        place(c, level + 1, a0, a1, seen);
+      });
+    }
+    place(rootId, 0, 0, Math.PI * 2, new Set());
+    const radius = Math.max(1, maxDepth) * RING + PAD;
+    clusters.push({ rootId, radius, ids: placed.map(p => p.id) });
+  }
+  // pack cluster centers left-to-right, wrap into rows to keep balance
+  let cx = 0, cy = 0, rowH = 0, maxW = 1200, xCursor = 0;
+  const centers = new Map();
+  for (const cl of clusters) {
+    const d = cl.radius * 2;
+    if (xCursor > 0 && xCursor + d > maxW) { cy += rowH + 40; xCursor = 0; rowH = 0; }
+    centers.set(cl.rootId, { x: xCursor + cl.radius, y: cy + cl.radius });
+    xCursor += d + 60;
+    rowH = Math.max(rowH, d);
+  }
+  let minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
+  for (const [id, c] of REF_COORDS) {
+    const root = findClusterRoot(id);
+    const ctr = centers.get(root) || { x: 0, y: 0 };
+    c.x = ctr.x + Math.cos(c.angle) * c.radius;
+    c.y = ctr.y + Math.sin(c.angle) * c.radius;
+    minX = Math.min(minX, c.x); maxX = Math.max(maxX, c.x);
+    minY = Math.min(minY, c.y); maxY = Math.max(maxY, c.y);
+  }
+  const M = 84;
+  for (const c of REF_COORDS.values()) { c.x += M - minX; c.y += M - minY; }
+  NET.size = { w: (maxX - minX) + M * 2, h: (maxY - minY) + M * 2 };
+}
+
+function edgePath(p, c) {
+  // gentle organic bow perpendicular to the segment
+  const dx = c.x - p.x, dy = c.y - p.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len, ny = dx / len;
+  const bow = Math.min(26, len * 0.16);
+  const mx = (p.x + c.x) / 2 + nx * bow, my = (p.y + c.y) / 2 + ny * bow;
+  return `M ${p.x.toFixed(1)} ${p.y.toFixed(1)} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`;
+}
+
+function nodeTier(node, level) {
+  const s = NET.nodeScale;
+  if (level === 0 && node.children.length) return { r: Math.round(26 * s), cls: 'tier-root' };
+  if (node.children.length) return { r: Math.round(21 * s), cls: 'tier-mid' };
+  return { r: Math.round(16 * s), cls: 'tier-leaf' };
+}
+function nodeEarned(node) {
+  const rewardedOut = node.children.filter(cid => REF_GRAPH.nodes.get(cid)?.edge?.reward_granted).length;
+  return rewardedOut * (REF.rewardDays || 30);
+}
+function chainToRoot(id) {
+  const ids = [id];
+  let cur = REF_GRAPH.nodes.get(id);
+  const seen = new Set([id]);
+  while (cur?.parentId && !seen.has(cur.parentId)) {
+    ids.push(cur.parentId);
+    seen.add(cur.parentId);
+    cur = REF_GRAPH.nodes.get(cur.parentId);
+  }
+  return ids;
+}
+
+function netTipHtml(id) {
+  const node = REF_GRAPH.nodes.get(id);
+  const u = userLookup(id);
+  const meta = statusMeta(u.status);
+  const earned = nodeEarned(node);
+  const c = REF_COORDS.get(id);
+  const rows = [
+    ['Plan', meta.text],
+    ['Joined', fmtDate(u.created_at)],
+    ['Referrals', String(node.children.length)],
+    ['Level', c ? (c.level === 0 ? 'Root referrer' : `Depth ${c.level}`) : ''],
+  ];
+  if (earned) rows.push(['Earned', `+${earned}d Pro`]);
+  if (node.edge) rows.push(['Referral', node.edge.reward_granted ? 'Rewarded' : 'Pending']);
+  return `<div class="tip-title">${esc(u.name || u.email)}</div><div class="tip-sub">${esc(u.email)}</div>` +
+    rows.map(([k, v]) => `<div class="tip-row"><span>${k}</span><strong>${esc(v)}</strong></div>`).join('');
+}
+
+function renderReferralNetwork(animate = false) {
   const wrap = document.getElementById('refNetworkWrap');
   if (!REF.edges.length) { wrap.innerHTML = '<div class="empty">No referrals yet. They will appear here once users start referring each other.</div>'; return; }
 
   REF_GRAPH = buildReferralGraph(REF.edges);
-  const levels = layoutGraph(REF_GRAPH);
-  const colW = 190, rowH = 72, marginX = 60, marginY = 46, r = 20;
-  REF_COORDS = new Map();
-  levels.forEach((levelNodes, li) => levelNodes.forEach((n, i) => {
-    REF_COORDS.set(n.id, { x: marginX + li * colW, y: marginY + i * rowH, level: li, rootId: n.rootId });
-  }));
-  const maxLevel = Math.max(0, levels.length - 1);
-  const maxRows = Math.max(1, ...levels.map(l => l.length));
-  const width = marginX * 2 + maxLevel * colW + r * 2;
-  const height = marginY * 2 + Math.max(0, maxRows - 1) * rowH + r * 2;
+  const oldPos = animate && REF_COORDS ? new Map([...REF_COORDS].map(([id, c]) => [id, { x: c.x, y: c.y }])) : null;
+  layoutRadial();
 
-  let edgesSvg = '', nodesSvg = '';
+  let edgesSvg = '', particlesSvg = '', nodesSvg = '';
+  let pi = 0;
   for (const [id, node] of REF_GRAPH.nodes) {
+    if (!netVisible(id)) continue;
     const c = REF_COORDS.get(id);
-    if (!c || !node.parentId || !REF_COORDS.has(node.parentId)) continue;
+    if (!c || !node.parentId || !netVisible(node.parentId)) continue;
     const p = REF_COORDS.get(node.parentId);
+    if (!p) continue;
     const granted = !!node.edge?.reward_granted;
-    edgesSvg += `<line class="net-edge ${granted ? 'granted' : 'pending'}" data-root="${p.rootId}"
-      x1="${p.x + r}" y1="${p.y}" x2="${c.x - r - 6}" y2="${c.y}"
-      onmouseenter="showTip(event,'<span class=t-lbl>${esc(fmtDate(node.edge?.created_at))}</span><strong>${granted ? 'Rewarded' : 'Pending'}</strong>')" onmouseleave="hideTip()"></line>`;
+    const d = edgePath(p, c);
+    const depthOp = Math.max(0.45, 0.95 - c.level * 0.16);
+    edgesSvg += `<path id="refp-${id}" class="net-edge ${granted ? 'granted' : 'pending'}" data-child="${id}" data-root="${c.rootId}"
+      d="${d}" style="opacity:${depthOp}"
+      onmouseenter="netEdgeTip(event,'${id}')" onmouseleave="hideTip()"></path>`;
+    if (granted && !NET.reduced) {
+      const dur = (2.4 + (pi % 4) * 0.5).toFixed(1);
+      particlesSvg += `<circle class="net-particle" data-root="${c.rootId}" data-child="${id}" r="2.4">
+        <animateMotion dur="${dur}s" begin="${(pi * 0.55).toFixed(2)}s" repeatCount="indefinite"><mpath href="#refp-${id}"/></animateMotion>
+      </circle>`;
+      pi++;
+    }
   }
+  let ni = 0;
   for (const [id, node] of REF_GRAPH.nodes) {
+    if (!netVisible(id)) continue;
     const c = REF_COORDS.get(id);
     if (!c) continue;
     const u = userLookup(id);
     const meta = statusMeta(u.status);
-    const rewardedOut = node.children.filter(cid => REF_GRAPH.nodes.get(cid)?.edge?.reward_granted).length;
-    const earned = rewardedOut * (REF.rewardDays || 30);
-    const nodeR = node.children.length ? r + 2 : r - 2;
+    const tier = nodeTier(node, c.level);
+    const earned = nodeEarned(node);
+    const collapsed = NET.collapsed.has(id);
+    const hidden = collapsed ? hiddenDescendants(id) : 0;
     const label = (u.name || u.email || '').split(' ')[0] || u.email;
-    nodesSvg += `<g class="net-node" data-id="${id}" data-root="${c.rootId}"
-        onclick="onNetworkNodeClick(event,'${c.rootId}')"
-        onmouseenter="showTip(event,'<span class=t-lbl>${esc(u.email)}</span><strong>${esc(meta.text)}</strong>${earned ? `<br><span class=t-lbl>Earned</span><strong>+${earned}d Pro</strong>` : ''}')"
-        onmouseleave="hideTip()">
-      <circle class="${meta.ring}" cx="${c.x}" cy="${c.y}" r="${nodeR}"></circle>
-      <text class="net-init" x="${c.x}" y="${c.y + 4}" text-anchor="middle">${esc(initials(u))}</text>
-      ${earned ? `<g transform="translate(${c.x + nodeR - 2},${c.y - nodeR - 4})"><rect class="net-pill" x="-17" y="-8" width="34" height="15" rx="7.5"></rect><text class="net-pill-txt" x="0" y="3" text-anchor="middle">+${earned}d</text></g>` : ''}
-      <text class="net-lbl" x="${c.x}" y="${c.y + nodeR + 15}" text-anchor="middle">${esc(label)}</text>
+    const pendingIn = node.edge && !node.edge.reward_granted;
+    nodesSvg += `<g class="net-node ${tier.cls} ${meta.ring} ${id === NET.focalId ? 'focal' : ''}" data-id="${id}" data-root="${c.rootId}"
+        transform="translate(${c.x.toFixed(1)},${c.y.toFixed(1)})" style="--float-delay:${(ni % 7) * -1.3}s"
+        onclick="onNetworkNodeClick(event,'${id}')"
+        onmouseenter="netNodeHover(event,'${id}',true)" onmouseleave="netNodeHover(event,'${id}',false)">
+      <g class="net-float">
+        <circle class="net-halo" r="${tier.r + 8}"></circle>
+        <circle class="net-focal-ring" r="${tier.r + 6}"></circle>
+        <circle class="net-body" r="${tier.r}" fill="url(#netGlass)"></circle>
+        <text class="net-init" style="font-size:${Math.max(8, Math.round(tier.r * 0.42))}px" y="${Math.max(3, Math.round(tier.r * 0.16))}" text-anchor="middle">${esc(initials(u))}</text>
+        ${pendingIn ? `<circle class="net-dot-pending" cx="${tier.r * 0.72}" cy="${tier.r * 0.72}" r="3.2"></circle>` : ''}
+        ${earned ? `<g transform="translate(${tier.r - 2},${-tier.r - 6})"><rect class="net-pill" x="-17" y="-8" width="34" height="15" rx="7.5"></rect><text class="net-pill-txt" y="3" text-anchor="middle">+${earned}d</text></g>` : ''}
+        ${collapsed ? `<g transform="translate(0,${tier.r + 10})"><rect class="net-more" x="-14" y="-7" width="28" height="14" rx="7"></rect><text class="net-more-txt" y="3" text-anchor="middle">+${hidden}</text></g>` : ''}
+        <text class="net-lbl" y="${tier.r + (collapsed ? 26 : 16)}" text-anchor="middle">${esc(label)}</text>
+      </g>
+      <circle class="net-hit" r="${tier.r + 10}"></circle>
     </g>`;
+    ni++;
   }
-  wrap.innerHTML = `<svg class="net-svg" viewBox="0 0 ${width} ${height}" onclick="if(event.target===this) resetFocus()">${edgesSvg}${nodesSvg}</svg>
+
+  wrap.innerHTML = `
+  <div class="net-stage" id="netStage">
+    <svg class="net-svg" id="netSvg" viewBox="0 0 ${NET.size.w} ${NET.size.h}" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <radialGradient id="netGlass" cx="38%" cy="34%" r="75%">
+          <stop offset="0%" stop-color="#1c2b23"/>
+          <stop offset="100%" stop-color="#101a15"/>
+        </radialGradient>
+        <linearGradient id="netEdgeGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="rgba(0,255,136,.12)"/>
+          <stop offset="55%" stop-color="rgba(25,195,125,.5)"/>
+          <stop offset="100%" stop-color="rgba(0,255,136,.75)"/>
+        </linearGradient>
+        <marker id="netArrow" viewBox="0 0 8 8" refX="6.5" refY="4" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+          <path d="M0,0 L8,4 L0,8 Z" fill="rgba(120,150,135,.65)"></path>
+        </marker>
+      </defs>
+      <g id="netViewport">${edgesSvg}${particlesSvg}${nodesSvg}</g>
+    </svg>
+    <div class="net-ctrl">
+      <button class="net-ctrl-btn" onclick="netZoom(1.25)" title="Zoom in"><i class="fa-solid fa-plus"></i></button>
+      <button class="net-ctrl-btn" onclick="netZoom(0.8)" title="Zoom out"><i class="fa-solid fa-minus"></i></button>
+      <button class="net-ctrl-btn" onclick="netResetView()" title="Fit"><i class="fa-solid fa-expand"></i></button>
+    </div>
+  </div>
   <div class="net-legend">
     <span><i class="net-ring-good"></i>Pro (active)</span>
     <span><i class="net-ring-warn"></i>Expiring / grace</span>
     <span><i class="net-ring-bad"></i>Expired</span>
     <span><i class="net-ring-muted"></i>Free</span>
     <span class="net-legend-sep"></span>
-    <span><i class="net-edge-swatch granted"></i>Rewarded</span>
+    <span><i class="net-edge-swatch granted"></i>Rewarded flow</span>
     <span><i class="net-edge-swatch pending"></i>Pending</span>
+    <span class="net-legend-sep"></span>
+    <span class="hint">scroll to zoom · drag to pan · click a referrer to collapse</span>
   </div>`;
-  if (focusedClusterId) applyFocusStyles();
+
+  netFitStage();
+  netBindViewport();
+  netApplyView();
+  netRestoreSelectionStyles();
+
+  // FLIP: glide nodes from their previous coordinates to the new layout
+  if (oldPos && !NET.reduced) {
+    document.querySelectorAll('#netViewport .net-node').forEach(el => {
+      const prev = oldPos.get(el.dataset.id);
+      const now = REF_COORDS.get(el.dataset.id);
+      if (!prev || !now) return;
+      const ddx = prev.x - now.x, ddy = prev.y - now.y;
+      if (Math.abs(ddx) < 1 && Math.abs(ddy) < 1) return;
+      el.animate(
+        [{ transform: `translate(${now.x + ddx}px,${now.y + ddy}px)` }, { transform: `translate(${now.x}px,${now.y}px)` }],
+        { duration: 480, easing: 'cubic-bezier(.22,1,.36,1)' });
+    });
+    document.querySelectorAll('#netViewport .net-edge').forEach(el =>
+      el.animate([{ opacity: 0 }, { opacity: el.style.opacity || 1 }], { duration: 420, easing: 'ease-out' }));
+  }
 }
 
-function onNetworkNodeClick(e, rootId) { e.stopPropagation(); focusCluster(rootId); }
-function focusCluster(rootId) { focusedClusterId = rootId; applyFocusStyles(); }
-function resetFocus() { focusedClusterId = null; applyFocusStyles(); }
-function applyFocusStyles() {
-  const svg = document.querySelector('.net-svg');
+// Shape the stage's own aspect ratio to match the content's bounding box
+// (computed in layoutRadial), so preserveAspectRatio="meet" has nothing to
+// letterbox - a 3-node tree gets a short stage, a sprawling one gets a tall
+// one, both filled edge-to-edge. Then nudge the initial zoom a touch by tree
+// size: small trees read better slightly zoomed in, huge ones need room to
+// breathe beyond the tight fit.
+function netFitStage() {
+  const svg = document.getElementById('netSvg');
+  const stage = document.getElementById('netStage');
+  if (!svg || !stage) return;
+  const width = stage.clientWidth || 800;
+  const aspect = NET.size.h / Math.max(1, NET.size.w);
+  const height = Math.min(620, Math.max(220, Math.round(width * aspect)));
+  svg.style.height = height + 'px';
+  const n = countVisibleNodes();
+  const tierK = n <= 10 ? 1.12 : n <= 50 ? 1 : n <= 200 ? 0.9 : 0.78;
+  // Scale about the viewBox center (not the origin) so a non-1 tier zoom
+  // doesn't drag the content toward the top-left corner.
+  NET.baseView = { tx: NET.size.w / 2 * (1 - tierK), ty: NET.size.h / 2 * (1 - tierK), k: tierK };
+  NET.view = { ...NET.baseView };
+}
+
+// ── selection: a clicked/hovered user's full upstream + downstream chain ──
+// (replaces an earlier "dim everything outside this root cluster" scheme -
+// that made large branches hard to read; this highlights the exact
+// relationship path instead and only lightly fades the rest.)
+function descendantsOf(id, seen = new Set()) {
+  const node = REF_GRAPH.nodes.get(id);
+  if (!node || seen.has(id)) return [];
+  seen.add(id);
+  let out = [];
+  for (const c of node.children) { out.push(c); out = out.concat(descendantsOf(c, seen)); }
+  return out;
+}
+function relatedSetOf(id) {
+  return new Set([...chainToRoot(id), ...descendantsOf(id)]);
+}
+function netApplySelectionStyles(transientSet) {
+  const svg = document.getElementById('netSvg');
   if (!svg) return;
-  svg.querySelectorAll('.net-node, .net-edge').forEach(el => {
-    el.classList.toggle('dim', !!focusedClusterId && el.dataset.root !== focusedClusterId);
+  const set = transientSet || NET.selectedSet;
+  const active = !!set;
+  svg.classList.toggle('selecting', active);
+  svg.querySelectorAll('.net-node').forEach(el => {
+    el.classList.toggle('focal', !transientSet && el.dataset.id === NET.focalId);
+    el.classList.toggle('hl', active && set.has(el.dataset.id));
   });
+  svg.querySelectorAll('.net-edge, .net-particle').forEach(el => el.classList.toggle('hl', active && set.has(el.dataset.child)));
+}
+// Re-applies whatever the persistent selection is (or clears to neutral) -
+// used both after a fresh render and to restore state once a hover ends.
+function netRestoreSelectionStyles() { netApplySelectionStyles(); }
+function netSelect(id) {
+  NET.focalId = id;
+  NET.selectedSet = relatedSetOf(id);
+  netRestoreSelectionStyles();
+  netCenterOn(id);
+}
+function netClearSelection() {
+  NET.focalId = null;
+  NET.selectedSet = null;
+  netRestoreSelectionStyles();
+}
+
+// ── hover: transient preview of a node's chain; reverts to the sticky
+// selection (or neutral) on mouseleave rather than always clearing ──
+function netNodeHover(e, id, on) {
+  const svg = document.getElementById('netSvg');
+  if (!svg) return;
+  if (on) {
+    showTip(e, netTipHtml(id));
+    netApplySelectionStyles(relatedSetOf(id));
+  } else {
+    hideTip();
+    netRestoreSelectionStyles();
+  }
+}
+function netEdgeTip(e, childId) {
+  const node = REF_GRAPH.nodes.get(childId);
+  const granted = !!node?.edge?.reward_granted;
+  showTip(e, `<div class="tip-row"><span>${esc(fmtDate(node?.edge?.created_at))}</span><strong>${granted ? 'Rewarded · +' + (REF.rewardDays || 30) + 'd' : 'Pending'}</strong></div>`);
+}
+
+// ── interactions ──
+function onNetworkNodeClick(e, id) {
+  e.stopPropagation();
+  hideTip();
+  const node = REF_GRAPH.nodes.get(id);
+  netSelect(id);
+  if (node.children.length) {
+    if (NET.collapsed.has(id)) NET.collapsed.delete(id); else NET.collapsed.add(id);
+    renderReferralNetwork(true);
+  }
 }
 function findClusterRoot(userId) {
   if (!REF_GRAPH) return userId;
   let cur = REF_GRAPH.nodes.get(userId);
   if (!cur) return userId;
-  while (cur.parentId && REF_GRAPH.nodes.has(cur.parentId)) cur = REF_GRAPH.nodes.get(cur.parentId);
+  const seen = new Set([userId]);
+  while (cur.parentId && REF_GRAPH.nodes.has(cur.parentId) && !seen.has(cur.parentId)) {
+    seen.add(cur.parentId);
+    cur = REF_GRAPH.nodes.get(cur.parentId);
+  }
   return cur.id;
 }
 async function goToReferralsAndFocus(userId) {
   goToView('referrals');
   if (!REF) await loadReferrals();
-  focusCluster(findClusterRoot(userId));
+  netSelect(userId);
+}
+
+// ── zoom / pan (transform on the viewport group) ──
+function netApplyView() {
+  const vp = document.getElementById('netViewport');
+  if (vp) vp.setAttribute('transform', `translate(${NET.view.tx} ${NET.view.ty}) scale(${NET.view.k})`);
+}
+function netZoom(factor, cx, cy) {
+  const svg = document.getElementById('netSvg');
+  if (!svg) return;
+  const k = Math.min(4, Math.max(0.35, NET.view.k * factor));
+  // zoom toward (cx,cy) in svg user units; default = center of current view
+  if (cx == null) {
+    const vb = svg.viewBox.baseVal;
+    cx = vb.width / 2; cy = vb.height / 2;
+  }
+  const scale = k / NET.view.k;
+  NET.view.tx = cx - (cx - NET.view.tx) * scale;
+  NET.view.ty = cy - (cy - NET.view.ty) * scale;
+  NET.view.k = k;
+  netApplyView();
+}
+function netResetView() { NET.view = { ...NET.baseView }; netApplyView(); }
+function netCenterOn(id) {
+  const c = REF_COORDS?.get(id);
+  const svg = document.getElementById('netSvg');
+  if (!c || !svg) return;
+  const vb = svg.viewBox.baseVal;
+  const k = Math.max(NET.view.k, 1);
+  NET.view = { k, tx: vb.width / 2 - c.x * k, ty: vb.height / 2 - c.y * k };
+  netApplyView();
+}
+function netSvgPoint(svg, clientX, clientY) {
+  const rect = svg.getBoundingClientRect();
+  const vb = svg.viewBox.baseVal;
+  // preserveAspectRatio=meet: uniform scale, content centered
+  const s = Math.min(rect.width / vb.width, rect.height / vb.height);
+  const ox = (rect.width - vb.width * s) / 2, oy = (rect.height - vb.height * s) / 2;
+  return { x: (clientX - rect.left - ox) / s, y: (clientY - rect.top - oy) / s };
+}
+function netBindViewport() {
+  const svg = document.getElementById('netSvg');
+  const stage = document.getElementById('netStage');
+  if (!svg) return;
+  svg.addEventListener('wheel', e => {
+    e.preventDefault();
+    const pt = netSvgPoint(svg, e.clientX, e.clientY);
+    netZoom(e.deltaY < 0 ? 1.18 : 0.85, pt.x, pt.y);
+  }, { passive: false });
+  let drag = null;
+  svg.addEventListener('pointerdown', e => {
+    // A press that starts on a node is a click (focus/collapse), not a pan -
+    // capturing the pointer here would steal the node's click event.
+    if (e.target.closest?.('.net-node')) return;
+    drag = { x: e.clientX, y: e.clientY, tx: NET.view.tx, ty: NET.view.ty, moved: false };
+    svg.setPointerCapture(e.pointerId);
+  });
+  svg.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const rect = svg.getBoundingClientRect();
+    const vb = svg.viewBox.baseVal;
+    const s = Math.min(rect.width / vb.width, rect.height / vb.height);
+    const dx = (e.clientX - drag.x) / s, dy = (e.clientY - drag.y) / s;
+    if (Math.abs(dx) + Math.abs(dy) > 2) drag.moved = true;
+    NET.view.tx = drag.tx + dx; NET.view.ty = drag.ty + dy;
+    netApplyView();
+    if (drag.moved) stage.classList.add('grabbing');
+  });
+  const end = e => {
+    if (drag && !drag.moved && (e.target === svg || e.target.id === 'netViewport')) netClearSelection();
+    drag = null;
+    stage.classList.remove('grabbing');
+  };
+  svg.addEventListener('pointerup', end);
+  svg.addEventListener('pointercancel', () => { drag = null; stage.classList.remove('grabbing'); });
 }
 
 function renderReferrerList() {
@@ -469,7 +921,7 @@ function renderReferrerList() {
   }).sort((a, b) => b.earned - a.earned || b.count - a.count);
   if (!rows.length) { wrap.innerHTML = '<div class="empty">No referrers yet.</div>'; return; }
   wrap.innerHTML = `<table><thead><tr><th>Referrer</th><th>Plan</th><th class="num">Referred</th><th class="num">Rewarded</th><th class="num">Pending</th><th class="num">Days earned</th></tr></thead><tbody>
-    ${rows.map(r => `<tr class="ref-row" onclick="focusCluster('${r.id}')">
+    ${rows.map(r => `<tr class="ref-row" onclick="netSelect('${r.id}')">
       <td><div class="u-name">${esc(r.u.name || r.u.email)}</div><div class="u-email">${esc(r.u.email)}</div></td>
       <td>${badgeFor(r.u)}</td>
       <td class="num">${r.count}</td>
@@ -483,7 +935,7 @@ function renderReferrerList() {
 // ── analytics ────────────────────────────────────────────────
 async function loadAnalytics() {
   const wrap = document.getElementById('analyticsWrap');
-  wrap.innerHTML = '<div class="empty">Loading…</div>';
+  wrap.innerHTML = `<div class="tiles">${skelTiles(4)}</div><div class="card">${loadingBlock('Crunching events…')}</div>`;
   let a;
   try { a = await api('/api/analytics?days=' + document.getElementById('daysSel').value); }
   catch (e) { wrap.innerHTML = `<div class="err-box">${esc(e.message)}</div>`; return; }
@@ -541,11 +993,15 @@ async function loadAnalytics() {
 }
 
 // ── reports ──────────────────────────────────────────────────
-async function loadReports() {
+async function loadReports(btn) {
   const wrap = document.getElementById('reportsWrap');
-  wrap.innerHTML = '<div class="empty">Loading…</div>';
+  // Reports also loads at boot to fill the nav counter, while the Users view is
+  // on screen - only paint the spinner when its own view is actually visible.
+  if (document.getElementById('view-reports').classList.contains('active')) {
+    wrap.innerHTML = `<div class="card">${loadingBlock('Loading messages…')}</div>`;
+  }
   let r;
-  try { r = await api('/api/reports'); }
+  try { r = await (btn ? withBtnBusy(btn, () => api('/api/reports')) : api('/api/reports')); }
   catch (e) { wrap.innerHTML = `<div class="err-box">${esc(e.message)}</div>`; return; }
   if (r.missingTable) { wrap.innerHTML = `<div class="err-box">${esc(r.message)}</div>`; return; }
 
@@ -576,7 +1032,7 @@ async function loadReports() {
           <span>${esc(m.sender_email || '')}</span>
           <span style="flex:1"></span>
           Status:
-          <select class="btn" onchange="setStatus('${m.id}', this.value)">
+          <select class="btn" onchange="setStatus('${m.id}', this.value, this)">
             ${['new', 'read', 'resolved'].map(s => `<option value="${s}" ${m.status === s ? 'selected' : ''}>${s}</option>`).join('')}
           </select>
         </div>
@@ -584,17 +1040,20 @@ async function loadReports() {
     </div>`).join('') + `</div>`;
 }
 
-async function setStatus(id, status) {
+async function setStatus(id, status, sel) {
+  if (sel) sel.disabled = true;
   try { await api(`/api/reports/${id}/status`, { method: 'POST', body: JSON.stringify({ status }) }); loadReports(); }
-  catch (e) { alert('Update failed: ' + e.message); }
+  catch (e) { if (sel) sel.disabled = false; alert('Update failed: ' + e.message); }
 }
 
 // ── boot ─────────────────────────────────────────────────────
-(async () => {
-  try {
-    const me = await api('/api/me');
-    if (me.mock) document.getElementById('mockBadge').style.display = '';
-  } catch { /* redirected to login */ }
+(() => {
+  // Fire all three in parallel: /api/me only decides the MOCK badge, so making
+  // the user list wait on it just delays the first paint. A 401 in any of them
+  // redirects to login anyway.
+  api('/api/me')
+    .then(me => { if (me.mock) document.getElementById('mockBadge').style.display = ''; })
+    .catch(() => { /* redirected to login */ });
   loadUsers();
   loadReports(); // populate the new-message counter
 })();

@@ -19,7 +19,7 @@
       <input id="u" type="text" autocomplete="username" autofocus>
       <label for="p">Password</label>
       <input id="p" type="password" autocomplete="current-password">
-      <button class="login-btn" type="submit">Log In</button>
+      <button class="login-btn" type="submit" id="loginGo">Log In</button>
       <div class="login-err" id="err"></div>
     </form>
     <div class="login-note">This panel runs on 127.0.0.1 with the service role key from admin/.env. It is never deployed: build.js only ships src/.</div>
@@ -29,19 +29,25 @@
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const err = document.getElementById('err');
+  const go = document.getElementById('loginGo');
   err.textContent = '';
+  go.disabled = true;
+  go.innerHTML = '<span class="spin"></span>Signing in…';
   try {
     const res = await fetch('/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username: document.getElementById('u').value, password: document.getElementById('p').value })
     });
+    // On success the redirect replaces the page, so leave the button spinning.
     if (res.ok) { location.href = '/'; return; }
     const body = await res.json().catch(() => ({}));
     err.textContent = body.error || 'Login failed';
   } catch {
     err.textContent = 'Server not reachable';
   }
+  go.disabled = false;
+  go.textContent = 'Log In';
 });
 </script>
 </body>
