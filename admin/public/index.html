@@ -23,6 +23,7 @@
     <button class="nav-btn" data-view="referrals"><i class="fa-solid fa-share-nodes"></i> <span class="nav-lbl">Referrals</span></button>
     <button class="nav-btn" data-view="analytics"><i class="fa-solid fa-chart-line"></i> <span class="nav-lbl">Analytics</span></button>
     <button class="nav-btn" data-view="reports"><i class="fa-solid fa-inbox"></i> <span class="nav-lbl">Reports</span><span class="cnt" id="newCnt" style="display:none">0</span></button>
+    <button class="nav-btn" data-view="deleted"><i class="fa-solid fa-user-slash"></i> <span class="nav-lbl">Deleted</span></button>
     <div class="side-foot">
       <div class="mock-badge" id="mockBadge" style="display:none">MOCK DATA</div>
       <button class="logout-btn" onclick="logout()">Log out</button>
@@ -99,6 +100,28 @@
       <div id="reportsWrap"><div class="loading-block"><span class="spin lg"></span><span>Loading…</span></div></div>
     </section>
 
+    <!-- DELETED ACCOUNTS -->
+    <section class="view" id="view-deleted">
+      <div class="view-hdr">
+        <div><h1>Deleted accounts</h1><p id="deletedSub">Accounts users deleted themselves. Login is blocked; data is kept until you purge it.</p></div>
+        <button class="btn" onclick="loadDeleted(this)">Refresh</button>
+      </div>
+      <div class="card"><div class="tw" style="max-height:74vh;overflow-y:auto"><table>
+        <thead><tr>
+          <th>User</th>
+          <th>Plan at deletion</th>
+          <th class="num">Journals</th>
+          <th class="num">Trades</th>
+          <th class="num">Images</th>
+          <th class="num date">Joined</th>
+          <th class="num date">Last seen</th>
+          <th class="num date">Deleted</th>
+          <th></th>
+        </tr></thead>
+        <tbody id="deletedBody"><tr><td colspan="9"><div class="loading-block"><span class="spin lg"></span><span>Loading…</span></div></td></tr></tbody>
+      </table></div></div>
+    </section>
+
   </main>
 </div>
 
@@ -121,6 +144,23 @@
     <div class="modal-btns">
       <button class="btn" onclick="closeGrant()">Cancel</button>
       <button class="btn primary" id="grantGo" onclick="doGrant()">Grant Pro</button>
+    </div>
+  </div>
+</div>
+
+<!-- message modal -->
+<div class="modal-back" id="msgModal">
+  <div class="modal">
+    <h3>Send message</h3>
+    <div class="m-sub" id="msgWho"></div>
+    <label>Title</label>
+    <input type="text" id="msgTitle" maxlength="120" placeholder="e.g. You've been upgraded to Pro">
+    <label>Message</label>
+    <textarea id="msgBody" maxlength="2000" rows="5" placeholder="The user sees this in the notification bell on their dashboard."></textarea>
+    <div class="m-msg" id="msgMsg"></div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeMessage()">Cancel</button>
+      <button class="btn primary" id="msgGo" onclick="doMessage()">Send</button>
     </div>
   </div>
 </div>

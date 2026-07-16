@@ -1,0 +1,74 @@
+<!-- analytics.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<script src="/favicon.js"></script>
+<title>Analytics</title>
+<link rel="stylesheet" href="/styles/analytics.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/lib/theme.js"></script>
+<script src="/js/lib/supabase-client.js"></script>
+<script src="/js/lib/track.js" defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+</head>
+<body>
+<!-- Loading indicator -->
+<style>
+.loading-overlay{display:flex;align-items:center;justify-content:center;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:9999;visibility:visible;opacity:1;transition:opacity 0.3s ease,visibility 0.3s ease}
+.loading-overlay.hidden{visibility:hidden;opacity:0;pointer-events:none}
+.pl-spin{width:30px;height:30px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+</style>
+<div id="anaLoadingOverlay" class="loading-overlay">
+  <div class="pl-spin"></div>
+</div>
+
+<div class="pw">
+<div id="skelView">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+    <div style="width:140px" class="skel-hdr"></div>
+    <div style="width:180px;height:36px;border-radius:8px" class="skel-hdr"></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px">
+    <div class="skel-card"></div><div class="skel-card"></div><div class="skel-card"></div><div class="skel-card"></div><div class="skel-card"></div>
+  </div>
+  <div class="skel-chart" style="margin-bottom:16px"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div class="skel-chart"></div><div class="skel-chart"></div></div>
+</div>
+<div id="root" style="display:none"></div>
+</div>
+
+<!-- ── PDF Preview Modal ── -->
+<div class="pdf-prev-overlay" id="pdfPrevOverlay" onclick="pdfPrevOverlayClick(event)">
+  <div class="pdf-prev-modal">
+    <div class="pdf-prev-hdr">
+      <div class="pdf-prev-hdr-title">
+        <i class="fa-solid fa-file-pdf"></i>
+        <span>Analytics PDF Preview</span>
+        <span class="pdf-prev-hdr-count" id="pdfExportStatus" style="display:none"></span>
+      </div>
+      <div class="pdf-prev-hdr-actions">
+        <button class="btn-ghost" onclick="closePdfPreview()"><i class="fa-solid fa-xmark"></i> Close</button>
+        <button class="btn-primary" id="pdfDownloadBtn" onclick="downloadAnalyticsPdf()"><i class="fa-solid fa-download"></i> Download PDF</button>
+      </div>
+    </div>
+    <div class="pdf-prev-body" id="pdfPrevBody">
+      <div class="pdf-prev-page" id="pdfPrevPage">
+        <div class="pdf-prev-loading"><i class="fa-solid fa-spinner" style="animation:spin 1s linear infinite"></i> Building preview…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/modules/analytics.js"></script>
+<script src="/js/loss-vignette.js"></script>
+</body>
+</html>

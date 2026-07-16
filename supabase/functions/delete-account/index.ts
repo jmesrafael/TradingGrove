@@ -43,37 +43,38 @@ Deno.serve(async (req) => {
     }
 
     const userId = user.id;
-    console.log("Deleting account for user:", userId);
+    console.log("Soft-deleting account for user:", userId);
 
-    // ── Helper: delete rows via admin client ───────────────────────────────
-    const del = async (table: string, col: string) => {
-      const { error } = await admin.from(table).delete().eq(col, userId);
-      if (error) console.error(`Failed to delete from ${table} (${col}):`, error.message);
-      else console.log(`Deleted from ${table} (${col})`);
-    };
+    // ── Soft delete: mark the profile, keep all data ───────────────────────
+    // Rows stay in place so the account shows up in the admin "Deleted" view;
+    // permanent erasure happens only from there (admin purge).
+    const { error: markErr } = await admin
+      .from("profiles")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", userId);
 
-    // ── Delete data in dependency order ───────────────────────────────────
-    await del("trade_images",   "user_id");
-    await del("trades",         "user_id");
-    await del("journal_settings","user_id");
-    await del("custom_notes",   "user_id");
-    await del("journals",       "user_id");
-    await del("referrals",      "referrer_id");
-    await del("referrals",      "referred_user_id");
-    await del("profiles",       "id");
-
-    // ── Delete the auth user last (requires service role) ─────────────────
-    const { error: deleteAuthErr } = await admin.auth.admin.deleteUser(userId);
-
-    if (deleteAuthErr) {
-      console.error("Auth user deletion failed:", deleteAuthErr.message);
+    if (markErr) {
+      console.error("Failed to mark profile deleted:", markErr.message);
       return new Response(
-        JSON.stringify({ error: "Failed to delete auth user: " + deleteAuthErr.message }),
+        JSON.stringify({ error: "Failed to delete account: " + markErr.message }),
         { status: 500, headers: CORS }
       );
     }
 
-    console.log("Account successfully deleted for user:", userId);
+    // ── Permanently block login (ban instead of deleting the auth user) ────
+    const { error: banErr } = await admin.auth.admin.updateUserById(userId, {
+      ban_duration: "876000h", // ~100 years
+    });
+
+    if (banErr) {
+      console.error("Failed to ban auth user:", banErr.message);
+      return new Response(
+        JSON.stringify({ error: "Failed to disable login: " + banErr.message }),
+        { status: 500, headers: CORS }
+      );
+    }
+
+    console.log("Account soft-deleted and login disabled for user:", userId);
     return new Response(JSON.stringify({ success: true }), { status: 200, headers: CORS });
 
   } catch (err: any) {

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<!--
+  TradingGrove blog post template.
+  Copy this file, rename to {slug}.html, fill in the placeholders below.
+  After publishing, add a matching <a class="post-card"> entry to ../blog.html
+  and a new <url> entry to ../sitemap.xml.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{POST TITLE} | TradingGrove Blog</title>
+<meta name="description" content="{1-2 SENTENCE SUMMARY FOR SEARCH RESULTS}">
+<meta property="og:title" content="{POST TITLE}">
+<meta property="og:description" content="{1-2 SENTENCE SUMMARY}">
+<meta property="og:url" content="https://tradinggrove.com/blog/{slug}">
+<meta property="og:type" content="article">
+<meta property="og:image" content="https://tradinggrove.com/assets/og-home.png">
+<meta property="article:published_time" content="2026-01-01T00:00:00Z">
+<meta property="article:author" content="TradingGrove">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<link rel="canonical" href="https://tradinggrove.com/blog/{slug}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
+<link rel="stylesheet" href="/styles/blog.css">
+</head>
+<body>
+
+<div class="bg-orb bg-orb1"></div>
+<div class="bg-orb bg-orb2"></div>
+
+<div class="page-loader" id="pageLoader">
+  <div>
+    <div class="pl-logo">Trading<span>Grove</span></div>
+    <div class="pl-spin"></div>
+  </div>
+</div>
+
+<header>
+  <a href="/" class="logo">Trading<span>Grove</span></a>
+  <a href="/blog" class="btn-ghost"><i class="fa-solid fa-chevron-left"></i> All posts</a>
+</header>
+
+<main>
+  <article class="post-article">
+
+    <div class="post-hero">
+      <div class="post-meta-row">
+        <span class="post-tag">{TAG}</span>
+        <span>{MONTH DAY, YEAR}</span>
+        <span>·</span>
+        <span>{N} min read</span>
+      </div>
+      <h1>{POST TITLE}</h1>
+      <p class="post-lead">{LEAD PARAGRAPH — one-sentence hook that sets up the rest of the article}</p>
+    </div>
+
+    <div class="post-body">
+      <p>{Opening paragraph.}</p>
+
+      <h2>{Section heading}</h2>
+      <p>{Body paragraph.}</p>
+
+      <ul>
+        <li>{Bullet}</li>
+      </ul>
+
+      <blockquote>{Optional pull-quote.}</blockquote>
+
+      <h2>{Closing section}</h2>
+      <p>{Wrap-up paragraph with a soft CTA, e.g. linking to /auth or /calculator.}</p>
+    </div>
+
+    <div class="post-footer">
+      <a href="/blog" class="back-link"><i class="fa-solid fa-arrow-left"></i> More posts</a>
+    </div>
+
+  </article>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo">Trading<span>Grove</span></div>
+      <p class="footer-tagline">A trading journal that helps you understand your own trading.</p>
+      <div class="footer-badges">
+        <span class="footer-badge"><i class="fa-solid fa-cloud"></i> Cloud-Powered</span>
+        <span class="footer-badge"><i class="fa-solid fa-lock"></i> Secure</span>
+        <span class="footer-badge"><i class="fa-solid fa-database"></i> Your Data</span>
+      </div>
+    </div>
+    <div class="footer-links-group">
+      <div class="footer-col">
+        <div class="footer-col-title">Product</div>
+        <a href="/#features">Features</a>
+        <a href="/#pricing">Pricing</a>
+        <a href="/#compare">Compare</a>
+        <a href="/#how">How It Works</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Free Tools</div>
+        <a href="/#crypto-calculator">Crypto Calculator</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Company</div>
+        <a href="/about">About</a>
+        <a href="/security">Security</a>
+        <a href="/blog">Blog</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Account</div>
+        <a href="/auth">Sign Up Free</a>
+        <a href="/auth">Log In</a>
+        <a href="/subscription">Upgrade to Pro</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Legal</div>
+        <a href="/terms">Terms of Service</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/refund">Refund Policy</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 TradingGrove. Secure cloud-powered trading journal.</span>
+    <span>Plan &nbsp;·&nbsp; Log &nbsp;·&nbsp; Review &nbsp;·&nbsp; Improve</span>
+  </div>
+</footer>
+
+<script>
+(async () => {
+  const loader = document.getElementById('pageLoader');
+  loader.classList.add('gone');
+  setTimeout(() => { if (loader) loader.style.display = 'none'; }, 400);
+})();
+</script>
+</body>
+</html>

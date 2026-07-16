@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<title>Pre-Session</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/lib/theme.js"></script>
+<script src="/js/lib/supabase-client.js"></script>
+<script src="/js/lib/track.js" defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
+<link rel="stylesheet" href="/styles/presession.css">
+<style>
+.loading-overlay{display:flex;align-items:center;justify-content:center;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:9999;visibility:visible;opacity:1;transition:opacity 0.3s ease,visibility 0.3s ease}
+.loading-overlay.hidden{visibility:hidden;opacity:0;pointer-events:none}
+.pl-spin{width:30px;height:30px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+</style>
+</head>
+<body>
+<!-- Loading indicator -->
+<div id="psLoadingOverlay" class="loading-overlay">
+  <div class="pl-spin"></div>
+</div>
+
+<div class="pw">
+
+  <!-- Status Banner -->
+  <div class="session-banner" id="sessionBanner">
+    <div class="sb-left">
+      <div class="sb-dot" id="sbDot"></div>
+      <span class="sb-label">Bias</span>
+      <span class="sb-bias" id="sbBias">—</span>
+    </div>
+    <div class="sb-center">
+      <span class="sb-score-label">Checklist</span>
+      <span class="sb-score-val" id="sbScoreVal">—</span>
+    </div>
+    <div class="sb-right">
+      <i class="fa-solid fa-rotate-right" style="font-size:11px;opacity:.6"></i>
+      <span class="sb-phase" id="sbPhase">—</span>
+    </div>
+  </div>
+
+  <!-- Page Header -->
+  <div class="ps-page-header">
+    <div class="ps-page-header-left">
+      <div class="ps-page-title">Pre-Session</div>
+      <div class="ps-page-subtitle" id="psSubtitle">Reusable checklists with scheduled resets</div>
+    </div>
+    <div class="ps-page-header-right">
+      <button class="btn-secondary" id="btnSettings" onclick="openSettings()" title="Session settings" style="display:none">
+        <i class="fa-solid fa-sliders"></i> Settings
+      </button>
+      <button class="btn-secondary" id="btnResetNow" onclick="resetActiveSetNow()" title="Reset checks now" style="display:none">
+        <i class="fa-solid fa-rotate-right"></i> Reset
+      </button>
+      <button class="btn-primary" onclick="openCreateSet()">
+        <i class="fa-solid fa-plus"></i> New Set
+      </button>
+    </div>
+  </div>
+
+  <!-- Set tabs -->
+  <div class="set-tabs" id="setTabs"></div>
+
+  <!-- Empty state -->
+  <div class="ps-empty" id="psEmpty" style="display:none">
+    <i class="fa-solid fa-clipboard-list"></i>
+    <div class="ps-empty-title">No checklist sets yet</div>
+    <div class="ps-empty-sub">Create a checklist to track the routine you want to follow before every session.</div>
+    <button class="btn-primary" onclick="openCreateSet()"><i class="fa-solid fa-plus"></i> Create your first set</button>
+  </div>
+
+  <!-- Active set — minimal execution view -->
+  <div class="ps-active" id="psActive" style="display:none">
+
+    <!-- Subtle inline Instructions (no card / no border). Click → Settings. -->
+    <div class="ps-instructions" id="psInstructions" onclick="openSettings('instructions')" title="Edit in Session Settings"></div>
+
+    <!-- Bias + Mood (resettable per cycle) -->
+    <div class="ps-state-row">
+      <div class="ps-state-block">
+        <div class="ps-state-lbl"><i class="fa-solid fa-compass"></i> Market Bias</div>
+        <div class="bias-selector" id="biasSelector">
+          <button class="bias-btn" data-bias="Bullish" onclick="setBias('Bullish')"><i class="fa-solid fa-arrow-trend-up"></i> Bullish</button>
+          <button class="bias-btn" data-bias="Bearish" onclick="setBias('Bearish')"><i class="fa-solid fa-arrow-trend-down"></i> Bearish</button>
+          <button class="bias-btn" data-bias="Neutral" onclick="setBias('Neutral')"><i class="fa-solid fa-minus"></i> Neutral</button>
+          <button class="bias-btn" data-bias="Wait"    onclick="setBias('Wait')"><i class="fa-solid fa-hand"></i> Wait</button>
+        </div>
+      </div>
+
+      <div class="ps-state-block">
+        <div class="ps-state-lbl"><i class="fa-solid fa-face-smile"></i> Mood</div>
+        <div class="mood-row" id="moodRow"></div>
+      </div>
+    </div>
+
+    <!-- Checklist — primary focus -->
+    <div class="ps-checklist">
+      <div class="ps-checklist-head">
+        <div class="ps-checklist-title" id="setNameLabel">Checklist</div>
+        <div class="cl-progress-wrap">
+          <div class="cl-progress-bar"><div class="cl-progress-fill" id="clProgressFill"></div></div>
+          <span class="cl-progress-label" id="clProgressLabel">0 / 0 checked</span>
+        </div>
+      </div>
+      <div class="cl-simple-items" id="clItems"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Session Settings drawer ─────────────────────────────────────────── -->
+<div class="ps-drawer-bd" id="settingsBd" onclick="closeSettings()"></div>
+<aside class="ps-drawer" id="settingsDrawer" aria-hidden="true">
+  <header class="ps-drawer-head">
+    <div class="ps-drawer-title">
+      <i class="fa-solid fa-sliders"></i>
+      <span>Session Settings</span>
+      <span class="ps-drawer-set" id="settingsSetLabel"></span>
+    </div>
+    <button class="ps-icon-btn" onclick="closeSettings()" title="Close"><i class="fa-solid fa-xmark"></i></button>
+  </header>
+
+  <div class="ps-drawer-body">
+
+    <section class="ps-set-section">
+      <div class="ps-section-label">Set name</div>
+      <input type="text" class="ps-inline-input" id="settingsSetName" maxlength="80" oninput="markSettingsDirty()">
+    </section>
+
+    <section class="ps-set-section">
+      <div class="ps-section-label">Instructions <span class="ps-lbl-hint">persistent — does not reset</span></div>
+      <textarea class="ps-textarea" id="settingsDescription" rows="5"
+        placeholder="Add the rules / context / mindset notes that should always be visible above your checklist…"
+        oninput="markSettingsDirty()"></textarea>
+    </section>
+
+    <section class="ps-set-section">
+      <div class="ps-section-label">Mood defaults <span class="ps-lbl-hint">resets each cycle — these are the choices the user picks from</span></div>
+      <div class="mood-editor" id="moodEditor"></div>
+      <div class="ps-add-row">
+        <input type="text" class="ps-inline-input" id="moodInp" placeholder="Add a mood (e.g. 😊 Calm) — press Enter or +" maxlength="80" autocomplete="off" oninput="markSettingsDirty()" onkeydown="if(event.key==='Enter'){event.preventDefault();addMoodOption();}">
+        <button type="button" class="btn-add-sm" onclick="addMoodOption()" title="Add mood"><i class="fa-solid fa-plus"></i></button>
+      </div>
+    </section>
+
+    <section class="ps-set-section">
+      <div class="ps-section-label">Reset schedule</div>
+      <label class="ps-toggle-row">
+        <span class="ps-toggle-label">Auto-reset on schedule</span>
+        <span class="ps-switch">
+          <input type="checkbox" id="settingsResetEnabled" onchange="markSettingsDirty()">
+          <span class="ps-switch-slider"></span>
+        </span>
+      </label>
+      <div class="ps-field-lbl" style="margin-top:10px">Reset time <span class="ps-lbl-hint">local time, daily</span></div>
+      <input type="time" class="ps-inline-input" id="settingsResetTime" oninput="markSettingsDirty()">
+      <div class="ps-next-reset" id="settingsNextReset"></div>
+    </section>
+
+    <section class="ps-set-section">
+      <div class="ps-section-label">Checklist items <span class="ps-lbl-hint">checks reset; items persist</span></div>
+      <div class="cl-manage-list" id="clManageList"></div>
+      <div class="ps-add-row" style="margin-top:8px">
+        <input type="text" class="ps-inline-input" id="clItemInp" placeholder="New checklist item…" maxlength="160" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();addItem();}">
+        <button type="button" class="btn-add-sm" onclick="addItem()" title="Add item"><i class="fa-solid fa-plus"></i></button>
+      </div>
+    </section>
+
+    <section class="ps-set-section ps-danger-section">
+      <button class="btn-danger" onclick="confirmDeleteSet()"><i class="fa-solid fa-trash"></i> Delete this set</button>
+    </section>
+
+  </div>
+
+  <footer class="ps-drawer-foot">
+    <span class="ps-dirty-indicator" id="settingsDirty"></span>
+    <button class="btn-secondary" onclick="closeSettings()">Close</button>
+    <button class="btn-ps-save" id="settingsSaveBtn" onclick="saveSettings()" disabled><i class="fa-solid fa-floppy-disk"></i> Save changes</button>
+  </footer>
+</aside>
+
+<!-- Set create modal -->
+<div class="ps-modal-bd" id="setModalBd" onclick="closeSetModal()"></div>
+<div class="ps-modal" id="setModal">
+  <div class="ps-modal-title">New Checklist Set</div>
+  <input type="text" class="ps-inline-input" id="setModalName" placeholder="Set name" maxlength="80">
+  <div class="ps-modal-actions">
+    <button class="btn-secondary" onclick="closeSetModal()">Cancel</button>
+    <button class="btn-primary" id="setModalSave" onclick="confirmSetModal()">Save</button>
+  </div>
+</div>
+
+<!-- Confirm delete modal -->
+<div class="ps-modal-bd" id="confirmBd" onclick="closeConfirm()"></div>
+<div class="ps-modal" id="confirmModal">
+  <div class="ps-modal-title">Delete checklist set?</div>
+  <div class="ps-modal-msg">All items, descriptions and current state will be removed. This cannot be undone.</div>
+  <div class="ps-modal-actions">
+    <button class="btn-secondary" onclick="closeConfirm()">Cancel</button>
+    <button class="btn-danger" onclick="performDeleteSet()">Delete</button>
+  </div>
+</div>
+
+<div id="toast"><i id="toastIcon" class="fa-solid fa-circle-check"></i><span id="toastMsg"></span></div>
+
+<script src="/js/modules/presession.js"></script>
+<script src="/js/loss-vignette.js"></script>
+</body>
+</html>

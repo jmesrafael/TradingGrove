@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trading Journal Features | Trade Log, Analytics & Risk Tools | TradingGrove</title>
+<meta name="description" content="Everything inside the TradingGrove trading journal: smart trade log, pre-session planning, deep trading analytics, trade calendar, screenshot gallery and a live risk calculator. See how each tool helps you improve.">
+<meta property="og:title" content="Trading Journal Features | TradingGrove">
+<meta property="og:description" content="Tool by tool: how TradingGrove turns your trade history into better trading decisions.">
+<meta property="og:url" content="https://tradinggrove.com/features">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://tradinggrove.com/features">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<script src="/favicon.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
+<link rel="stylesheet" href="/styles/index.css">
+<style>
+.fp-inner{max-width:900px;margin:0 auto;padding:140px 24px 80px}
+.fp-inner h1{font-size:clamp(30px,4.5vw,52px);font-weight:700;letter-spacing:-1.5px;line-height:1.08;margin-bottom:14px;text-align:center}
+.fp-inner h1 span{color:var(--accent)}
+.fp-intro{font-size:15px;color:var(--text2);line-height:1.7;max-width:620px;margin:0 auto 56px;text-align:center}
+.fp-sec-title{font-family:'Outfit',sans-serif;font-size:clamp(22px,3vw,32px);font-weight:700;letter-spacing:-.8px;margin:64px 0 10px}
+.fp-sec-title span{color:var(--accent)}
+.fp-sec-sub{font-size:14px;color:var(--text2);line-height:1.7;max-width:640px;margin-bottom:28px}
+.loop-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:700px){.loop-grid{grid-template-columns:1fr}}
+.loop-card{background:var(--panel2);border:1px solid var(--border2);border-radius:13px;padding:22px}
+.loop-step{font-family:'Outfit',sans-serif;font-size:11px;font-weight:800;color:var(--accent2);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px}
+.loop-card h3{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;margin-bottom:6px}
+.loop-card p{font-size:13px;color:var(--text2);line-height:1.65}
+.tool-block{display:flex;gap:20px;align-items:flex-start;background:var(--panel2);border:1px solid var(--border2);border-radius:13px;padding:24px;margin-bottom:12px;position:relative;overflow:hidden}
+.tool-block::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(180deg,var(--accent),transparent)}
+.tool-icon{width:44px;height:44px;border-radius:11px;background:linear-gradient(135deg,rgba(0,255,136,.12),rgba(0,255,136,.04));border:1px solid rgba(0,255,136,.15);display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--accent2);flex-shrink:0}
+.tool-block h3{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;margin-bottom:6px}
+.tool-block p{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:8px}
+.tool-q{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--accent2);background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.15);border-radius:4px;padding:3px 9px;font-family:'Outfit',sans-serif;margin-bottom:10px}
+.tool-tag{font-size:10px;font-weight:700;color:#fbbf24;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:4px;padding:2px 7px;font-family:'Outfit',sans-serif;margin-left:8px;vertical-align:2px}
+.days-grid{display:flex;flex-direction:column;gap:12px}
+.day-card{display:flex;gap:18px;align-items:flex-start;background:var(--bg);border:1px solid var(--border2);border-radius:13px;padding:22px}
+.day-when{font-family:'Outfit',sans-serif;font-size:12px;font-weight:800;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;flex-shrink:0;width:110px;padding-top:2px}
+.day-card h3{font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;margin-bottom:5px}
+.day-card p{font-size:13px;color:var(--text2);line-height:1.7}
+.fp-cta{margin-top:64px;text-align:center;background:linear-gradient(135deg,rgba(0,255,136,.06),rgba(0,255,136,.02));border:1px solid rgba(0,255,136,.18);border-radius:14px;padding:40px 24px}
+.fp-cta h2{font-family:'Outfit',sans-serif;font-size:24px;font-weight:700;letter-spacing:-.5px;margin-bottom:8px}
+.fp-cta p{font-size:13px;color:var(--text2);margin-bottom:22px}
+.plan-note{display:flex;gap:14px;flex-wrap:wrap}
+.plan-note-card{flex:1;min-width:240px;background:var(--panel2);border:1px solid var(--border2);border-radius:12px;padding:18px 20px}
+.plan-note-card.pro{border-color:rgba(0,255,136,.25)}
+.plan-note-name{font-family:'Outfit',sans-serif;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px}
+.plan-note-card.pro .plan-note-name{color:var(--accent2)}
+.plan-note-card p{font-size:12.5px;color:var(--text2);line-height:1.65}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">Trading<span>Grove</span></a>
+  <div class="nav-links">
+    <a href="/about">About</a>
+    <a href="/features" class="active">Features</a>
+    <a href="/faq">FAQ</a>
+    <a href="/pricing">Pricing</a>
+  </div>
+  <div class="nav-right">
+    <a href="/auth" class="nav-login">Log In</a>
+    <a href="/auth" class="nav-cta">Start Free <i class="fa-solid fa-chevron-right" style="font-size:10px;margin-left:3px"></i></a>
+  </div>
+</nav>
+
+<div class="fp-inner">
+  <h1>Inside the TradingGrove<br><span>trading journal.</span></h1>
+  <p class="fp-intro">Every tool here exists to answer one question: what should you change about your trading? This page walks through each feature, the question it answers, and what a realistic first three months of journaling looks like.</p>
+
+  <h2 class="fp-sec-title">One loop: <span>Plan, Log, Review.</span></h2>
+  <p class="fp-sec-sub">Consistent traders repeat a simple cycle every session. TradingGrove gives each phase its own tool, so the loop takes minutes instead of willpower.</p>
+  <div class="loop-grid">
+    <div class="loop-card"><div class="loop-step">1 · Plan</div><h3>Before the session</h3><p>Set your bias, check the news, run through your rules, and size the trade with the risk calculator before you enter.</p></div>
+    <div class="loop-card"><div class="loop-step">2 · Log</div><h3>During and after</h3><p>Capture each trade in seconds: pair, direction, strategy, timeframe, PNL, R-multiple, confidence, mood and a chart screenshot.</p></div>
+    <div class="loop-card"><div class="loop-step">3 · Review</div><h3>Weekly</h3><p>Open the analytics, read what the week actually looked like, and pick one thing to change. Small corrections, compounded.</p></div>
+  </div>
+
+  <h2 class="fp-sec-title">The tools, <span>one by one.</span></h2>
+  <p class="fp-sec-sub">Each tool answers a question you cannot answer from memory or a spreadsheet without real effort.</p>
+
+  <div class="tool-block"><div class="tool-icon"><i class="fa-solid fa-table-list"></i></div><div>
+    <h3>Smart Trade Log</h3>
+    <span class="tool-q"><i class="fa-solid fa-circle-question"></i> What exactly have I been trading?</span>
+    <p>The core of the journal: a fast, structured log with 13+ data points per trade. Filter by pair, strategy, mood or timeframe and your whole history becomes searchable evidence instead of a blur. Logging a trade takes about 30 seconds, which is the difference between a journal you keep and one you abandon.</p>
+    <p><strong style="color:var(--text)">What changes for you:</strong> you stop arguing with your memory. When you think "shorts have been working", the log either confirms it or corrects you.</p>
+  </div></div>
+
+  <div class="tool-block"><div class="tool-icon"><i class="fa-solid fa-clipboard-list"></i></div><div>
+    <h3>Pre-Session Planning</h3>
+    <span class="tool-q"><i class="fa-solid fa-circle-question"></i> Am I about to trade my plan, or my feelings?</span>
+    <p>A short checklist before you open a chart: market bias, upcoming news, your rules for the day. After the session, a reflection prompt closes the loop. Two minutes at each end of a session, and impulsive entries have to get past a written plan first.</p>
+    <p><strong style="color:var(--text)">What changes for you:</strong> fewer unplanned trades. Most traders find their worst losses were never in the morning's plan.</p>
+  </div></div>
+
+  <div class="tool-block"><div class="tool-icon"><i class="fa-solid fa-chart-area"></i></div><div>
+    <h3>Deep Analytics</h3>
+    <span class="tool-q"><i class="fa-solid fa-circle-question"></i> Where do I actually make and lose money?</span>
+    <p>Computed automatically from every logged trade: equity curve with drawdowns, win/loss split, strategy PNL breakdown, mood vs performance, hour heatmap, day-of-week analysis, Long vs Short, timeframe breakdown and most-traded pairs. This is where a losing scalping habit or a profitable "boring" setup becomes impossible to miss.</p>
+    <p><strong style="color:var(--text)">What changes for you:</strong> you learn your real expectancy. A 41% win rate with 2.7R winners is a business; the analytics show whether your numbers work like that.</p>
+  </div></div>
+
+  <div class="tool-block"><div class="tool-icon"><i class="fa-solid fa-calendar-days"></i></div><div>
+    <h3>Trade Calendar</h3>
+    <span class="tool-q"><i class="fa-solid fa-circle-question"></i> How does my month really look?</span>
+    <p>A monthly grid of green and red days with PNL and trade count on each. Click a day to open the trades behind it. Red streaks stop feeling like a broken system once you see them sitting inside a profitable month.</p>
+    <p><strong style="color:var(--text)">What changes for you:</strong> perspective. One bad Tuesday reads very differently on a calendar that is green overall.</p>
+  </div></div>
+
+  <div class="tool-block"><div class="tool-icon"><i class="fa-solid fa-note-sticky"></i></div><div>
+    <h3>Notes &amp; Screenshot Gallery <span class="tool-tag">Pro · Unlimited Images</span></h3>
+    <span class="tool-q"><i class="fa-solid fa-circle-question"></i> What did the chart actually look like when I entered?</span>
+    <p>Paste chart screenshots straight from your clipboard onto any trade, add notes with autosave, and browse the full gallery when reviewing. Your entry chart is evidence; without it, hindsight quietly rewrites every setup into something cleaner than it was.</p>
+    <p><strong style="color:var(--text)">What changes for you:</strong> honest reviews. You grade the trade you actually took, not the one you remember.</p>
+  </div></div>
+
+  <div class="tool-block"><div class="tool-icon"><i class="fa-solid fa-calculator"></i></div><div>
+    <h3>Live Risk Calculator</h3>
+    <span class="tool-q"><i class="fa-solid fa-circle-question"></i> How big should this position be?</span>
+    <p>Enter account size, risk percentage, entry and stop loss; get position size, risk amount and R:R instantly. Built for crypto today, with a forex version planned. Position sizing is the risk management habit that keeps a 7-trade losing streak survivable, and it works best decided before the trade, not during it.</p>
+    <p><strong style="color:var(--text)">What changes for you:</strong> every loss costs roughly the same. That single discipline is what makes expectancy math hold up in real life.</p>
+  </div></div>
+
+  <h2 class="fp-sec-title">What your first <span>90 days look like.</span></h2>
+  <p class="fp-sec-sub">Journaling pays out on a delay. Here is the realistic timeline, based on how the analytics fill in as your trade count grows.</p>
+  <div class="days-grid">
+    <div class="day-card"><div class="day-when">Weeks 1-2</div><div><h3>Build the habit</h3><p>You log every trade, win or lose, about 30 seconds each. The pre-session checklist starts catching a few impulse entries. The data is still thin, and that is fine; the habit is the product at this stage.</p></div></div>
+    <div class="day-card"><div class="day-when">Month 1</div><div><h3>First patterns surface</h3><p>With 30 to 50 trades logged, the hour heatmap and mood chart start saying something. Maybe your afternoon trades run negative, or "frustrated" entries lose twice as often. You make your first evidence-based change: a stopped hour, a two-loss rule.</p></div></div>
+    <div class="day-card"><div class="day-when">Month 3</div><div><h3>Expectancy becomes visible</h3><p>Around 100+ trades, the strategy breakdown is trustworthy. You know which setup earns its risk and which has been draining it, what your real average winner and loser look like, and whether your sizing survives your worst streak. Reviews shift from "how do I feel" to "what does the data say".</p></div></div>
+  </div>
+
+  <h2 class="fp-sec-title">Free and Pro, <span>briefly.</span></h2>
+  <div class="plan-note">
+    <div class="plan-note-card"><div class="plan-note-name">Free</div><p>One journal, unlimited trades, core analytics, calendar, pre-session planning and the risk calculator. Enough to build the habit and see your first patterns. No card, no expiry.</p></div>
+    <div class="plan-note-card pro"><div class="plan-note-name">Pro</div><p>Unlimited journals for separate accounts or markets, the full analytics suite, unlimited screenshots, export and import, themes and PIN lock. For when the habit has stuck and you want the complete picture.</p></div>
+  </div>
+  <p style="margin-top:14px;font-size:13px"><a href="/pricing" class="sec-more-link">See plans and pricing in detail <i class="fa-solid fa-arrow-right" style="font-size:10px"></i></a></p>
+
+  <div class="fp-cta">
+    <h2>The best time to start logging was your first trade.</h2>
+    <p>The second best time is your next one. Setup takes under a minute.</p>
+    <a href="/auth" class="btn-hero" style="padding:13px 26px;font-size:14px"><i class="fa-solid fa-chart-line"></i> Start Your Free Journal</a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo">Trading<span>Grove</span></div>
+      <p class="footer-tagline">The online trading journal for traders who improve through review: log trades, track your psychology, and read your own analytics.</p>
+      <div class="footer-badges">
+        <span class="footer-badge"><i class="fa-solid fa-mobile-screen"></i> Any Device</span>
+        <span class="footer-badge"><i class="fa-solid fa-bolt"></i> Quick Setup</span>
+        <span class="footer-badge"><i class="fa-solid fa-circle-check"></i> Free Starter Plan</span>
+      </div>
+    </div>
+    <div class="footer-links-group">
+      <div class="footer-col">
+        <div class="footer-col-title">Product</div>
+        <a href="/features">Features</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/#compare">Compare</a>
+        <a href="/#how">How It Works</a>
+        <a href="/faq">FAQ</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Free Tools</div>
+        <a href="/#crypto-calculator">Crypto Risk Calculator</a>
+        <span class="footer-soon">Forex Calculator · Soon</span>
+        <span class="footer-soon">Trade Statistics · Soon</span>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Company</div>
+        <a href="/about">About</a>
+        <a href="/security">Security</a>
+        <a href="/blog">Blog</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Account</div>
+        <a href="/auth">Sign Up Free</a>
+        <a href="/auth">Log In</a>
+        <a href="/subscription">Upgrade to Pro</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Legal</div>
+        <a href="/terms">Terms of Service</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/refund">Refund Policy</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 TradingGrove. A trading journal built for honest review.</span>
+    <span>Plan &nbsp;·&nbsp; Log &nbsp;·&nbsp; Review &nbsp;·&nbsp; Improve</span>
+  </div>
+</footer>
+
+</body>
+</html>

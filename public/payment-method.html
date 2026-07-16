@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<title>TradingGrove | Choose Payment</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/lib/theme.js"></script>
+<script src="/js/lib/supabase-client.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
+<link rel="stylesheet" href="/styles/payment-method.css">
+</head>
+<body>
+
+<div class="bg-orb bg-orb1"></div>
+<div class="bg-orb bg-orb2"></div>
+
+<div class="page-loader" id="pageLoader">
+  <div class="pl-inner">
+    <div class="pl-logo">Trading<span>Grove</span></div>
+    <div class="pl-spin"></div>
+  </div>
+</div>
+
+<header>
+  <a href="/" class="logo">Trading<span>Grove</span></a>
+  <button class="btn-ghost" onclick="location.href='/subscription'">
+    <i class="fa-solid fa-chevron-left"></i> Back to Plans
+  </button>
+</header>
+
+<main>
+
+  <div class="pm-wrap">
+
+    <!-- Top label -->
+    <div class="pm-eyebrow"><i class="fa-solid fa-lock"></i> Secure Checkout</div>
+
+    <!-- Title -->
+    <h1 class="pm-title">Choose your payment method</h1>
+
+    <!-- Plan summary badge -->
+    <div class="pm-plan-badge" id="planBadge">
+      <i class="fa-solid fa-star"></i>
+      <span id="planBadgeText">TradingGrove Pro — Monthly · $15/mo</span>
+    </div>
+
+    <!-- Cards -->
+    <div class="pm-cards">
+
+      <!-- PayPal Only -->
+      <button class="pm-card paypal-only" id="paypalBtn" onclick="payWithPayPal()">
+        <div class="pm-card-inner">
+          <img src="/assets/images/paypal-logo.png" alt="PayPal" class="pm-paypal-logo">
+          <div class="pm-card-body">
+            <div class="pm-card-desc">Pay securely with your PayPal account or linked card</div>
+          </div>
+          <div class="pm-card-arrow"><i class="fa-solid fa-chevron-right"></i></div>
+        </div>
+        <div class="pm-card-loader" id="paypalLoader" style="display:none">
+          <i class="fa-solid fa-spinner fa-spin"></i> Redirecting to PayPal…
+        </div>
+      </button>
+
+    </div>
+
+    <!-- Trust line -->
+    <div class="pm-trust">
+      <span><i class="fa-solid fa-lock"></i> 256-bit SSL encryption</span>
+      <span class="pm-trust-sep">·</span>
+      <span><i class="fa-solid fa-ban"></i> Cancel anytime</span>
+      <span class="pm-trust-sep">·</span>
+      <span><i class="fa-solid fa-database"></i> Your data is always yours</span>
+    </div>
+
+  </div>
+
+</main>
+
+<div id="toast"><i id="toastIcon"></i><span id="toastMsg"></span></div>
+
+<script src="/js/modules/payment-method.js"></script>
+</body>
+</html>

@@ -87,6 +87,7 @@ function goToView(view) {
   if (view === 'analytics') loadAnalytics();
   if (view === 'reports') loadReports();
   if (view === 'referrals' && !REF) loadReferrals();
+  if (view === 'deleted') loadDeleted();
 }
 document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => goToView(btn.dataset.view)));
 
@@ -219,6 +220,7 @@ function renderUsers() {
       <td class="num date">${fmtDate(u.created_at)}</td>
       <td class="num date">${fmtDate(u.last_sign_in_at)}</td>
       <td style="text-align:right;white-space:nowrap">
+        <button class="btn btn-sm" onclick="openMessage('${u.id}')">Message</button>
         <button class="btn btn-sm" onclick="openGrant('${u.id}')">Grant</button>
         ${u.plan === 'pro' ? `<button class="btn btn-sm danger" onclick="revoke('${u.id}',this)">Revoke</button>` : ''}
       </td>
@@ -339,6 +341,41 @@ async function revoke(id, btn) {
   } catch (e) { alert('Revoke failed: ' + e.message); }
 }
 
+// ── message user (admin -> user notification) ────────────────
+let msgTarget = null;
+function openMessage(id) {
+  msgTarget = USERS.find(u => u.id === id);
+  if (!msgTarget) return;
+  document.getElementById('msgWho').textContent = `To ${msgTarget.email} — shows up in the bell on their dashboard.`;
+  document.getElementById('msgTitle').value = '';
+  document.getElementById('msgBody').value = '';
+  document.getElementById('msgMsg').textContent = '';
+  document.getElementById('msgModal').classList.add('open');
+  document.getElementById('msgTitle').focus();
+}
+function closeMessage() { document.getElementById('msgModal').classList.remove('open'); msgTarget = null; }
+
+async function doMessage() {
+  if (!msgTarget) return;
+  const title = document.getElementById('msgTitle').value.trim();
+  const body = document.getElementById('msgBody').value.trim();
+  const msg = document.getElementById('msgMsg');
+  const go = document.getElementById('msgGo');
+  if (!title) { msg.className = 'm-msg err'; msg.textContent = 'Enter a title.'; return; }
+  if (!body) { msg.className = 'm-msg err'; msg.textContent = 'Enter a message.'; return; }
+  go.disabled = true;
+  msg.className = 'm-msg'; msg.innerHTML = '<span class="spin"></span> Sending…';
+  try {
+    const r = await api(`/api/users/${msgTarget.id}/message`, { method: 'POST', body: JSON.stringify({ title, body }) });
+    if (r.missingTable) { msg.className = 'm-msg err'; msg.textContent = r.message; return; }
+    msg.className = 'm-msg ok';
+    msg.textContent = 'Sent.';
+    setTimeout(closeMessage, 900);
+  } catch (e) {
+    msg.className = 'm-msg err'; msg.textContent = e.message;
+  } finally { go.disabled = false; }
+}
+
 // ── referrals ────────────────────────────────────────────────
 // Reward = 30 days of Pro per rewarded referral (server confirms via
 // REF.rewardDays, mirroring supabase/functions/_shared/referral-utils.ts).
@@ -360,14 +397,33 @@ function buildReferralGraph(edges) {
     child.edge = e;
     nodes.get(e.referrer_id).children.push(child.id);
   }
-  let roots = [...nodes.values()].filter(n => n.parentId === null).map(n => n.id);
-  if (!roots.length && nodes.size) {
-    // Every node has a parent - only possible with a referral cycle (e.g. two
-    // users who each "referred" the other). Fall back to "anyone who referred
-    // someone" as a root; layoutGraph's visited-set still prevents duplicate
-    // placement, it just breaks the cycle at an arbitrary point instead of
-    // crashing with zero levels (which produced a negative SVG viewBox).
-    roots = [...nodes.values()].filter(n => n.children.length > 0).map(n => n.id);
+  // Connected components (undirected: a referral link ties two users together
+  // regardless of direction). Normally every component has exactly one true
+  // root (parentId === null). A referral cycle - two users who each
+  // "referred" the other - leaves that component with NO true root; pick one
+  // representative per such component rather than letting every member
+  // become its own cluster center (which splinters one connected group
+  // across the canvas, joined only by long edges crossing empty space).
+  const adj = new Map();
+  const link = (a, b) => { if (!adj.has(a)) adj.set(a, new Set()); adj.get(a).add(b); };
+  for (const n of nodes.values()) {
+    if (n.parentId && nodes.has(n.parentId)) { link(n.id, n.parentId); link(n.parentId, n.id); }
+  }
+  const seen = new Set();
+  const roots = [];
+  for (const id of nodes.keys()) {
+    if (seen.has(id)) continue;
+    const comp = [];
+    const queue = [id];
+    seen.add(id);
+    while (queue.length) {
+      const cur = queue.shift();
+      comp.push(cur);
+      for (const nb of adj.get(cur) || []) if (!seen.has(nb)) { seen.add(nb); queue.push(nb); }
+    }
+    const naturalRoots = comp.filter(cid => nodes.get(cid).parentId === null);
+    if (naturalRoots.length) roots.push(...naturalRoots);
+    else roots.push(comp.reduce((best, cid) => nodes.get(cid).children.length > nodes.get(best).children.length ? cid : best, comp[0]));
   }
   return { nodes, roots };
 }
@@ -538,8 +594,13 @@ function layoutRadial() {
   }
   let minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
   for (const [id, c] of REF_COORDS) {
-    const root = findClusterRoot(id);
-    const ctr = centers.get(root) || { x: 0, y: 0 };
+    // c.rootId was set once by the closure-captured rootId at the top of
+    // this node's place() traversal - use it directly. A parentId re-walk
+    // (the previous approach) breaks down on a referral cycle: two different
+    // members of the very same connected component could resolve to two
+    // different (and sometimes non-existent) center keys, scattering one
+    // cohesive cluster across the canvas.
+    const ctr = centers.get(c.rootId) || { x: 0, y: 0 };
     c.x = ctr.x + Math.cos(c.angle) * c.radius;
     c.y = ctr.y + Math.sin(c.angle) * c.radius;
     minX = Math.min(minX, c.x); maxX = Math.max(maxX, c.x);
@@ -731,10 +792,24 @@ function netFitStage() {
   const svg = document.getElementById('netSvg');
   const stage = document.getElementById('netStage');
   if (!svg || !stage) return;
-  const width = stage.clientWidth || 800;
-  const aspect = NET.size.h / Math.max(1, NET.size.w);
-  const height = Math.min(620, Math.max(220, Math.round(width * aspect)));
-  svg.style.height = height + 'px';
+  // Size the SVG from its own content bounding box (not from the card's
+  // width) so a compact tree renders as a compact, centered box instead of
+  // stretching to fill a full-width card. Large trees grow toward the
+  // card's available width/height caps; tiny ones upscale a bit so they
+  // don't render as a speck.
+  const availW = Math.max(280, stage.clientWidth - 28);
+  const MIN_DIM = 200, MAX_H = 560, MAX_SCALE = 1.6;
+  const w0 = Math.max(1, NET.size.w), h0 = Math.max(1, NET.size.h);
+  // Cap how far we'll upscale sparse content: a 1-2 node graph has a small,
+  // mostly-empty bounding box (the margin dominates it), so chasing the
+  // height cap would blow a single circle up to fill 560px of empty box -
+  // the opposite of "compact." MAX_SCALE keeps a lone/small cluster modest;
+  // MIN_DIM only pushes past it if the content is so tiny that legibility
+  // would otherwise suffer.
+  let scale = Math.min(availW / w0, MAX_H / h0, MAX_SCALE);
+  if (Math.max(w0, h0) * scale < MIN_DIM) scale = Math.min(MIN_DIM / Math.max(w0, h0), availW / w0, MAX_H / h0);
+  svg.style.width = Math.round(w0 * scale) + 'px';
+  svg.style.height = Math.round(h0 * scale) + 'px';
   const n = countVisibleNodes();
   const tierK = n <= 10 ? 1.12 : n <= 50 ? 1 : n <= 200 ? 0.9 : 0.78;
   // Scale about the viewBox center (not the origin) so a non-1 tier zoom
@@ -814,17 +889,6 @@ function onNetworkNodeClick(e, id) {
     if (NET.collapsed.has(id)) NET.collapsed.delete(id); else NET.collapsed.add(id);
     renderReferralNetwork(true);
   }
-}
-function findClusterRoot(userId) {
-  if (!REF_GRAPH) return userId;
-  let cur = REF_GRAPH.nodes.get(userId);
-  if (!cur) return userId;
-  const seen = new Set([userId]);
-  while (cur.parentId && REF_GRAPH.nodes.has(cur.parentId) && !seen.has(cur.parentId)) {
-    seen.add(cur.parentId);
-    cur = REF_GRAPH.nodes.get(cur.parentId);
-  }
-  return cur.id;
 }
 async function goToReferralsAndFocus(userId) {
   goToView('referrals');
@@ -1044,6 +1108,60 @@ async function setStatus(id, status, sel) {
   if (sel) sel.disabled = true;
   try { await api(`/api/reports/${id}/status`, { method: 'POST', body: JSON.stringify({ status }) }); loadReports(); }
   catch (e) { if (sel) sel.disabled = false; alert('Update failed: ' + e.message); }
+}
+
+// ── deleted accounts ─────────────────────────────────────────
+let DELETED = [];
+async function loadDeleted(btn) {
+  const body = document.getElementById('deletedBody');
+  const sub = document.getElementById('deletedSub');
+  try {
+    const { users } = await (btn ? withBtnBusy(btn, () => api('/api/deleted-users')) : api('/api/deleted-users'));
+    DELETED = users;
+    sub.textContent = users.length
+      ? `${users.length} deleted account${users.length === 1 ? '' : 's'}. Login is blocked; data is kept until you purge it.`
+      : 'Accounts users deleted themselves. Login is blocked; data is kept until you purge it.';
+    renderDeleted();
+  } catch (e) {
+    body.innerHTML = `<tr><td colspan="9"><div class="err-box">Could not load deleted accounts: ${esc(e.message)}</div></td></tr>`;
+  }
+}
+function renderDeleted() {
+  const body = document.getElementById('deletedBody');
+  if (!DELETED.length) { body.innerHTML = '<tr><td colspan="9" class="empty">No deleted accounts.</td></tr>'; return; }
+  body.innerHTML = DELETED.map(u => `
+    <tr data-id="${u.id}">
+      <td>
+        <div class="u-cell">
+          <div class="u-avatar">${esc(initials(u))}</div>
+          <div class="u-info">
+            <div class="u-name">${esc(u.name || '(no name)')}</div>
+            <div class="u-email" onclick="copyEmail(event,'${esc(u.email)}')" title="Click to copy">${esc(u.email)}</div>
+          </div>
+        </div>
+      </td>
+      <td><span class="badge ${u.plan === 'pro' ? 'pro' : 'free'}">${u.plan === 'pro' ? 'Pro' : 'Free'}</span></td>
+      <td class="num">${u.journals}</td>
+      <td class="num">${u.trades}</td>
+      <td class="num">${u.images}</td>
+      <td class="num date">${fmtDate(u.created_at)}</td>
+      <td class="num date">${fmtDate(u.last_sign_in_at)}</td>
+      <td class="num date">${fmtDate(u.deleted_at)}</td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="btn btn-sm danger" onclick="purgeUser('${u.id}', this)">Delete permanently</button>
+      </td>
+    </tr>`).join('');
+}
+async function purgeUser(id, btn) {
+  const u = DELETED.find(x => x.id === id);
+  if (!u) return;
+  const typed = prompt(`This permanently erases ALL data for this account — journals, trades, images, referrals — and cannot be undone.\n\nType the user's email to confirm:\n${u.email}`);
+  if (typed === null) return;
+  if (typed.trim().toLowerCase() !== (u.email || '').toLowerCase()) { alert('Email did not match. Nothing was deleted.'); return; }
+  try {
+    await withBtnBusy(btn, () => api(`/api/users/${id}/purge`, { method: 'POST' }));
+    await loadDeleted();
+  } catch (e) { alert('Purge failed: ' + e.message); }
 }
 
 // ── boot ─────────────────────────────────────────────────────

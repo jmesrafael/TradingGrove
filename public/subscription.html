@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<title>TradingGrove | Pro</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/lib/theme.js"></script>
+<script src="/js/lib/supabase-client.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
+<link rel="stylesheet" href="/styles/subscription.css">
+</head>
+<body>
+
+<canvas id="confettiCanvas" style="display:none"></canvas>
+<div class="bg-orb bg-orb1"></div>
+<div class="bg-orb bg-orb2"></div>
+<div class="bg-orb bg-orb3"></div>
+
+<div class="page-loader" id="pageLoader">
+  <div class="pl-inner">
+    <div class="pl-logo">Trading<span>Grove</span></div>
+    <div class="pl-spin"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     PRO SUBSCRIPTION CELEBRATION MODAL
+     (Ported exactly from profile.html reward modal)
+═══════════════════════════════════════════ -->
+<div id="rewardOverlay">
+  <div id="rewardParticles" class="reward-particles"></div>
+  <div id="rewardCard">
+    <canvas id="rewardConfettiCanvas"></canvas>
+    <div class="reward-hdr">
+      <div class="reward-icon-wrap">🚀</div>
+      <div class="reward-days-badge">
+        <i class="fa-solid fa-star"></i>
+        Pro — Successfully Activated!
+      </div>
+      <div class="reward-title">You're now <span style="color:var(--accent)">Pro!</span> 🎉</div>
+      <div class="reward-subtitle">
+        Your subscription is live and all Pro features are<br>
+        <strong>active on your account right now.</strong>
+      </div>
+    </div>
+    <div class="reward-body">
+      <button class="reward-cta" onclick="closeRewardModal()">
+        <i class="fa-solid fa-book-open"></i>
+        Start Journalling
+      </button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <a href="/" class="logo">Trading<span>Grove</span></a>
+  <div style="display:flex;align-items:center;gap:8px">
+    <button class="btn-ghost" onclick="location.href='/dashboard'"><i class="fa-solid fa-chevron-left"></i> Dashboard</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-pill"><i class="fa-solid fa-bolt"></i> Unlock Your Full Edge</div>
+    <h1>Trade smarter.<br><span class="hl">Win more.</span></h1>
+    <p>Serious traders don't guess. They journal, analyze, and improve. Pro gives you every tool to do exactly that.</p>
+    <div class="social-proof">
+      <div class="sp-item"><i class="fa-solid fa-lock"></i> Secure checkout</div>
+      <span class="sp-sep">·</span>
+      <div class="sp-item"><i class="fa-solid fa-database"></i> Your data, always</div>
+      <span class="sp-sep">·</span>
+      <div class="sp-item"><i class="fa-solid fa-ban"></i> No ads ever</div>
+    </div>
+  </div>
+
+  <!-- Current plan strip -->
+  <div class="plan-strip" id="planStrip">
+    <div class="ps-left">
+      <div class="ps-icon free" id="psIcon"><i class="fa-solid fa-circle-user"></i></div>
+      <div>
+        <div class="ps-label">Your current plan</div>
+        <div class="ps-val" id="psVal">Free Plan</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <span class="ps-meta" id="psMeta">Upgrade to unlock all features</span>
+      <button class="manage-btn" id="manageBtn" style="display:none" onclick="openBillingPortal()">
+        <i class="fa-solid fa-gear"></i> Manage Billing
+      </button>
+    </div>
+  </div>
+
+  <!-- Queued subscription notice -->
+  <div id="queuedNotice" style="display:none;background:rgba(0,156,222,.08);border:1px solid rgba(0,156,222,.2);border-radius:10px;padding:14px 16px;margin-top:16px;margin-bottom:16px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <i class="fa-solid fa-clock" style="color:#009cde;font-size:16px"></i>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:600;color:var(--text)">
+          Upgrade Scheduled: <span id="queuedNoticeBadge" style="color:#009cde">—</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted)">
+          Your plan will upgrade on <span id="queuedNoticeDate">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Days remaining bar (Pro users only) -->
+  <div class="days-bar-wrap" id="daysBarWrap" style="display:none">
+    <div class="days-bar-labels" style="margin-bottom:6px">
+      <span style="font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);font-weight:600">Subscription Period</span>
+    </div>
+    <div class="days-bar-track" style="margin-bottom:8px">
+      <div class="days-bar-fill" id="daysBarFill"></div>
+    </div>
+    <div class="days-bar-labels">
+      <span id="daysBarLeft" style="font-weight:600"></span>
+      <span id="daysBarRight" style="font-size:11px"></span>
+    </div>
+  </div>
+
+  <!-- Billing toggle -->
+  <div class="billing-toggle" id="billingToggle">
+    <button class="btog-btn active" id="btnMonthly" onclick="setPlan('monthly')">Monthly</button>
+    <button class="btog-btn" id="btnAnnual" onclick="setPlan('annual')">
+      Annual &nbsp;<span class="annual-badge">Save $60</span>
+    </button>
+  </div>
+
+  <!-- Plans -->
+  <div class="plans" id="plansGrid">
+
+    <!-- Free -->
+    <div class="plan-card">
+      <div class="plan-tier">Free</div>
+      <div class="price-wrap">
+        <div class="price-row">
+          <span class="price-currency">$</span>
+          <span class="price-amt">0</span>
+          <span class="price-period">/ forever</span>
+        </div>
+        <div class="price-billed-note">&nbsp;</div>
+      </div>
+      <p class="plan-desc">A solid start. Get one journal and basic analytics — no card needed, no expiry.</p>
+      <hr class="pdiv">
+      <ul class="feat-list">
+        <li><i class="fa-solid fa-check ico y"></i><span>1 Trading journal</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Unlimited trade logs</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>1 image per trade</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Basic analytics</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Limited calendar lookback</span></li>
+        <li class="dim"><i class="fa-solid fa-xmark ico n"></i><span>Multiple journals</span></li>
+        <li class="dim"><i class="fa-solid fa-xmark ico n"></i><span>Advanced analytics</span></li>
+        <li class="dim"><i class="fa-solid fa-xmark ico n"></i><span>Themes &amp; fonts</span></li>
+        <li class="dim"><i class="fa-solid fa-xmark ico n"></i><span>Export / import</span></li>
+        <li class="dim"><i class="fa-solid fa-xmark ico n"></i><span>Ads shown</span></li>
+      </ul>
+      <button class="plan-btn ghost" id="freePlanBtn" disabled>Current Plan</button>
+    </div>
+
+    <!-- Pro -->
+    <div class="plan-card pro">
+      <div class="popular-tag">⚡ Most Popular</div>
+      <div class="plan-tier pro">Pro</div>
+
+      <!-- Monthly pricing (default) -->
+      <div id="priceMonthly" class="price-wrap">
+        <div class="price-row">
+          <span class="price-currency pro">$</span>
+          <span class="price-amt pro">15</span>
+          <span class="price-period">/ month</span>
+        </div>
+        <div class="price-billed-note">Billed monthly · cancel anytime</div>
+      </div>
+
+      <!-- Annual pricing (hidden by default) -->
+      <div id="priceAnnual" class="price-wrap" style="display:none">
+        <div class="price-annual-stack">
+          <span class="price-old">$15</span>
+          <div class="price-row">
+            <span class="price-currency pro">$</span>
+            <span class="price-amt pro">10</span>
+            <span class="price-period">/ month</span>
+          </div>
+        </div>
+        <div class="price-billed-note">
+          Billed as <strong style="color:var(--text)">$120/yr</strong> &nbsp;
+          <span class="save-amt">You save $60</span>
+        </div>
+      </div>
+
+      <p class="plan-desc">For traders who are serious. Every insight, every edge, zero limitations — starting today.</p>
+      <hr class="pdiv">
+      <ul class="feat-list">
+        <li><i class="fa-solid fa-check ico y"></i><span>Unlimited journals<span class="feat-note">Spot, futures, one for each exchange — all separate</span></span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Unlimited trade logs</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Multiple images per trade</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Full analytics suite<span class="feat-note">Heatmap, Mood, Confidence, Timeframe</span></span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Unlimited calendar lookback</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Notes collection</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Export &amp; import backup</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Color &amp; font themes</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>PIN-protected journals</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>No ads — ever</span></li>
+      </ul>
+
+      <button class="plan-btn cta" id="proPlanBtn" onclick="redirectToPayment()">
+        <i class="fa-solid fa-rocket"></i>
+        <span id="proBtnText">Upgrade to Pro — $15/mo</span>
+      </button>
+      <div class="cta-nudge">
+        <i class="fa-solid fa-shield-halved"></i> Secure payment via PayPal
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Comparison table -->
+  <div class="cmp-sec">
+    <div class="sec-title">Everything compared</div>
+    <div class="cmp-wrap">
+      <table class="cmp-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Free</th>
+            <th class="pro"><i class="fa-solid fa-bolt" style="margin-right:5px;font-size:9px"></i>Pro</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="cat"><td colspan="2">Journals &amp; Logs</td><td class="pro"></td></tr>
+          <tr><td>Journals</td><td>1</td><td class="pro">Unlimited</td></tr>
+          <tr><td>Trade logs</td><td>Unlimited</td><td class="pro">Unlimited</td></tr>
+          <tr><td>Images per trade</td><td>1</td><td class="pro">Multiple</td></tr>
+          <tr><td>PIN-protected journals</td><td class="no"><i class="fa-solid fa-xmark n"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr class="cat"><td colspan="2">Analytics</td><td class="pro"></td></tr>
+          <tr><td>Total PNL, Win Rate, Streaks</td><td><i class="fa-solid fa-check y"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Equity Curve</td><td><i class="fa-solid fa-check y"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Hour-of-day heatmap</td><td class="no"><i class="fa-solid fa-xmark n"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Mood &amp; Confidence analytics</td><td class="no"><i class="fa-solid fa-xmark n"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Timeframe &amp; Day breakdown</td><td class="no"><i class="fa-solid fa-xmark n"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr class="cat"><td colspan="2">Tools &amp; Customization</td><td class="pro"></td></tr>
+          <tr><td>Notes collection</td><td class="no"><i class="fa-solid fa-xmark n"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Export / Import (.json, .csv)</td><td class="no"><i class="fa-solid fa-xmark n"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Color theme customization</td><td class="no"><i class="fa-solid fa-xmark n"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Font customization</td><td class="no"><i class="fa-solid fa-xmark n"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Calendar lookback</td><td>Limited</td><td class="pro">Unlimited</td></tr>
+          <tr><td>Ads</td><td>Shown</td><td class="pro">None — ever</td></tr>
+          <tr class="cat"><td colspan="2">Referrals</td><td class="pro"></td></tr>
+          <tr><td>Referral program</td><td><i class="fa-solid fa-check y"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Earn free Pro days</td><td><i class="fa-solid fa-check y"></i></td><td class="pro"><i class="fa-solid fa-check y"></i></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq-sec">
+    <div class="sec-title">Common questions</div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Is the free plan really free forever? <i class="fa-solid fa-chevron-down"></i></div>
+      <div class="faq-a">Yes. The free plan never expires and requires no credit card. You get 1 journal, unlimited trade logs, basic analytics, and limited calendar lookback — no strings attached.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">What's the difference between Monthly and Annual? <i class="fa-solid fa-chevron-down"></i></div>
+      <div class="faq-a">Monthly is $15/month billed each month. Annual is $120/year — that's just $10/month, saving you $60 compared to paying monthly. Both plans include exactly the same Pro features.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Can I cancel anytime? <i class="fa-solid fa-chevron-down"></i></div>
+      <div class="faq-a">Absolutely. Cancel anytime via Manage Billing. You keep full Pro access until the end of your billing period, then revert to Free. Your trades and journals are never deleted.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">What happens to extra journals if I cancel? <i class="fa-solid fa-chevron-down"></i></div>
+      <div class="faq-a">Extra journals become read-only after downgrade — all your data stays safe. Your primary journal continues to work normally on the Free plan.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">How does the referral program work? <i class="fa-solid fa-chevron-down"></i></div>
+      <div class="faq-a">Share your referral link from your Profile page. When someone signs up through your link and subscribes to Pro for the first time, you automatically receive 30 free days of Pro added to your account.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Where is my data stored? <i class="fa-solid fa-chevron-down"></i></div>
+      <div class="faq-a">Securely in Supabase with row-level security — only you can access your own data. Pro users can export everything as a .json backup or .csv for spreadsheet analysis.</div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    <span>Your data is always yours</span>
+    <span class="footer-sep">·</span>
+    <span>No hidden fees</span>
+    <span class="footer-sep">·</span>
+    <a href="/terms">Terms</a>
+    <span class="footer-sep">·</span>
+    <a href="/privacy">Privacy</a>
+    <span class="footer-sep">·</span>
+    <a href="/refund">Refunds</a>
+  </div>
+
+</main>
+
+<!-- ══════════════════════════════════════════
+     PAYMENT GATEWAY SELECTOR MODAL
+     Opens when user clicks "Upgrade to Pro"
+═══════════════════════════════════════════ -->
+<div id="paymentGatewayOverlay" class="pgw-overlay" onclick="handleOverlayClick(event)">
+  <div class="pgw-modal" id="paymentGatewayModal">
+
+    <button class="pgw-close" onclick="closePaymentModal()" aria-label="Close">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+
+    <div class="pgw-eyebrow"><i class="fa-solid fa-lock"></i> Secure Checkout</div>
+    <h2 class="pgw-title">Choose payment method</h2>
+
+    <!-- Plan badge -->
+    <div class="pgw-plan-badge" id="pgwPlanBadge">
+      <i class="fa-solid fa-star"></i>
+      <span id="pgwPlanBadgeText">TradingGrove Pro — Monthly · $15/mo</span>
+    </div>
+
+    <!-- Gateway cards -->
+    <div class="pgw-cards">
+
+      <!-- Stripe — commented out until Stripe is re-enabled
+      <button class="pgw-card" id="pgwStripeBtn" onclick="pgwPayWithStripe()">
+        <div class="pgw-card-inner" id="pgwStripeInner">
+          <div class="pgw-card-icon">
+            <svg viewBox="0 0 60 25" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:52px;height:22px;color:var(--text)">
+              <path d="M59.64 14.28h-8.06c.19 1.93 1.6 2.55 3.2 2.55 1.64 0 2.96-.37 4.05-.95v3.32a14.13 14.13 0 0 1-4.84.85c-4.3 0-7.09-2.76-7.09-7.26 0-4.06 2.28-7.38 6.6-7.38 4.17 0 6.11 3.4 6.11 7.33 0 .31-.02.71-.02 1.54h.05zm-5.29-5.71c-1.16 0-1.9.82-2.08 2.25h4.08c-.06-1.28-.6-2.25-2-2.25zM47.28 5.43V.77l4.43-.96v19.45h-4.43v-1.68c-.83 1.15-2.02 2.04-3.96 2.04-3.46 0-5.97-2.84-5.97-7.2 0-4.2 2.48-7.4 6.13-7.4 1.93 0 3.04.79 3.8 1.93V5.43zm0 9.21V11c-.48-1.02-1.38-1.73-2.5-1.73-1.68 0-2.65 1.43-2.65 3.46 0 1.97.97 3.43 2.65 3.43 1.13 0 2.03-.7 2.5-1.52zM34.3 5.43L30 19.26h-4.82L20.9 5.43H26l2.14 8.3 2.14-8.3h4.02zM16.38 2.54c0 1.4-1.1 2.52-2.52 2.52S11.34 3.94 11.34 2.54C11.34 1.14 12.44 0 13.86 0s2.52 1.14 2.52 2.54zm-4.73 2.89h4.44V19.26h-4.44V5.43zM0 19.26h4.43V5.43H0v13.83zM0 3.6a2.24 2.24 0 1 1 4.48 0A2.24 2.24 0 0 1 0 3.6z" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="pgw-card-body">
+            <div class="pgw-card-title">Credit or Debit Card</div>
+            <div class="pgw-card-desc">Visa, Mastercard, Amex &amp; more</div>
+          </div>
+          <i class="fa-solid fa-chevron-right pgw-arrow"></i>
+        </div>
+        <div class="pgw-card-loader" id="pgwStripeLoader" style="display:none">
+          <i class="fa-solid fa-spinner fa-spin"></i> Redirecting to Stripe…
+        </div>
+      </button>
+      -->
+
+      <!-- PayPal -->
+      <button class="pgw-card pgw-card-paypal" id="pgwPaypalBtn" onclick="pgwPayWithPayPal()">
+        <div class="pgw-card-inner" id="pgwPaypalInner">
+          <img src="/assets/images/paypal-logo.png" alt="PayPal" class="pgw-paypal-logo">
+          <div class="pgw-card-body">
+            <div class="pgw-card-desc">Pay securely with your PayPal account or linked card</div>
+          </div>
+          <i class="fa-solid fa-chevron-right pgw-arrow"></i>
+        </div>
+        <div class="pgw-card-loader" id="pgwPaypalLoader" style="display:none">
+          <i class="fa-solid fa-spinner fa-spin"></i> Redirecting to PayPal…
+        </div>
+      </button>
+
+    </div>
+
+    <div class="pgw-trust">
+      <span><i class="fa-solid fa-lock"></i> 256-bit SSL</span>
+      <span class="pgw-trust-sep">·</span>
+      <span><i class="fa-solid fa-ban"></i> Cancel anytime</span>
+      <span class="pgw-trust-sep">·</span>
+      <span><i class="fa-solid fa-database"></i> Your data, always</span>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast"><i id="toastIcon"></i><span id="toastMsg"></span></div>
+
+<script src="/js/modules/subscription.js"></script>
+</body>
+</html>

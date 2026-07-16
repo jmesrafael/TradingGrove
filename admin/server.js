@@ -140,20 +140,36 @@ function computeStatus(profile) {
 }
 
 // ── API implementations ──────────────────────────────────────
-async function apiUsers() {
-  if (cfg.mock) return mockData.users;
+// Shared fetch for apiUsers/apiDeletedUsers: auth users + profiles + per-user counts.
+async function fetchUsersJoined() {
+  // deleted_at only exists after the 2026-07-16 migration; fall back without it.
+  const profilesQ = restAll('profiles?select=id,name,plan,plan_type,subscription_expires_at,payment_gateway,referral_code,referral_count,queued_subscription,deleted_at')
+    .catch(e => {
+      if (e.code === '42703' || /deleted_at/.test(e.message)) {
+        return restAll('profiles?select=id,name,plan,plan_type,subscription_expires_at,payment_gateway,referral_code,referral_count,queued_subscription');
+      }
+      throw e;
+    });
   const [authUsers, profiles, journals, trades, images] = await Promise.all([
     authUsersAll(),
-    restAll('profiles?select=id,name,plan,plan_type,subscription_expires_at,payment_gateway,referral_code,referral_count,queued_subscription'),
+    profilesQ,
     restAll('journals?select=user_id'),
     restAll('trades?select=user_id'),
     restAll('trade_images?select=user_id'),
   ]);
-  const profById = new Map(profiles.map(p => [p.id, p]));
-  const jc = countBy(journals, r => r.user_id);
-  const tc = countBy(trades, r => r.user_id);
-  const ic = countBy(images, r => r.user_id);
-  return authUsers.map(u => {
+  return {
+    authUsers,
+    profById: new Map(profiles.map(p => [p.id, p])),
+    jc: countBy(journals, r => r.user_id),
+    tc: countBy(trades, r => r.user_id),
+    ic: countBy(images, r => r.user_id),
+  };
+}
+
+async function apiUsers() {
+  if (cfg.mock) return mockData.users;
+  const { authUsers, profById, jc, tc, ic } = await fetchUsersJoined();
+  return authUsers.filter(u => !profById.get(u.id)?.deleted_at).map(u => {
     const p = profById.get(u.id) || {};
     return {
       id: u.id,
@@ -225,6 +241,83 @@ async function apiRevoke(userId) {
     headers: { Prefer: 'return=representation' },
   });
   return { ok: true, profile: rows[0] };
+}
+
+// ── Messaging (admin -> user notification) ───────────────────
+async function apiMessage(userId, body) {
+  const title = String(body.title || '').trim();
+  const text = String(body.body || '').trim();
+  if (!title || title.length > 120) throw Object.assign(new Error('title must be 1-120 characters'), { status: 400 });
+  if (!text || text.length > 2000) throw Object.assign(new Error('message must be 1-2000 characters'), { status: 400 });
+  if (cfg.mock) return { ok: true, mock: true };
+  let rows;
+  try {
+    rows = await rest('notifications', {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId, title, body: text }),
+      headers: { Prefer: 'return=representation' },
+    });
+  } catch (e) {
+    if (e.code === '42P01' || /does not exist/i.test(e.message)) {
+      return { missingTable: true, message: 'notifications table missing. Run the migration supabase/migrations/2026-07-16_notifications_soft_delete.sql' };
+    }
+    throw e;
+  }
+  return { ok: true, notification: rows[0] };
+}
+
+// ── Deleted accounts (soft-deleted profiles) ─────────────────
+async function apiDeletedUsers() {
+  if (cfg.mock) return mockData.deletedUsers;
+  const { authUsers, profById, jc, tc, ic } = await fetchUsersJoined();
+  return authUsers.filter(u => profById.get(u.id)?.deleted_at).map(u => {
+    const p = profById.get(u.id);
+    return {
+      id: u.id,
+      email: u.email,
+      name: p.name || u.user_metadata?.name || '',
+      created_at: u.created_at,
+      last_sign_in_at: u.last_sign_in_at,
+      deleted_at: p.deleted_at,
+      plan: p.plan || 'free',
+      journals: jc.get(u.id) || 0,
+      trades: tc.get(u.id) || 0,
+      images: ic.get(u.id) || 0,
+    };
+  }).sort((a, b) => new Date(b.deleted_at) - new Date(a.deleted_at));
+}
+
+// Permanently erase a soft-deleted account: all data rows in dependency
+// order (mirrors the old delete-account edge function cascade), then the
+// auth user. Refuses unless the profile is already soft-deleted.
+async function apiPurge(userId) {
+  if (cfg.mock) {
+    mockData.deletedUsers = mockData.deletedUsers.filter(u => u.id !== userId);
+    return { ok: true, mock: true };
+  }
+  const [profile] = await rest(`profiles?id=eq.${userId}&select=id,deleted_at`);
+  if (!profile) throw Object.assign(new Error('profile not found'), { status: 404 });
+  if (!profile.deleted_at) throw Object.assign(new Error('account is not soft-deleted; refuse to purge an active account'), { status: 403 });
+
+  const del = (pathQ) => rest(pathQ, { method: 'DELETE' }).catch(e => {
+    // Missing tables (e.g. notifications before its migration) are fine.
+    if (e.code === '42P01' || /does not exist/i.test(e.message)) return null;
+    throw e;
+  });
+  await del(`trade_images?user_id=eq.${userId}`);
+  await del(`trades?user_id=eq.${userId}`);
+  await del(`journal_settings?user_id=eq.${userId}`);
+  await del(`custom_notes?user_id=eq.${userId}`);
+  await del(`journals?user_id=eq.${userId}`);
+  await del(`referrals?referrer_id=eq.${userId}`);
+  await del(`referrals?referred_user_id=eq.${userId}`);
+  await del(`notifications?user_id=eq.${userId}`);
+  await del(`profiles?id=eq.${userId}`);
+  // app_events / support_messages cascade via their FK to auth.users.
+
+  const res = await fetch(`${cfg.url}/auth/v1/admin/users/${userId}`, { method: 'DELETE', headers: sbHeaders() });
+  if (!res.ok) throw new Error(`Auth admin delete failed: ${res.status} ${await res.text()}`);
+  return { ok: true };
 }
 
 // ── Storage usage ────────────────────────────────────────────
@@ -429,6 +522,10 @@ const mockData = {
     daily: Array.from({ length: 30 }, (_, i) => ({ day: new Date(Date.now() - (29 - i) * 86400000).toISOString().slice(0, 10), users: [1, 2, 2, 3, 1, 2, 3][i % 7] })),
     topUsers: [{ user_id: 'u1', n: 611 }, { user_id: 'u2', n: 502 }, { user_id: 'u3', n: 305 }],
   },
+  deletedUsers: [
+    { id: 'd1', email: 'old.trader@example.com', name: 'Old Trader', created_at: '2026-01-11T09:00:00Z', last_sign_in_at: '2026-06-02T13:45:00Z', deleted_at: '2026-07-10T18:22:00Z', plan: 'free', journals: 2, trades: 158, images: 34 },
+    { id: 'd2', email: 'quit.fx@example.com', name: 'Quit FX', created_at: '2026-04-03T12:00:00Z', last_sign_in_at: '2026-07-01T10:10:00Z', deleted_at: '2026-07-14T07:05:00Z', plan: 'pro', journals: 1, trades: 41, images: 9 },
+  ],
   reports: {
     messages: [
       { id: 'm1', user_id: 'u2', subject: 'Calendar day totals look off on mobile', message: 'When I open the calendar on my phone the day cells overlap on small screens. Pixel 6, Chrome.', status: 'new', created_at: '2026-07-13T19:22:00Z', sender_name: 'Renz C.', sender_email: 'renz@example.com', sender_status: { label: 'expiring', daysLeft: 5 } },
@@ -494,6 +591,15 @@ const server = http.createServer(async (req, res) => {
       }
       if ((m = p.match(/^\/api\/users\/([\w-]+)\/revoke$/)) && req.method === 'POST') {
         return sendJson(res, 200, await apiRevoke(m[1]));
+      }
+      if ((m = p.match(/^\/api\/users\/([\w-]+)\/message$/)) && req.method === 'POST') {
+        return sendJson(res, 200, await apiMessage(m[1], await readBody(req)));
+      }
+      if ((m = p.match(/^\/api\/users\/([\w-]+)\/purge$/)) && req.method === 'POST') {
+        return sendJson(res, 200, await apiPurge(m[1]));
+      }
+      if (p === '/api/deleted-users' && req.method === 'GET') {
+        return sendJson(res, 200, { users: await apiDeletedUsers() });
       }
       if ((m = p.match(/^\/api\/users\/([\w-]+)\/storage$/)) && req.method === 'GET') {
         return sendJson(res, 200, await apiStorage(m[1]));

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<title>TradingGrove | Pricing & Plans</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/lib/theme.js"></script>
+<script src="/js/lib/supabase-client.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
+<link rel="stylesheet" href="/styles/pricing.css">
+</head>
+<body>
+
+<div class="bg-orb bg-orb1"></div>
+<div class="bg-orb bg-orb2"></div>
+
+<div class="page-loader" id="pageLoader">
+  <div class="pl-inner">
+    <div class="pl-logo">Trading<span>Grove</span></div>
+    <div class="pl-spin"></div>
+  </div>
+</div>
+
+<header>
+  <a href="/" class="logo">Trading<span>Grove</span></a>
+  <div style="display:flex;align-items:center;gap:8px">
+    <button class="btn-ghost" onclick="location.href='/'"><i class="fa-solid fa-chevron-left"></i> Back</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-pill"><i class="fa-solid fa-bolt"></i> Transparent Pricing</div>
+    <h1>Two plans.<br><span class="hl">No surprises.</span></h1>
+    <p>Start with a free journal and build the review habit. Upgrade to Pro when you want unlimited journals and the full analytics picture. Cancel anytime, keep your data either way.</p>
+    <div class="social-proof">
+      <div class="sp-item"><i class="fa-solid fa-lock"></i> Secure checkout</div>
+      <span class="sp-sep">·</span>
+      <div class="sp-item"><i class="fa-solid fa-database"></i> Your data, always</div>
+      <span class="sp-sep">·</span>
+      <div class="sp-item"><i class="fa-solid fa-ban"></i> No ads ever</div>
+    </div>
+  </div>
+
+  <!-- Billing toggle -->
+  <div class="billing-toggle" id="billingToggle">
+    <button class="btog-btn active" id="btnMonthly" onclick="setPlan('monthly')">Monthly</button>
+    <button class="btog-btn" id="btnAnnual" onclick="setPlan('annual')">
+      Annual &nbsp;<span class="annual-badge">Save $60</span>
+    </button>
+  </div>
+
+  <!-- Plans -->
+  <div class="plans" id="plansGrid">
+
+    <!-- Free -->
+    <div class="plan-card">
+      <div class="plan-tier">Free</div>
+      <div class="price-wrap">
+        <div class="price-row">
+          <span class="price-currency">$</span>
+          <span class="price-amt">0</span>
+          <span class="price-period">/ forever</span>
+        </div>
+        <div class="price-billed-note">&nbsp;</div>
+      </div>
+      <p class="plan-desc">A solid start. Get one journal and basic analytics, no card needed, no expiry.</p>
+      <hr class="pdiv">
+      <ul class="feat-list">
+        <li><i class="fa-solid fa-check ico y"></i><span>1 Trading journal</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Unlimited trade logs</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>1 image per trade</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Basic analytics</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Limited calendar lookback</span></li>
+        <li class="dim"><i class="fa-solid fa-xmark ico n"></i><span>Multiple journals</span></li>
+        <li class="dim"><i class="fa-solid fa-xmark ico n"></i><span>Advanced analytics</span></li>
+        <li class="dim"><i class="fa-solid fa-xmark ico n"></i><span>Themes &amp; fonts</span></li>
+        <li class="dim"><i class="fa-solid fa-xmark ico n"></i><span>Export / import</span></li>
+        <li class="dim"><i class="fa-solid fa-xmark ico n"></i><span>Ads shown</span></li>
+      </ul>
+      <button class="plan-btn ghost" disabled>Included, No Expiry</button>
+    </div>
+
+    <!-- Pro -->
+    <div class="plan-card pro">
+      <div class="popular-tag">⚡ Most Popular</div>
+      <div class="plan-tier pro">Pro</div>
+
+      <!-- Monthly pricing (default) -->
+      <div id="priceMonthly" class="price-wrap">
+        <div class="price-row">
+          <span class="price-currency pro">$</span>
+          <span class="price-amt pro">15</span>
+          <span class="price-period">/ month</span>
+        </div>
+        <div class="price-billed-note">Billed monthly · cancel anytime</div>
+      </div>
+
+      <!-- Annual pricing (hidden by default) -->
+      <div id="priceAnnual" class="price-wrap" style="display:none">
+        <div class="price-annual-stack">
+          <span class="price-old">$15</span>
+          <div class="price-row">
+            <span class="price-currency pro">$</span>
+            <span class="price-amt pro">10</span>
+            <span class="price-period">/ month</span>
+          </div>
+        </div>
+        <div class="price-billed-note">
+          Billed as <strong style="color:var(--text)">$120/yr</strong> &nbsp;
+          <span class="save-amt">You save $60</span>
+        </div>
+      </div>
+
+      <p class="plan-desc">For traders who are serious. Every insight, every edge, zero limitations, starting today.</p>
+      <hr class="pdiv">
+      <ul class="feat-list">
+        <li><i class="fa-solid fa-check ico y"></i><span>Unlimited journals<span class="feat-note">Spot, futures, one for each exchange, all kept separate</span></span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Unlimited trade logs</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Multiple images per trade</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Full analytics suite<span class="feat-note">Heatmap, Mood, Confidence, Timeframe</span></span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Unlimited calendar lookback</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Notes collection</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Export &amp; import backup</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>Color &amp; font themes</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>PIN-protected journals</span></li>
+        <li><i class="fa-solid fa-check ico y"></i><span>No ads, ever</span></li>
+      </ul>
+
+      <button class="plan-btn cta" id="proPlanBtn" onclick="upgradeToPro()">
+        <i class="fa-solid fa-rocket"></i>
+        <span id="proBtnText">Upgrade to Pro · $15/mo</span>
+      </button>
+      <div class="cta-nudge">
+        <i class="fa-solid fa-shield-halved"></i> Secure payment via PayPal
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Which plan fits -->
+  <div class="fit-sec">
+    <div class="sec-title">Which plan fits you</div>
+    <div class="fit-grid">
+      <div class="fit-card">
+        <div class="fit-head"><i class="fa-solid fa-seedling"></i> Choose Free if...</div>
+        <p>You are building the journaling habit, trade one account, and want the core stats, equity curve, calendar and risk calculator without paying anything. You can stay on Free for as long as you like.</p>
+      </div>
+      <div class="fit-card pro">
+        <div class="fit-head pro"><i class="fa-solid fa-rocket"></i> Choose Pro if...</div>
+        <p>You run more than one account or market, want the full analytics suite (mood, hour heatmap, strategy expectancy, day-of-week), attach lots of chart screenshots, or need export and backup.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feature comparison -->
+  <div class="pcmp-sec">
+    <div class="sec-title">Every feature, side by side</div>
+    <div class="pcmp-wrap">
+      <table class="pcmp-table">
+        <thead><tr><th>Feature</th><th>Free</th><th>Pro</th></tr></thead>
+        <tbody>
+          <tr><td>Trading journals</td><td>1</td><td>Unlimited</td></tr>
+          <tr><td>Trade logs</td><td>Unlimited</td><td>Unlimited</td></tr>
+          <tr><td>Images per trade</td><td>1</td><td>Unlimited</td></tr>
+          <tr><td>Core stats &amp; equity curve</td><td><i class="fa-solid fa-check y"></i></td><td><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Full analytics suite<span class="pcmp-note">Strategy PNL, Mood, Hour heatmap, Day-of-week, Long vs Short, Pairs</span></td><td><i class="fa-solid fa-xmark n"></i></td><td><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Trade calendar lookback</td><td>90 days</td><td>Unlimited</td></tr>
+          <tr><td>Pre-session planning</td><td><i class="fa-solid fa-check y"></i></td><td><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Risk calculator</td><td><i class="fa-solid fa-check y"></i></td><td><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Cloud sync across devices</td><td><i class="fa-solid fa-check y"></i></td><td><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Export &amp; import (JSON + CSV)</td><td><i class="fa-solid fa-xmark n"></i></td><td><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Themes &amp; fonts</td><td><i class="fa-solid fa-xmark n"></i></td><td><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>PIN-protected journals</td><td><i class="fa-solid fa-xmark n"></i></td><td><i class="fa-solid fa-check y"></i></td></tr>
+          <tr><td>Ads</td><td>Shown</td><td>Never</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq-sec">
+    <div class="sec-title">Common questions</div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Does the free plan expire? <i class="fa-solid fa-chevron-down"></i></div>
+      <div class="faq-a">No. The free plan never expires and requires no credit card. You get 1 journal, unlimited trade logs, core analytics, and a 90-day calendar lookback, no strings attached.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">What's the difference between Monthly and Annual? <i class="fa-solid fa-chevron-down"></i></div>
+      <div class="faq-a">Monthly is $15/month billed each month. Annual is $120/year, that's just $10/month, saving you $60 compared to paying monthly. Both plans include exactly the same Pro features.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Can I cancel anytime? <i class="fa-solid fa-chevron-down"></i></div>
+      <div class="faq-a">Absolutely. Cancel anytime via Manage Billing. You keep full Pro access until the end of your billing period, then revert to Free. Your trades and journals are never deleted.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">What about refunds? <i class="fa-solid fa-chevron-down"></i></div>
+      <div class="faq-a">We offer a 14-day money-back guarantee. If you're not satisfied with Pro within 14 days of purchase, we'll refund your payment in full. See our <a href="/refund" style="color:var(--accent2);text-decoration:underline">refund policy</a> for details.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">How does the referral program work? <i class="fa-solid fa-chevron-down"></i></div>
+      <div class="faq-a">Share your referral link from your Profile page. When someone signs up through your link and subscribes to Pro for the first time, you automatically receive 30 free days of Pro added to your account.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Is my data secure? <i class="fa-solid fa-chevron-down"></i></div>
+      <div class="faq-a">Yes. Your trades and journal entries are stored securely in Supabase with row-level security, only you can access your data. Pro users can export everything as .json or .csv anytime. See our <a href="/privacy" style="color:var(--accent2);text-decoration:underline">privacy policy</a> for full details.</div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    <span>Your data is always yours</span>
+    <span class="footer-sep">·</span>
+    <span>No hidden fees</span>
+    <span class="footer-sep">·</span>
+    <a href="/terms">Terms</a>
+    <span class="footer-sep">·</span>
+    <a href="/privacy">Privacy</a>
+    <span class="footer-sep">·</span>
+    <a href="/refund">Refunds</a>
+  </div>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo">Trading<span>Grove</span></div>
+      <p class="footer-tagline">The online trading journal for traders who improve through review: log trades, track your psychology, and read your own analytics.</p>
+      <div class="footer-badges">
+        <span class="footer-badge"><i class="fa-solid fa-mobile-screen"></i> Any Device</span>
+        <span class="footer-badge"><i class="fa-solid fa-bolt"></i> Quick Setup</span>
+        <span class="footer-badge"><i class="fa-solid fa-circle-check"></i> Free Starter Plan</span>
+      </div>
+    </div>
+    <div class="footer-links-group">
+      <div class="footer-col">
+        <div class="footer-col-title">Product</div>
+        <a href="/features">Features</a>
+        <a href="/pricing">Pricing</a>
+        <a href="/#compare">Compare</a>
+        <a href="/faq">FAQ</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Free Tools</div>
+        <a href="/#crypto-calculator">Crypto Risk Calculator</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Account</div>
+        <a href="/auth">Sign Up Free</a>
+        <a href="/auth">Log In</a>
+        <a href="/pricing">Upgrade to Pro</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Legal</div>
+        <a href="/terms">Terms of Service</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/refund">Refund Policy</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 TradingGrove. A trading journal built for honest review.</span>
+    <span>Plan &nbsp;·&nbsp; Log &nbsp;·&nbsp; Review &nbsp;·&nbsp; Improve</span>
+  </div>
+</footer>
+
+<script src="/js/modules/pricing.js"></script>
+</body>
+</html>

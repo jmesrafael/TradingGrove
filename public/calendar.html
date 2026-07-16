@@ -1,0 +1,125 @@
+<!-- calendar.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<script src="/favicon.js"></script>
+<title>Calendar</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/js/lib/theme.js"></script>
+<script src="/js/lib/supabase-client.js"></script>
+<script src="/js/lib/track.js" defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
+<link rel="stylesheet" href="/styles/calendar.css">
+</head>
+<body>
+<!-- Loading indicator -->
+<div id="calLoadingOverlay" class="loading-overlay">
+  <div class="pl-spin"></div>
+</div>
+
+<div class="pw">
+  <div class="cal-hdr">
+    <h2><i class="fa-solid fa-calendar-days" style="color:var(--accent2)"></i>Trade Calendar</h2>
+    <div class="nav-row">
+      <button class="nav-btn" id="prevBtn" onclick="prevMonthClick()"><i class="fa-solid fa-chevron-left"></i></button>
+      <span class="month-lbl" id="monthLbl">—</span>
+      <button class="nav-btn" id="nextBtn" onclick="nextMonth()"><i class="fa-solid fa-chevron-right"></i></button>
+      <button class="nav-btn" onclick="goToday()" style="width:auto;padding:0 10px;font-size:11px;font-weight:600">Today</button>
+    </div>
+  </div>
+
+  <div class="free-banner" id="freeBanner" style="display:none">
+    <i class="fa-solid fa-clock-rotate-left"></i>
+    <span>Free plan shows the last 90 days. <a href="/subscription">Upgrade to Pro</a> for full history.</span>
+  </div>
+
+  <div class="sum-bar" id="sumBar" style="display:none">
+    <div class="sum-pair">
+      <div class="sum-item"><div class="sum-lbl">Win Days</div><div class="sum-val pos" id="sumWin">0</div></div>
+      <div class="sum-item"><div class="sum-lbl">Loss Days</div><div class="sum-val neg" id="sumLoss">0</div></div>
+    </div>
+    <div class="sum-pair">
+      <div class="sum-item"><div class="sum-lbl">Best Day</div><div class="sum-val pos" id="sumBest">—</div></div>
+      <div class="sum-item"><div class="sum-lbl">Worst Day</div><div class="sum-val neg" id="sumWorst">—</div></div>
+    </div>
+    <div class="sum-pair">
+      <div class="sum-item"><div class="sum-lbl">Win R</div><div class="sum-val pos" id="sumWinR">—</div></div>
+      <div class="sum-item"><div class="sum-lbl">Loss R</div><div class="sum-val neg" id="sumLossR">—</div></div>
+    </div>
+    <div class="sum-pair">
+      <div class="sum-item"><div class="sum-lbl">Win Rate</div><div class="sum-val" id="sumWR">—</div></div>
+      <div class="sum-item"><div class="sum-lbl">Total R</div><div class="sum-val" id="sumTotalR">—</div></div>
+    </div>
+    <div class="sum-pair">
+      <div class="sum-item"><div class="sum-lbl">Trades</div><div class="sum-val" id="sumTrades">0</div></div>
+      <div class="sum-item"><div class="sum-lbl">Month PNL</div><div class="sum-val" id="sumPnl">—</div></div>
+    </div>
+  </div>
+
+  <div class="skel-wrap" id="skelWrap">
+    <div class="dow-hdr-skel" id="skelDow"></div>
+    <div class="grid-skel" id="skelGrid"></div>
+  </div>
+
+  <div class="cal-wrap" id="calWrap">
+    <div class="dow-hdr" id="calDow"></div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+
+  <div class="pro-lock-month" id="proLockMsg">
+    <i class="fa-solid fa-lock" style="font-size:26px;color:var(--amber);opacity:.7"></i>
+    <div>
+      <div style="font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:14px;font-weight:600;margin-bottom:6px">History Locked</div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6;max-width:280px;margin:0 auto">Free plan shows the last 90 days only. Upgrade to Pro to view your full trading history.</div>
+    </div>
+    <a href="/subscription" style="display:inline-flex;align-items:center;gap:7px;background:var(--accent);color:#0b0f0c;border:none;border-radius:var(--radius-md);padding:9px 18px;font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:13px;font-weight:700;text-decoration:none;transition:opacity .2s" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+      <i class="fa-solid fa-chevron-up"></i> Upgrade to Pro
+    </a>
+  </div>
+
+  <div class="prev-months" id="prevMonthsSection" style="display:none">
+    <div class="prev-months-hdr">
+      <div class="prev-months-hdr-left"><i class="fa-solid fa-chart-bar"></i>Monthly Breakdown</div>
+      <button class="pm-toggle-btn" id="pmToggleBtn" onclick="togglePrevMonths()">
+        <i class="fa-solid fa-chevron-up" id="pmToggleIcon"></i>
+        <span id="pmToggleLbl">Hide</span>
+      </button>
+    </div>
+    <div id="prevMonthsGrid"></div>
+  </div>
+
+  <div id="calAdSlot" style="display:none;margin-top:18px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">
+    <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:5px 12px 0;opacity:.5">Advertisement</div>
+    <div style="min-height:72px;display:flex;align-items:center;justify-content:center;padding:10px 16px">
+      <ins class="adsbygoogle" style="display:block;width:100%;min-height:72px" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="horizontal" data-full-width-responsive="true"></ins>
+    </div>
+  </div>
+  <div id="calUpgradeNudge" style="display:none;margin-top:10px;padding:10px 14px;border-radius:var(--radius-lg);align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap" class="cal-nudge-bar">
+    <span style="font-size:12px;color:var(--muted)"><strong style="color:var(--text)">Remove ads + unlock full history</strong> — upgrade to Pro.</span>
+    <a href="/subscription" style="background:var(--accent);color:#0b0f0c;border:none;border-radius:var(--radius-md);padding:6px 12px;font-family:var(--font-heading,'Space Grotesk',sans-serif);font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap">Upgrade to Pro</a>
+  </div>
+</div>
+
+<!-- Day detail modal -->
+<div class="day-modal-overlay" id="dayModalOverlay" onclick="closeDayModal(event)">
+  <div class="day-modal">
+    <div class="dm-hdr">
+      <h3 id="dmTitle">—</h3>
+      <button class="dm-close" onclick="closeDayModalDirect()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="dm-body" id="dmBody"></div>
+  </div>
+</div>
+
+<script src="/js/modules/calendar.js"></script>
+<script src="/js/loss-vignette.js"></script>
+</body>
+</html>
